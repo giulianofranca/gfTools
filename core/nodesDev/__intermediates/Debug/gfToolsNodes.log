@@ -1,0 +1,8 @@
+﻿  plugin.cpp
+  n_gfDebugPv.cpp
+  n_gfRigBlendTransform.cpp
+  n_gfRigIKVChain.cpp
+  n_gfRigPSD.cpp
+  Generating Code...
+     Creating library C:\Users\gfranca\Documents\maya\2017\scripts\gftoolsdevelopment\core\nodesDev\__build\Debug\gfToolsNodes.lib and object C:\Users\gfranca\Documents\maya\2017\scripts\gftoolsdevelopment\core\nodesDev\__build\Debug\gfToolsNodes.exp
+  gfToolsNodes.vcxproj -> C:\Users\gfranca\Documents\maya\2017\scripts\gftoolsdevelopment\core\nodesDev\__build\Debug\gfToolsNodes.mll

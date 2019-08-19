@@ -1,0 +1,444 @@
+global proc shelf_gfTools () {
+    global string $gBuffStr;
+    global string $gBuffStr0;
+    global string $gBuffStr1;
+
+
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 73
+        -height 38
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "Tool in development" 
+        -enableBackground 0
+        -highlightColor 0.321569 0.521569 0.65098 
+        -align "center" 
+        -label "gfProjManager" 
+        -labelOffset 0
+        -rotation 0
+        -flipX 0
+        -flipY 0
+        -useAlpha 1
+        -font "plainLabelFont" 
+        -overlayLabelColor 0.8 0.8 0.8 
+        -overlayLabelBackColor 0 0 0 0.5 
+        -image "C:/Users/gfranca/Documents/maya/2017/prefs/icons/gfProjectManager-01.png" 
+        -image1 "C:/Users/gfranca/Documents/maya/2017/prefs/icons/gfProjectManager-01.png" 
+        -style "iconOnly" 
+        -marginWidth 1
+        -marginHeight 1
+        -command "print(\"Tool in development\")" 
+        -sourceType "python" 
+        -commandRepeatable 1
+        -flat 1
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 73
+        -height 38
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "Selection of Maya tools created by user." 
+        -enableBackground 0
+        -highlightColor 0.321569 0.521569 0.65098 
+        -align "center" 
+        -label "gfUtilitiesBelt" 
+        -labelOffset 0
+        -rotation 0
+        -flipX 0
+        -flipY 0
+        -useAlpha 1
+        -font "plainLabelFont" 
+        -overlayLabelColor 0.8 0.8 0.8 
+        -overlayLabelBackColor 0 0 0 0.5 
+        -image "C:/Users/gfranca/Documents/maya/2017/prefs/icons/gfMayaTools-01.png" 
+        -image1 "C:/Users/gfranca/Documents/maya/2017/prefs/icons/gfMayaTools-01.png" 
+        -style "iconOnly" 
+        -marginWidth 1
+        -marginHeight 1
+        -command "from gfTools import appLoader\nappLoader.gfMayaToolsLoad()" 
+        -sourceType "python" 
+        -commandRepeatable 1
+        -flat 1
+        -mi "Viewport Dark" ( "# FKJoitns = 15(Blue) or 23(Green)\ncmds.displayColor('fkJoints', 23, c=True, d=True)" )
+        -mip 0
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 73
+        -height 38
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "print(\"Tool in development\")" 
+        -enableBackground 0
+        -highlightColor 0.321569 0.521569 0.65098 
+        -align "center" 
+        -label "gfXtraTools" 
+        -labelOffset 0
+        -rotation 0
+        -flipX 0
+        -flipY 0
+        -useAlpha 1
+        -font "plainLabelFont" 
+        -overlayLabelColor 0.8 0.8 0.8 
+        -overlayLabelBackColor 0 0 0 0.5 
+        -image "C:/Users/gfranca/Documents/maya/2017/prefs/icons/gfTools_ico/gfXtraTools-01.png" 
+        -image1 "C:/Users/gfranca/Documents/maya/2017/prefs/icons/gfTools_ico/gfXtraTools-01.png" 
+        -style "iconOnly" 
+        -marginWidth 1
+        -marginHeight 1
+        -command "print(\"Tool in development\")" 
+        -sourceType "python" 
+        -commandRepeatable 1
+        -flat 1
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 73
+        -height 38
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "print(\"Tool in development\")" 
+        -enableBackground 0
+        -highlightColor 0.321569 0.521569 0.65098 
+        -align "center" 
+        -label "gfAutoRig" 
+        -labelOffset 0
+        -rotation 0
+        -flipX 0
+        -flipY 0
+        -useAlpha 1
+        -font "plainLabelFont" 
+        -overlayLabelColor 0.8 0.8 0.8 
+        -overlayLabelBackColor 0 0 0 0.5 
+        -image "C:/Users/gfranca/Documents/maya/2017/prefs/icons/gfTools_ico/gfAutoRigTool3-01.png" 
+        -image1 "C:/Users/gfranca/Documents/maya/2017/prefs/icons/gfTools_ico/gfAutoRigTool3-01.png" 
+        -style "iconOnly" 
+        -marginWidth 1
+        -marginHeight 1
+        -command "from gfTools import appLoader\nappLoader.gfAutoRigLoad()" 
+        -sourceType "python" 
+        -commandRepeatable 1
+        -flat 1
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 73
+        -height 38
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "print(\"Tool in development\")" 
+        -enableBackground 0
+        -highlightColor 0.321569 0.521569 0.65098 
+        -align "center" 
+        -label "gfRigSystem" 
+        -labelOffset 0
+        -rotation 0
+        -flipX 0
+        -flipY 0
+        -useAlpha 1
+        -font "plainLabelFont" 
+        -overlayLabelColor 0.8 0.8 0.8 
+        -overlayLabelBackColor 0 0 0 0.5 
+        -image "C:/Users/gfranca/Documents/maya/2017/prefs/icons/gfRigSystem-01.png" 
+        -image1 "C:/Users/gfranca/Documents/maya/2017/prefs/icons/gfRigSystem-01.png" 
+        -style "iconOnly" 
+        -marginWidth 1
+        -marginHeight 1
+        -command "print(\"Tool in development\")" 
+        -sourceType "python" 
+        -commandRepeatable 1
+        -flat 1
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 73
+        -height 38
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "print(\"Tool in development\")" 
+        -enableBackground 0
+        -highlightColor 0.321569 0.521569 0.65098 
+        -align "center" 
+        -label "gfCtrlEditor" 
+        -labelOffset 0
+        -rotation 0
+        -flipX 0
+        -flipY 0
+        -useAlpha 1
+        -font "plainLabelFont" 
+        -overlayLabelColor 0.8 0.8 0.8 
+        -overlayLabelBackColor 0 0 0 0.5 
+        -image "C:/Users/gfranca/Documents/maya/2017/prefs/icons/gfTools_ico/gfCtrlEditorTool2-01.png" 
+        -image1 "C:/Users/gfranca/Documents/maya/2017/prefs/icons/gfTools_ico/gfCtrlEditorTool2-01.png" 
+        -style "iconOnly" 
+        -marginWidth 1
+        -marginHeight 1
+        -command "print(\"Tool in development\")" 
+        -sourceType "python" 
+        -commandRepeatable 1
+        -flat 1
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 73
+        -height 38
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "print(\"Tool in development\")" 
+        -enableBackground 0
+        -highlightColor 0.321569 0.521569 0.65098 
+        -align "center" 
+        -label "gfSkinTool" 
+        -labelOffset 0
+        -rotation 0
+        -flipX 0
+        -flipY 0
+        -useAlpha 1
+        -font "plainLabelFont" 
+        -overlayLabelColor 0.8 0.8 0.8 
+        -overlayLabelBackColor 0 0 0 0.5 
+        -image "C:/Users/gfranca/Documents/maya/2017/prefs/icons/gfSkinTool-01.png" 
+        -image1 "C:/Users/gfranca/Documents/maya/2017/prefs/icons/gfSkinTool-01.png" 
+        -style "iconOnly" 
+        -marginWidth 1
+        -marginHeight 1
+        -command "print(\"Tool in development\")" 
+        -sourceType "python" 
+        -commandRepeatable 1
+        -flat 1
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 73
+        -height 38
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "print(\"Tool in development\")" 
+        -enableBackground 0
+        -highlightColor 0.321569 0.521569 0.65098 
+        -align "center" 
+        -label "gfMuscleBuilder" 
+        -labelOffset 0
+        -rotation 0
+        -flipX 0
+        -flipY 0
+        -useAlpha 1
+        -font "plainLabelFont" 
+        -overlayLabelColor 0.8 0.8 0.8 
+        -overlayLabelBackColor 0 0 0 0.5 
+        -image "C:/Users/gfranca/Documents/maya/2017/prefs/icons/gfMuscleBuilder2-01.png" 
+        -image1 "C:/Users/gfranca/Documents/maya/2017/prefs/icons/gfMuscleBuilder2-01.png" 
+        -style "iconOnly" 
+        -marginWidth 1
+        -marginHeight 1
+        -command "print(\"Tool in development\")" 
+        -sourceType "python" 
+        -commandRepeatable 1
+        -flat 1
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 73
+        -height 38
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "print(\"Tool in development\")" 
+        -enableBackground 0
+        -highlightColor 0.321569 0.521569 0.65098 
+        -align "center" 
+        -label "gfPSDCreator" 
+        -labelOffset 0
+        -rotation 0
+        -flipX 0
+        -flipY 0
+        -useAlpha 1
+        -font "plainLabelFont" 
+        -overlayLabelColor 0.8 0.8 0.8 
+        -overlayLabelBackColor 0 0 0 0.5 
+        -image "C:/Users/gfranca/Documents/maya/2017/prefs/icons/gfPSDCreator.png" 
+        -image1 "C:/Users/gfranca/Documents/maya/2017/prefs/icons/gfPSDCreator.png" 
+        -style "iconOnly" 
+        -marginWidth 1
+        -marginHeight 1
+        -command "print(\"Tool in development\")" 
+        -sourceType "python" 
+        -commandRepeatable 1
+        -flat 1
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 73
+        -height 38
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "print(\"Tool in development\")" 
+        -enableBackground 0
+        -highlightColor 0.321569 0.521569 0.65098 
+        -align "center" 
+        -label "gfPoseLibrary" 
+        -labelOffset 0
+        -rotation 0
+        -flipX 0
+        -flipY 0
+        -useAlpha 1
+        -font "plainLabelFont" 
+        -overlayLabelColor 0.8 0.8 0.8 
+        -overlayLabelBackColor 0 0 0 0.5 
+        -image "C:/Users/gfranca/Documents/maya/2017/prefs/icons/gfPoseLibrary-01.png" 
+        -image1 "C:/Users/gfranca/Documents/maya/2017/prefs/icons/gfPoseLibrary-01.png" 
+        -style "iconOnly" 
+        -marginWidth 1
+        -marginHeight 1
+        -command "import sys\nposeLibPath = 'C:/Users/gfranca/Documents/maya/2017/scripts/gfTools/gfPoseLib'\n\nif poseLibPath not in sys.path:\n    sys.path.append(poseLibPath)\n\nfrom PySide2 import QtWidgets\nimport mainwindow as mw\nreload(mw)\n\nMainWindow = QtWidgets.QMainWindow()\nui = mw.Ui_MainWindow()\nui.setupUi(MainWindow)\nMainWindow.show()" 
+        -sourceType "python" 
+        -commandRepeatable 1
+        -flat 1
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 73
+        -height 38
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "print(\"Tool in development\")" 
+        -enableBackground 0
+        -highlightColor 0.321569 0.521569 0.65098 
+        -align "center" 
+        -label "gfAnimPicker" 
+        -labelOffset 0
+        -rotation 0
+        -flipX 0
+        -flipY 0
+        -useAlpha 1
+        -font "plainLabelFont" 
+        -overlayLabelColor 0.8 0.8 0.8 
+        -overlayLabelBackColor 0 0 0 0.5 
+        -image "C:/Users/gfranca/Documents/maya/2017/prefs/icons/gfAnimPicker3-01.png" 
+        -image1 "C:/Users/gfranca/Documents/maya/2017/prefs/icons/gfAnimPicker3-01.png" 
+        -style "iconOnly" 
+        -marginWidth 1
+        -marginHeight 1
+        -command "print(\"Tool in development\")" 
+        -sourceType "python" 
+        -commandRepeatable 1
+        -flat 1
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 73
+        -height 38
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "print(\"Tool in development\")" 
+        -enableBackground 0
+        -highlightColor 0.321569 0.521569 0.65098 
+        -align "center" 
+        -label "gfShotReview" 
+        -labelOffset 0
+        -rotation 0
+        -flipX 0
+        -flipY 0
+        -useAlpha 1
+        -font "plainLabelFont" 
+        -overlayLabelColor 0.8 0.8 0.8 
+        -overlayLabelBackColor 0 0 0 0.5 
+        -image "C:/Users/gfranca/Documents/maya/2017/prefs/icons/gfShowReview-01.png" 
+        -image1 "C:/Users/gfranca/Documents/maya/2017/prefs/icons/gfShowReview-01.png" 
+        -style "iconOnly" 
+        -marginWidth 1
+        -marginHeight 1
+        -command "print(\"Tool in development\")" 
+        -sourceType "python" 
+        -commandRepeatable 1
+        -flat 1
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 73
+        -height 38
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "print(\"Tool in development\")" 
+        -enableBackground 0
+        -highlightColor 0.321569 0.521569 0.65098 
+        -align "center" 
+        -label "gfMaterialLibrary" 
+        -labelOffset 0
+        -rotation 0
+        -flipX 0
+        -flipY 0
+        -useAlpha 1
+        -font "plainLabelFont" 
+        -overlayLabelColor 0.8 0.8 0.8 
+        -overlayLabelBackColor 0 0 0 0.5 
+        -image "C:/Users/gfranca/Documents/maya/2017/prefs/icons/gfMaterialLibrary-01.png" 
+        -image1 "C:/Users/gfranca/Documents/maya/2017/prefs/icons/gfMaterialLibrary-01.png" 
+        -style "iconOnly" 
+        -marginWidth 1
+        -marginHeight 1
+        -command "print(\"Tool in development\")" 
+        -sourceType "python" 
+        -commandRepeatable 1
+        -flat 1
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 73
+        -height 38
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "print(\"Tool in development\")" 
+        -enableBackground 0
+        -highlightColor 0.321569 0.521569 0.65098 
+        -align "center" 
+        -label "gfRenderQueue" 
+        -labelOffset 0
+        -rotation 0
+        -flipX 0
+        -flipY 0
+        -useAlpha 1
+        -font "plainLabelFont" 
+        -overlayLabelColor 0.8 0.8 0.8 
+        -overlayLabelBackColor 0 0 0 0.5 
+        -image "C:/Users/gfranca/Documents/maya/2017/prefs/icons/gfRenderQueue-01.png" 
+        -image1 "C:/Users/gfranca/Documents/maya/2017/prefs/icons/gfRenderQueue-01.png" 
+        -style "iconOnly" 
+        -marginWidth 1
+        -marginHeight 1
+        -command "print(\"Tool in development\")" 
+        -sourceType "python" 
+        -commandRepeatable 1
+        -flat 1
+    ;
+
+} 

@@ -1,0 +1,136 @@
+<?xml version="1.0"?>
+<deformerWeight>
+  <headerInfo fileName="C:/Users/giulianofranca/Desktop/HLegs_Bend_Rib_teste3.xml" worldMatrix="1.000000 0.000000 0.000000 0.000000 0.000000 1.000000 0.000000 0.000000 0.000000 0.000000 1.000000 0.000000 30.000000 0.000000 0.000000 1.000000 "/>
+  <shape name="Sfc_Bs_Rib_L_Leg_BendShape" group="974" stride="3" size="42" max="42">
+    <point index="0" value=" 8.750000 8.000000 -0.000000"/>
+    <point index="1" value=" 8.750000 10.545455 0.606061"/>
+    <point index="2" value=" 8.750000 15.636364 1.818182"/>
+    <point index="3" value=" 8.750000 23.272727 3.636364"/>
+    <point index="4" value=" 8.750000 30.909091 5.454545"/>
+    <point index="5" value=" 8.750000 38.539617 7.214356"/>
+    <point index="6" value=" 8.750000 46.236688 9.639602"/>
+    <point index="7" value=" 8.750000 53.691233 9.639602"/>
+    <point index="8" value=" 8.750000 60.903254 7.214356"/>
+    <point index="9" value=" 8.750000 68.181818 5.454545"/>
+    <point index="10" value=" 8.750000 75.454545 3.636364"/>
+    <point index="11" value=" 8.750000 82.727273 1.818182"/>
+    <point index="12" value=" 8.750000 87.575758 0.606061"/>
+    <point index="13" value=" 8.750000 90.000000 0.000000"/>
+    <point index="14" value=" 10.000000 8.000000 -0.000000"/>
+    <point index="15" value=" 10.000000 10.545455 0.606061"/>
+    <point index="16" value=" 10.000000 15.636364 1.818182"/>
+    <point index="17" value=" 10.000000 23.272727 3.636364"/>
+    <point index="18" value=" 10.000000 30.909091 5.454545"/>
+    <point index="19" value=" 10.000000 38.539617 7.214356"/>
+    <point index="20" value=" 10.000000 46.236688 9.639602"/>
+    <point index="21" value=" 10.000000 53.691233 9.639602"/>
+    <point index="22" value=" 10.000000 60.903254 7.214356"/>
+    <point index="23" value=" 10.000000 68.181818 5.454545"/>
+    <point index="24" value=" 10.000000 75.454545 3.636364"/>
+    <point index="25" value=" 10.000000 82.727273 1.818182"/>
+    <point index="26" value=" 10.000000 87.575758 0.606061"/>
+    <point index="27" value=" 10.000000 90.000000 0.000000"/>
+    <point index="28" value=" 11.250000 8.000000 -0.000000"/>
+    <point index="29" value=" 11.250000 10.545455 0.606061"/>
+    <point index="30" value=" 11.250000 15.636364 1.818182"/>
+    <point index="31" value=" 11.250000 23.272727 3.636364"/>
+    <point index="32" value=" 11.250000 30.909091 5.454545"/>
+    <point index="33" value=" 11.250000 38.539617 7.214356"/>
+    <point index="34" value=" 11.250000 46.236688 9.639602"/>
+    <point index="35" value=" 11.250000 53.691233 9.639602"/>
+    <point index="36" value=" 11.250000 60.903254 7.214356"/>
+    <point index="37" value=" 11.250000 68.181818 5.454545"/>
+    <point index="38" value=" 11.250000 75.454545 3.636364"/>
+    <point index="39" value=" 11.250000 82.727273 1.818182"/>
+    <point index="40" value=" 11.250000 87.575758 0.606061"/>
+    <point index="41" value=" 11.250000 90.000000 0.000000"/>
+  </shape>
+  <weights deformer="skinCluster2" source="JntDrv_Rib_L_Leg_LegStart" shape="Sfc_Bs_Rib_L_Leg_BendShape" layer="0" defaultValue="0.000" size="12" max="41">
+    <point index="10" value="0.126"/>
+    <point index="11" value="0.563"/>
+    <point index="12" value="0.870"/>
+    <point index="13" value="1.000"/>
+    <point index="24" value="0.126"/>
+    <point index="25" value="0.563"/>
+    <point index="26" value="0.870"/>
+    <point index="27" value="1.000"/>
+    <point index="38" value="0.126"/>
+    <point index="39" value="0.563"/>
+    <point index="40" value="0.870"/>
+    <point index="41" value="1.000"/>
+  </weights>
+  <weights deformer="skinCluster2" source="JntDrv_Rib_L_Leg_Thigh" shape="Sfc_Bs_Rib_L_Leg_BendShape" layer="1" defaultValue="0.000" size="18" max="40">
+    <point index="7" value="0.217"/>
+    <point index="8" value="0.654"/>
+    <point index="9" value="0.965"/>
+    <point index="10" value="0.874"/>
+    <point index="11" value="0.437"/>
+    <point index="12" value="0.130"/>
+    <point index="21" value="0.217"/>
+    <point index="22" value="0.654"/>
+    <point index="23" value="0.965"/>
+    <point index="24" value="0.874"/>
+    <point index="25" value="0.437"/>
+    <point index="26" value="0.130"/>
+    <point index="35" value="0.217"/>
+    <point index="36" value="0.654"/>
+    <point index="37" value="0.965"/>
+    <point index="38" value="0.874"/>
+    <point index="39" value="0.437"/>
+    <point index="40" value="0.130"/>
+  </weights>
+  <weights deformer="skinCluster2" source="JntDrv_Rib_L_Leg_Knee" shape="Sfc_Bs_Rib_L_Leg_BendShape" layer="2" defaultValue="0.000" size="18" max="37">
+    <point index="4" value="0.035"/>
+    <point index="5" value="0.346"/>
+    <point index="6" value="0.783"/>
+    <point index="7" value="0.783"/>
+    <point index="8" value="0.346"/>
+    <point index="9" value="0.035"/>
+    <point index="18" value="0.035"/>
+    <point index="19" value="0.346"/>
+    <point index="20" value="0.783"/>
+    <point index="21" value="0.783"/>
+    <point index="22" value="0.346"/>
+    <point index="23" value="0.035"/>
+    <point index="32" value="0.035"/>
+    <point index="33" value="0.346"/>
+    <point index="34" value="0.783"/>
+    <point index="35" value="0.783"/>
+    <point index="36" value="0.346"/>
+    <point index="37" value="0.035"/>
+  </weights>
+  <weights deformer="skinCluster2" source="JntDrv_Rib_L_Leg_Shin" shape="Sfc_Bs_Rib_L_Leg_BendShape" layer="3" defaultValue="0.000" size="18" max="34">
+    <point index="1" value="0.130"/>
+    <point index="2" value="0.437"/>
+    <point index="3" value="0.874"/>
+    <point index="4" value="0.965"/>
+    <point index="5" value="0.654"/>
+    <point index="6" value="0.217"/>
+    <point index="15" value="0.130"/>
+    <point index="16" value="0.437"/>
+    <point index="17" value="0.874"/>
+    <point index="18" value="0.965"/>
+    <point index="19" value="0.654"/>
+    <point index="20" value="0.217"/>
+    <point index="29" value="0.130"/>
+    <point index="30" value="0.437"/>
+    <point index="31" value="0.874"/>
+    <point index="32" value="0.965"/>
+    <point index="33" value="0.654"/>
+    <point index="34" value="0.217"/>
+  </weights>
+  <weights deformer="skinCluster2" source="JntDrv_Rib_L_Leg_LegEnd" shape="Sfc_Bs_Rib_L_Leg_BendShape" layer="4" defaultValue="0.000" size="12" max="31">
+    <point index="0" value="1.000"/>
+    <point index="1" value="0.870"/>
+    <point index="2" value="0.563"/>
+    <point index="3" value="0.126"/>
+    <point index="14" value="1.000"/>
+    <point index="15" value="0.870"/>
+    <point index="16" value="0.563"/>
+    <point index="17" value="0.126"/>
+    <point index="28" value="1.000"/>
+    <point index="29" value="0.870"/>
+    <point index="30" value="0.563"/>
+    <point index="31" value="0.126"/>
+  </weights>
+</deformerWeight>

@@ -1,0 +1,26 @@
+<?xml version="1.0" ?>
+<Data application="gfRigSystem" version="1.0">
+    <CharName>hippydrome</CharName>
+    <Instance type="transform">|hippydrome_char</Instance>
+    <Content>
+        <Deform>
+            <Instance type="transform">|hippydrome_char|deform_hrc</Instance>
+            <DeformationLayers>
+                <baseSktn>
+                    <Instance type="transform">|hippydrome_char|deform_hrc|baseSktn_defLyr</Instance>
+                    <Components/>
+                </baseSktn>
+            </DeformationLayers>
+        </Deform>
+        <GlobalTransform>
+            <Instance type="transform">|hippydrome_char|globalTransform_hrc</Instance>
+        </GlobalTransform>
+        <Geometry>
+            <Instance type="transform">|hippydrome_char|geometry_hrc</Instance>
+        </Geometry>
+    </Content>
+    <Info>
+        <Created>Feb 12, 2019 - 08:32:15 PM</Created>
+        <LastModified>Feb 12, 2019 - 08:34:21 PM</LastModified>
+    </Info>
+</Data>

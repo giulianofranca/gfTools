@@ -1,0 +1,9 @@
+{
+    "Application" : "gfUtilitiesBelt",
+    "Current Version": "1.0",
+    "Required Version" : "1.0",
+    "Settings" : {
+        "AutoLoad" : true,
+        "OpenedPockets" : ""
+    }
+}

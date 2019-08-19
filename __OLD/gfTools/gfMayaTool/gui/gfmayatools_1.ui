@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>gfMayaTools_MainUI</class>
+ <widget class="QMainWindow" name="gfMayaTools_MainUI">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>275</width>
+    <height>600</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>MainWindow</string>
+  </property>
+  <widget class="QWidget" name="centralwidget"/>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>275</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuFile">
+    <property name="title">
+     <string>File</string>
+    </property>
+    <addaction name="actionCreate_New_Tab"/>
+    <addaction name="actionDelete_Current_Tab"/>
+    <addaction name="actionImport_Tab"/>
+    <addaction name="actionExport_Tab"/>
+    <addaction name="actionCreate_Tool"/>
+    <addaction name="separator"/>
+    <addaction name="actionUpdate_Libraries"/>
+    <addaction name="separator"/>
+    <addaction name="actionAuto_Load"/>
+   </widget>
+   <widget class="QMenu" name="menuHelp">
+    <property name="title">
+     <string>Help</string>
+    </property>
+    <addaction name="actionHow_to_Use"/>
+    <addaction name="separator"/>
+    <addaction name="actionAbout_Tool"/>
+   </widget>
+   <addaction name="menuFile"/>
+   <addaction name="menuHelp"/>
+  </widget>
+  <action name="actionCreate_New_Tab">
+   <property name="text">
+    <string>Create New Tab</string>
+   </property>
+  </action>
+  <action name="actionImport_Tab">
+   <property name="text">
+    <string>Import Tab</string>
+   </property>
+  </action>
+  <action name="actionExport_Tab">
+   <property name="text">
+    <string>Export Tab</string>
+   </property>
+  </action>
+  <action name="actionCreate_Tool">
+   <property name="text">
+    <string>Create Tool</string>
+   </property>
+  </action>
+  <action name="actionUpdate_Libraries">
+   <property name="text">
+    <string>Update Libraries</string>
+   </property>
+  </action>
+  <action name="actionAuto_Load">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Auto Load</string>
+   </property>
+  </action>
+  <action name="actionHow_to_Use">
+   <property name="text">
+    <string>How to Use</string>
+   </property>
+  </action>
+  <action name="actionAbout_Tool">
+   <property name="text">
+    <string>About Tool</string>
+   </property>
+  </action>
+  <action name="actionDelete_Current_Tab">
+   <property name="text">
+    <string>Delete Current Tab</string>
+   </property>
+  </action>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

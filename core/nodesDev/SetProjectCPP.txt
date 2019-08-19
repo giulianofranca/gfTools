@@ -1,0 +1,12 @@
+- Remove x86 platform
+- Change configuration to all configurations
+- Out Dir = $(SolutionDir)build\$(Configuration)\
+- Intermediate Dir = $(SolutionDir)intermediates\$(Configuration)\
+- Configuration Type = Dynamic Library
+- Target Extension = .mll
+- Debugging | Command = C:\Program Files\Autodesk\Maya2017\bin\maya.exe
+- Debugging | Attach = Yes
+- VC++ Directories | Include Dir = append C:\Program Files\Autodesk\Maya2017\include
+- Linker General | Additional Library Dir = append C:\Program Files\Autodesk\Maya2017\lib
+- Linker Input | Additional Dependencies = append OpenMaya.lib;OpenMayaUI.lib;Foundation.lib;opengl32.lib;
+- Linker Command Line | \export:initializePlugin \export:uninitializePlugin
