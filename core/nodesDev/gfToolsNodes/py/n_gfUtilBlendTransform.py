@@ -6,7 +6,7 @@ Redistribution:
     Something here.
 
 Maya Node:
-    [This is a prototype version of the gfRigBlendTransform node. You should be using the related C++ version.]
+    [This is a prototype version of the gfUtilBlendTransform node. You should be using the related C++ version.]
     This node is a test node and only performs test operations with one input value.
 
 Requirements:
@@ -48,7 +48,7 @@ def OUTPUT_ATTR(FNATTR):
 
 
 class BlendTransform(om2.MPxNode):
-    """ Main class of gfBlendTransform node. """
+    """ Main class of gfUtilBlendTransform node. """
 
     kNODE_NAME = ""
     kNODE_CLASSIFY = ""
@@ -277,7 +277,7 @@ class BlendTransform(om2.MPxNode):
         Calculate the visibility of the objects based on blender value. Threshold can be changed
         in code to affect the calculation.
         """
-        threshold = 0.1
+        threshold = 0.25
         vis = True
         revVis = False
         if blender <= 0.0 + threshold:

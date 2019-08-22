@@ -7,7 +7,7 @@ def gfXtraToolsLoad():
     gfXtGui.gfXtraToolsUI()
 
 def gfMayaToolsLoad():
-    from gftools.__OLD.gfTools import gfMayaTools as gfMt
+    from gfTools.__OLD.gfTools import gfMayaTools as gfMt
     reload(gfMt)
     gfMt.gfMayaTools()
 
