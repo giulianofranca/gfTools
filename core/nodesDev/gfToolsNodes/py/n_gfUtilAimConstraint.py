@@ -61,7 +61,7 @@ class AimConstraint(om2.MPxNode):
     inWorldUp = om2.MObject()
     inUpObj = om2.MObject()
     inPivot = om2.MObject()
-    outAim = om2.MObject()
+    outConstraint = om2.MObject()
 
     def __init__(self):
         """ Constructor. """
@@ -92,7 +92,7 @@ class AimConstraint(om2.MPxNode):
         AimConstraint.inTarget = mAttr.create("target", "target", om2.MFnMatrixAttribute.kFloat)
         INPUT_ATTR(mAttr)
 
-        AimConstraint.inUpObj = mAttr.create("upObj", "uo", om2.MFnMatrixAttribute.kFloat)
+        AimConstraint.inUpObj = mAttr.create("up", "up", om2.MFnMatrixAttribute.kFloat)
         INPUT_ATTR(mAttr)
 
         AimConstraint.inWorldUp = nAttr.createPoint("worldUp", "wu")
@@ -101,10 +101,10 @@ class AimConstraint(om2.MPxNode):
         AimConstraint.inPivot = mAttr.create("pivot", "pivot", om2.MFnMatrixAttribute.kFloat)
         INPUT_ATTR(mAttr)
 
-        outAimX = uAttr.create("outAimX", "oax", om2.MFnUnitAttribute.kAngle, 0.0)
-        outAimY = uAttr.create("outAimY", "oay", om2.MFnUnitAttribute.kAngle, 0.0)
-        outAimZ = uAttr.create("outAimZ", "oaz", om2.MFnUnitAttribute.kAngle, 0.0)
-        AimConstraint.outAim = nAttr.create("outAim", "oa", outAimX, outAimY, outAimZ)
+        outConstraintX = uAttr.create("constraintX", "cx", om2.MFnUnitAttribute.kAngle, 0.0)
+        outConstraintY = uAttr.create("constraintY", "cy", om2.MFnUnitAttribute.kAngle, 0.0)
+        outConstraintZ = uAttr.create("constraintZ", "cz", om2.MFnUnitAttribute.kAngle, 0.0)
+        AimConstraint.outConstraint = nAttr.create("constraint", "const", outConstraintX, outConstraintY, outConstraintZ)
         OUTPUT_ATTR(nAttr)
 
         AimConstraint.addAttribute(AimConstraint.inUpVecType)
@@ -112,12 +112,12 @@ class AimConstraint(om2.MPxNode):
         AimConstraint.addAttribute(AimConstraint.inUpObj)
         AimConstraint.addAttribute(AimConstraint.inWorldUp)
         AimConstraint.addAttribute(AimConstraint.inPivot)
-        AimConstraint.addAttribute(AimConstraint.outAim)
-        AimConstraint.attributeAffects(AimConstraint.inUpVecType, AimConstraint.outAim)
-        AimConstraint.attributeAffects(AimConstraint.inTarget, AimConstraint.outAim)
-        AimConstraint.attributeAffects(AimConstraint.inUpObj, AimConstraint.outAim)
-        AimConstraint.attributeAffects(AimConstraint.inWorldUp, AimConstraint.outAim)
-        AimConstraint.attributeAffects(AimConstraint.inPivot, AimConstraint.outAim)
+        AimConstraint.addAttribute(AimConstraint.outConstraint)
+        AimConstraint.attributeAffects(AimConstraint.inUpVecType, AimConstraint.outConstraint)
+        AimConstraint.attributeAffects(AimConstraint.inTarget, AimConstraint.outConstraint)
+        AimConstraint.attributeAffects(AimConstraint.inUpObj, AimConstraint.outConstraint)
+        AimConstraint.attributeAffects(AimConstraint.inWorldUp, AimConstraint.outConstraint)
+        AimConstraint.attributeAffects(AimConstraint.inPivot, AimConstraint.outConstraint)
 
     def compute(self, plug, dataBlock):
         """
@@ -126,7 +126,7 @@ class AimConstraint(om2.MPxNode):
             * dataBlock contains the data on which we will base our computations.
         """
         # pylint: disable=no-self-use
-        if plug != AimConstraint.outAim:
+        if plug != AimConstraint.outConstraint:
             return om2.kUnknownParameter
         upType = dataBlock.inputValue(AimConstraint.inUpVecType).asShort()
         mTarget = dataBlock.inputValue(AimConstraint.inTarget).asFloatMatrix()
@@ -153,6 +153,6 @@ class AimConstraint(om2.MPxNode):
         mAim = om2.MMatrix(aim)
         mtxFn = om2.MTransformationMatrix(mAim)
         eAim = mtxFn.rotation(asQuaternion=True).asEulerRotation().asVector()
-        outAimHandle = dataBlock.outputValue(AimConstraint.outAim)
-        outAimHandle.setMVector(eAim)
-        outAimHandle.setClean()
+        outConstraintHandle = dataBlock.outputValue(AimConstraint.outConstraint)
+        outConstraintHandle.setMVector(eAim)
+        outConstraintHandle.setClean()
