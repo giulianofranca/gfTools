@@ -39,6 +39,7 @@ import maya.api.OpenMayaRender as omr2
 # gfDebug
 # import n_gfDebugPv as m_PvDebug
 import n_gfDebugPv2 as m_DebugPoleVector
+import n_gfDebugVector as m_DebugVector
 # import n_gfRigBlendMatrix as m_BlendMatrix
 # reload(m_BlendMatrix)
 # gfRig
@@ -55,6 +56,7 @@ import n_gfUtilAngleToDouble as m_AngleToDouble
 import n_gfUtilDoubleToAngle as m_DoubleToAngle
 # gfDebug
 reload(m_DebugPoleVector)
+reload(m_DebugVector)
 # gfRig
 reload(m_VectorAnglePSD)
 reload(m_IKVChainSolver)
@@ -134,10 +136,14 @@ kREQUIRED_API_VERSION = "Any"
 # m_PvDebug.PvDebug.kNODE_NAME = "gfDebugPv_P"
 # m_PvDebug.PvDebug.kNODE_CLASSIFY = "drawdb/geometry/locator"
 # m_PvDebug.PvDebug.kNODE_ID = om2.MTypeId(0x0012f7c0)
-m_DebugPoleVector.DebugPoleVector.kNODE_NAME = "gfDebugPv_P"
-m_DebugPoleVector.DebugPoleVector.kNODE_CLASSIFY = "drawdb/geometry/locator"
-m_DebugPoleVector.DebugPoleVector.kNODE_REGISTRANT_ID = "gfDebugPv_PNodePlugin"
-m_DebugPoleVector.DebugPoleVector.kNODE_ID = om2.MTypeId(0x0012f7c0)
+# m_DebugPoleVector.DebugPoleVector.kNODE_NAME = "gfDebugPv_P"
+# m_DebugPoleVector.DebugPoleVector.kNODE_CLASSIFY = "drawdb/geometry/locator"
+# m_DebugPoleVector.DebugPoleVector.kNODE_REGISTRANT_ID = "gfDebugPv_PNodePlugin"
+# m_DebugPoleVector.DebugPoleVector.kNODE_ID = om2.MTypeId(0x0012f7c0)
+m_DebugVector.DebugVector.kNODE_NAME = "gfDebugVector_P"
+m_DebugVector.DebugVector.kNODE_CLASSIFY = "drawdb/geometry/locator"
+m_DebugPoleVector.DebugPoleVector.kNODE_REGISTRANT_ID = "gfDebugVector_PNodePlugin"
+m_DebugVector.DebugVector.kNODE_ID = om2.MTypeId(0x0012f7c0)
 # gfRig
 # m_BlendMatrix.BlendMatrix.kNODE_NAME = "gfRigBlendMatrix_P"
 # m_BlendMatrix.BlendMatrix.kNODE_CLASSIFY = "utility/general"
@@ -180,7 +186,8 @@ def initializePlugin(mobject):
     mplugin2 = om2.MFnPlugin(mobject, kAUTHOR, kVERSION, kREQUIRED_API_VERSION)
 
     # REGISTER_NODE(m_PvDebug.PvDebug, mplugin2)
-    REGISTER_LOCATOR_NODE(m_DebugPoleVector.DebugPoleVector, mplugin2, m_DebugPoleVector.DebugPoleVectorDrawOverride)
+    # REGISTER_LOCATOR_NODE(m_DebugPoleVector.DebugPoleVector, mplugin2, m_DebugPoleVector.DebugPoleVectorDrawOverride)
+    REGISTER_LOCATOR_NODE(m_DebugVector.DebugVector, mplugin2, m_DebugVector.DebugVectorDrawOverride)
     # REGISTER_NODE(m_BlendMatrix.BlendMatrix, mplugin2)
     REGISTER_NODE(m_VectorAnglePSD.VectorAnglePSD, mplugin2)
     REGISTER_NODE(m_IKVChainSolver.IKVChainSolver, mplugin2)
@@ -199,7 +206,8 @@ def uninitializePlugin(mobject):
     mplugin2 = om2.MFnPlugin(mobject, kAUTHOR, kVERSION, kREQUIRED_API_VERSION)
 
     # DEREGISTER_NODE(m_PvDebug.PvDebug, mplugin2)
-    DEREGISTER_LOCATOR_NODE(m_DebugPoleVector.DebugPoleVector, mplugin2)
+    # DEREGISTER_LOCATOR_NODE(m_DebugPoleVector.DebugPoleVector, mplugin2)
+    DEREGISTER_LOCATOR_NODE(m_DebugVector.DebugVector, mplugin2)
     # DEREGISTER_NODE(m_BlendMatrix.BlendMatrix, mplugin2)
     DEREGISTER_NODE(m_VectorAnglePSD.VectorAnglePSD, mplugin2)
     DEREGISTER_NODE(m_IKVChainSolver.IKVChainSolver, mplugin2)
