@@ -18,11 +18,9 @@ Todo:
 
 This code supports Pylint. Rc file in project.
 """
-# pylint: disable=E0401
-# E0401 = Supress Maya modules import error
 
 import math
-import maya.api.OpenMaya as om2
+import maya.api._OpenMaya_py2 as om2
 
 
 def maya_useNewAPI():
@@ -52,9 +50,9 @@ def OUTPUT_ATTR(FNATTR):
 class VectorAnglePSD(om2.MPxNode):
     """ Main class of gfRigPSDVectorAngle node. """
 
-    kNODE_NAME = ""
-    kNODE_CLASSIFY = ""
-    kNODE_ID = ""
+    kNodeName = ""
+    kNodeClassify = ""
+    kNodeID = ""
 
     inBase = om2.MObject()
     inSource = om2.MObject()

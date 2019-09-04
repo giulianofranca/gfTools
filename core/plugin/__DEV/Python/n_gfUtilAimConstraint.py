@@ -19,10 +19,8 @@ Todo:
 
 This code supports Pylint. Rc file in project.
 """
-# pylint: disable=import-error
-# import-error = Supress Maya modules import error
 
-import maya.api.OpenMaya as om2
+import maya.api._OpenMaya_py2 as om2
 
 
 def maya_useNewAPI():
@@ -52,9 +50,9 @@ def OUTPUT_ATTR(FNATTR):
 class AimConstraint(om2.MPxNode):
     """ Main class of gfUtilAimConstraint node. """
 
-    kNODE_NAME = ""
-    kNODE_CLASSIFY = ""
-    kNODE_ID = ""
+    kNodeName = ""
+    kNodeClassify = ""
+    kNodeID = ""
 
     inUpVecType = om2.MObject()
     inTarget = om2.MObject()
@@ -96,7 +94,7 @@ class AimConstraint(om2.MPxNode):
         INPUT_ATTR(mAttr)
 
         AimConstraint.inWorldUp = nAttr.createPoint("worldUp", "wu")
-        nAttr.default = om2.MFloatVector(0.0, 1.0, 0.0)
+        nAttr.default = (0.0, 1.0, 0.0)
         INPUT_ATTR(nAttr)
 
         AimConstraint.inPivot = mAttr.create("pivot", "pivot", om2.MFnMatrixAttribute.kFloat)

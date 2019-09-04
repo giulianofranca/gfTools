@@ -17,11 +17,9 @@ Todo:
 
 This code supports Pylint. Rc file in project.
 """
-# pylint: disable=import-error
-# import-error = Supress Maya modules import error
 
 import math
-import maya.api.OpenMaya as om2
+import maya.api._OpenMaya_py2 as om2
 
 
 def maya_useNewAPI():
@@ -51,9 +49,9 @@ def OUTPUT_ATTR(FNATTR):
 class AngularScalarMath(om2.MPxNode):
     """ Main class of gfUtilAngularScalarMath node. """
 
-    kNODE_NAME = ""
-    kNODE_CLASSIFY = ""
-    kNODE_ID = ""
+    kNodeName = ""
+    kNodeClassify = ""
+    kNodeID = ""
 
     inAngle = om2.MObject()
     inScalar = om2.MObject()

@@ -1,4 +1,4 @@
-global proc AEgfRigPSDVectorAngle_PTemplate(string $nodeName){
+global proc AEgfRigPSDVectorAngleTemplate(string $nodeName){
     editorTemplate -beginScrollLayout;
         editorTemplate -beginLayout "gfRigPSDVectorAngle Attributes" -collapse 0; // Create groupbox | editorTemplate -addSeparator
             editorTemplate -beginLayout "Source Matrices" -collapse 1;

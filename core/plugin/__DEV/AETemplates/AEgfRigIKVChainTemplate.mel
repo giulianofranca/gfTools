@@ -1,4 +1,4 @@
-global proc AEgfRigIKVChain_PTemplate(string $nodeName){
+global proc AEgfRigIKVChainTemplate(string $nodeName){
     editorTemplate -beginScrollLayout;
         editorTemplate -beginLayout "gfRigIKVChain Attributes" -collapse 0; // Create groupbox | editorTemplate -addSeparator
             editorTemplate -beginLayout "Input Matrices" -collapse 1;

@@ -21,12 +21,10 @@ Todo:
 
 This code supports Pylint. Rc file in project.
 """
-# pylint: disable=import-error
-# import-error = Supress Maya modules import error
 
-import maya.api.OpenMaya as om2
-import maya.api.OpenMayaUI as omui2
-import maya.api.OpenMayaRender as omr2
+import maya.api._OpenMaya_py2 as om2
+import maya.api._OpenMayaUI_py2 as omui2
+import maya.api._OpenMayaRender_py2 as omr2
 
 
 def maya_useNewAPI():
@@ -56,10 +54,10 @@ def OUTPUT_ATTR(FNATTR):
 class DebugVector(omui2.MPxLocatorNode):
     """ Main class of gfDebugVector node. """
 
-    kNODE_NAME = ""
-    kNODE_CLASSIFY = ""
-    kNODE_REGISTRANT_ID = ""
-    kNODE_ID = ""
+    kNodeName = ""
+    kNodeClassify = ""
+    kNodeRegistrantID = ""
+    kNodeID = ""
 
     inLineWidth = om2.MObject()
     inColor = om2.MObject()

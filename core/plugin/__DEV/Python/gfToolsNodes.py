@@ -28,20 +28,14 @@ Todo:
 
 This code supports Pylint. Rc file in project.
 """
-# pylint: disable=E0401, C0103, undefined-variable
-# E0401 = Supress Maya modules import error
-# C0103 = Especial cases of constants (non-camelCase)
+# pylint: disable=undefined-variable
 
 import sys
-import maya.api.OpenMaya as om2
-import maya.api.OpenMayaRender as omr2
+import maya.api._OpenMaya_py2 as om2
+import maya.api._OpenMayaRender_py2 as omr2
 
 # gfDebug
-# import n_gfDebugPv as m_PvDebug
-import n_gfDebugPv2 as m_DebugPoleVector
 import n_gfDebugVector as m_DebugVector
-# import n_gfRigBlendMatrix as m_BlendMatrix
-# reload(m_BlendMatrix)
 # gfRig
 import n_gfRigPSDVectorAngle as m_VectorAnglePSD
 import n_gfRigIKVChain as m_IKVChainSolver
@@ -55,7 +49,6 @@ import n_gfUtilAngleTrigMath as m_AngularTrigMath
 import n_gfUtilAngleToDouble as m_AngleToDouble
 import n_gfUtilDoubleToAngle as m_DoubleToAngle
 # gfDebug
-reload(m_DebugPoleVector)
 reload(m_DebugVector)
 # gfRig
 reload(m_VectorAnglePSD)
@@ -79,49 +72,53 @@ def maya_useNewAPI():
 
 def REGISTER_NODE(NODE, PLUGIN):
     """ Register a MPxNode. """
+    # pylint: disable=invalid-name
     try:
-        PLUGIN.registerNode(NODE.kNODE_NAME, NODE.kNODE_ID, NODE.creator,
-                            NODE.initialize, om2.MPxNode.kDependNode, NODE.kNODE_CLASSIFY)
+        PLUGIN.registerNode(NODE.kNodeName, NODE.kNodeID, NODE.creator,
+                            NODE.initialize, om2.MPxNode.kDependNode, NODE.kNodeClassify)
     except BaseException:
-        sys.stderr.write("Failed to register node: %s" % NODE.kNODE_NAME)
+        sys.stderr.write("Failed to register node: %s" % NODE.kNodeName)
         raise
 
 def DEREGISTER_NODE(NODE, PLUGIN):
     """ Deregister a MPxNode. """
+    # pylint: disable=invalid-name
     try:
-        PLUGIN.deregisterNode(NODE.kNODE_ID)
+        PLUGIN.deregisterNode(NODE.kNodeID)
     except BaseException:
-        sys.stderr.write("Failed to deregister node: %s" % NODE.kNODE_NAME)
+        sys.stderr.write("Failed to deregister node: %s" % NODE.kNodeName)
         raise
 
 def REGISTER_LOCATOR_NODE(NODE, PLUGIN, DRAWOVERRIDE):
     """ Register a MPxLocatorNode. """
+    # pylint: disable=invalid-name
     try:
-        PLUGIN.registerNode(NODE.kNODE_NAME, NODE.kNODE_ID, NODE.creator,
-                            NODE.initialize, om2.MPxNode.kLocatorNode, NODE.kNODE_CLASSIFY)
+        PLUGIN.registerNode(NODE.kNodeName, NODE.kNodeID, NODE.creator,
+                            NODE.initialize, om2.MPxNode.kLocatorNode, NODE.kNodeClassify)
     except BaseException:
-        sys.stderr.write("Failed to register node: %s" % NODE.kNODE_NAME)
+        sys.stderr.write("Failed to register node: %s" % NODE.kNodeName)
         raise
 
     try:
-        omr2.MDrawRegistry.registerDrawOverrideCreator(NODE.kNODE_CLASSIFY, NODE.kNODE_REGISTRANT_ID,
+        omr2.MDrawRegistry.registerDrawOverrideCreator(NODE.kNodeClassify, NODE.kNodeRegistrantID,
                                                        DRAWOVERRIDE.creator)
     except BaseException:
-        sys.stderr.write("Failed to register override: %s" % NODE.kNODE_NAME)
+        sys.stderr.write("Failed to register override: %s" % NODE.kNodeName)
         raise
 
 def DEREGISTER_LOCATOR_NODE(NODE, PLUGIN):
     """ Deregister a MPxLocatorNode. """
+    # pylint: disable=invalid-name
     try:
-        PLUGIN.deregisterNode(NODE.kNODE_ID)
+        PLUGIN.deregisterNode(NODE.kNodeID)
     except BaseException:
-        sys.stderr.write("Failed to deregister node: %s" % NODE.kNODE_NAME)
+        sys.stderr.write("Failed to deregister node: %s" % NODE.kNodeName)
         raise
 
     try:
-        omr2.MDrawRegistry.deregisterDrawOverrideCreator(NODE.kNODE_CLASSIFY, NODE.kNODE_REGISTRANT_ID)
+        omr2.MDrawRegistry.deregisterDrawOverrideCreator(NODE.kNodeClassify, NODE.kNodeRegistrantID)
     except BaseException:
-        sys.stderr.write("Failed to deregister override: %s" % NODE.kNODE_NAME)
+        sys.stderr.write("Failed to deregister override: %s" % NODE.kNodeName)
         raise
 
 
@@ -130,62 +127,49 @@ kVersion = "1.0"
 kRequiredAPIVersion = "Any"
 
 # gfDebug
-# m_PvDebug.PvDebug.kNODE_NAME = "gfDebugPv_P"
-# m_PvDebug.PvDebug.kNODE_CLASSIFY = "drawdb/geometry/locator"
-# m_PvDebug.PvDebug.kNODE_ID = om2.MTypeId(0x0012f7c0)
-# m_DebugPoleVector.DebugPoleVector.kNODE_NAME = "gfDebugPv_P"
-# m_DebugPoleVector.DebugPoleVector.kNODE_CLASSIFY = "drawdb/geometry/locator"
-# m_DebugPoleVector.DebugPoleVector.kNODE_REGISTRANT_ID = "gfDebugPv_PNodePlugin"
-# m_DebugPoleVector.DebugPoleVector.kNODE_ID = om2.MTypeId(0x0012f7c0)
-m_DebugVector.DebugVector.kNODE_NAME = "gfDebugVector_P"
-m_DebugVector.DebugVector.kNODE_CLASSIFY = "drawdb/geometry/locator"
-m_DebugPoleVector.DebugPoleVector.kNODE_REGISTRANT_ID = "gfDebugVector_PNodePlugin"
-m_DebugVector.DebugVector.kNODE_ID = om2.MTypeId(0x0012f7c0)
+m_DebugVector.DebugVector.kNodeName = "gfDebugVector_P"
+m_DebugVector.DebugVector.kNodeClassify = "drawdb/geometry/locator"
+m_DebugVector.DebugVector.kNodeRegistrantID = "gfDebugVector_PNodePlugin"
+m_DebugVector.DebugVector.kNodeID = om2.MTypeId(0x0012f7c0)
 # gfRig
-# m_BlendMatrix.BlendMatrix.kNODE_NAME = "gfRigBlendMatrix_P"
-# m_BlendMatrix.BlendMatrix.kNODE_CLASSIFY = "utility/general"
-# m_BlendMatrix.BlendMatrix.kNODE_ID = om2.MTypeId(0x0012f7c2)
-m_VectorAnglePSD.VectorAnglePSD.kNODE_NAME = "gfRigPSDVectorAngle_P"
-m_VectorAnglePSD.VectorAnglePSD.kNODE_CLASSIFY = "utility/general"
-m_VectorAnglePSD.VectorAnglePSD.kNODE_ID = om2.MTypeId(0x0012f7c1)
-m_IKVChainSolver.IKVChainSolver.kNODE_NAME = "gfRigIKVChain_P"
-m_IKVChainSolver.IKVChainSolver.kNODE_CLASSIFY = "utility/general"
-m_IKVChainSolver.IKVChainSolver.kNODE_ID = om2.MTypeId(0x0012f7c2)
+m_VectorAnglePSD.VectorAnglePSD.kNodeName = "gfRigPSDVectorAngle_P"
+m_VectorAnglePSD.VectorAnglePSD.kNodeClassify = "utility/general"
+m_VectorAnglePSD.VectorAnglePSD.kNodeID = om2.MTypeId(0x0012f7c1)
+m_IKVChainSolver.IKVChainSolver.kNodeName = "gfRigIKVChain_P"
+m_IKVChainSolver.IKVChainSolver.kNodeClassify = "utility/general"
+m_IKVChainSolver.IKVChainSolver.kNodeID = om2.MTypeId(0x0012f7c2)
 # gfUtil
-m_BlendTransform.BlendTransform.kNODE_NAME = "gfUtilBlendTransform_P"
-m_BlendTransform.BlendTransform.kNODE_CLASSIFY = "utility/general"
-m_BlendTransform.BlendTransform.kNODE_ID = om2.MTypeId(0x0012f7c3)
-m_AimConstraint.AimConstraint.kNODE_NAME = "gfUtilAimConstraint_P"
-m_AimConstraint.AimConstraint.kNODE_CLASSIFY = "utility/general"
-m_AimConstraint.AimConstraint.kNODE_ID = om2.MTypeId(0x0012f7c4)
-m_ParentConstraint.ParentConstraint.kNODE_NAME = "gfUtilParentConstraint_P"
-m_ParentConstraint.ParentConstraint.kNODE_CLASSIFY = "utility/general"
-m_ParentConstraint.ParentConstraint.kNODE_ID = om2.MTypeId(0x0012f7c5)
-m_AngularMath.AngularMath.kNODE_NAME = "gfUtilAngleMath_P"
-m_AngularMath.AngularMath.kNODE_CLASSIFY = "utility/general"
-m_AngularMath.AngularMath.kNODE_ID = om2.MTypeId(0x0012f7c6)
-m_AngularScalarMath.AngularScalarMath.kNODE_NAME = "gfUtilAngleScalarMath_P"
-m_AngularScalarMath.AngularScalarMath.kNODE_CLASSIFY = "utility/general"
-m_AngularScalarMath.AngularScalarMath.kNODE_ID = om2.MTypeId(0x0012f7c7)
-m_AngularTrigMath.AngularTrigMath.kNODE_NAME = "gfUtilAngleTrigMath_P"
-m_AngularTrigMath.AngularTrigMath.kNODE_CLASSIFY = "utility/general"
-m_AngularTrigMath.AngularTrigMath.kNODE_ID = om2.MTypeId(0x0012f7c8)
-m_AngleToDouble.AngleToDouble.kNODE_NAME = "gfUtilAngleToDouble_P"
-m_AngleToDouble.AngleToDouble.kNODE_CLASSIFY = "utility/general"
-m_AngleToDouble.AngleToDouble.kNODE_ID = om2.MTypeId(0x0012f7c9)
-m_DoubleToAngle.DoubleToAngle.kNODE_NAME = "gfUtilDoubleToAngle_P"
-m_DoubleToAngle.DoubleToAngle.kNODE_CLASSIFY = "utility/general"
-m_DoubleToAngle.DoubleToAngle.kNODE_ID = om2.MTypeId(0x0012f7ca)
+m_BlendTransform.BlendTransform.kNodeName = "gfUtilBlendTransform_P"
+m_BlendTransform.BlendTransform.kNodeClassify = "utility/general"
+m_BlendTransform.BlendTransform.kNodeID = om2.MTypeId(0x0012f7c3)
+m_AimConstraint.AimConstraint.kNodeName = "gfUtilAimConstraint_P"
+m_AimConstraint.AimConstraint.kNodeClassify = "utility/general"
+m_AimConstraint.AimConstraint.kNodeID = om2.MTypeId(0x0012f7c4)
+m_ParentConstraint.ParentConstraint.kNodeName = "gfUtilParentConstraint_P"
+m_ParentConstraint.ParentConstraint.kNodeClassify = "utility/general"
+m_ParentConstraint.ParentConstraint.kNodeID = om2.MTypeId(0x0012f7c5)
+m_AngularMath.AngularMath.kNodeName = "gfUtilAngleMath_P"
+m_AngularMath.AngularMath.kNodeClassify = "utility/general"
+m_AngularMath.AngularMath.kNodeID = om2.MTypeId(0x0012f7c6)
+m_AngularScalarMath.AngularScalarMath.kNodeName = "gfUtilAngleScalarMath_P"
+m_AngularScalarMath.AngularScalarMath.kNodeClassify = "utility/general"
+m_AngularScalarMath.AngularScalarMath.kNodeID = om2.MTypeId(0x0012f7c7)
+m_AngularTrigMath.AngularTrigMath.kNodeName = "gfUtilAngleTrigMath_P"
+m_AngularTrigMath.AngularTrigMath.kNodeClassify = "utility/general"
+m_AngularTrigMath.AngularTrigMath.kNodeID = om2.MTypeId(0x0012f7c8)
+m_AngleToDouble.AngleToDouble.kNodeName = "gfUtilAngleToDouble_P"
+m_AngleToDouble.AngleToDouble.kNodeClassify = "utility/general"
+m_AngleToDouble.AngleToDouble.kNodeID = om2.MTypeId(0x0012f7c9)
+m_DoubleToAngle.DoubleToAngle.kNodeName = "gfUtilDoubleToAngle_P"
+m_DoubleToAngle.DoubleToAngle.kNodeClassify = "utility/general"
+m_DoubleToAngle.DoubleToAngle.kNodeID = om2.MTypeId(0x0012f7ca)
 
 
 def initializePlugin(mobject):
     """ Initializes the plug-in. """
     mplugin2 = om2.MFnPlugin(mobject, kAuthor, kVersion, kRequiredAPIVersion)
 
-    # REGISTER_NODE(m_PvDebug.PvDebug, mplugin2)
-    # REGISTER_LOCATOR_NODE(m_DebugPoleVector.DebugPoleVector, mplugin2, m_DebugPoleVector.DebugPoleVectorDrawOverride)
     REGISTER_LOCATOR_NODE(m_DebugVector.DebugVector, mplugin2, m_DebugVector.DebugVectorDrawOverride)
-    # REGISTER_NODE(m_BlendMatrix.BlendMatrix, mplugin2)
     REGISTER_NODE(m_VectorAnglePSD.VectorAnglePSD, mplugin2)
     REGISTER_NODE(m_IKVChainSolver.IKVChainSolver, mplugin2)
     REGISTER_NODE(m_BlendTransform.BlendTransform, mplugin2)
@@ -202,10 +186,7 @@ def uninitializePlugin(mobject):
     """ Unitializes the plug-in. """
     mplugin2 = om2.MFnPlugin(mobject, kAuthor, kVersion, kRequiredAPIVersion)
 
-    # DEREGISTER_NODE(m_PvDebug.PvDebug, mplugin2)
-    # DEREGISTER_LOCATOR_NODE(m_DebugPoleVector.DebugPoleVector, mplugin2)
     DEREGISTER_LOCATOR_NODE(m_DebugVector.DebugVector, mplugin2)
-    # DEREGISTER_NODE(m_BlendMatrix.BlendMatrix, mplugin2)
     DEREGISTER_NODE(m_VectorAnglePSD.VectorAnglePSD, mplugin2)
     DEREGISTER_NODE(m_IKVChainSolver.IKVChainSolver, mplugin2)
     DEREGISTER_NODE(m_BlendTransform.BlendTransform, mplugin2)

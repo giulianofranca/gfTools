@@ -24,6 +24,11 @@ Requirements:
 Todo:
 	* NDA
 */
+
+// gfRig
+#include "n_gfRigPSDVectorAngle.h"
+#include "n_gfRigIKVChain.h"
+// gfUtil
 #include "n_gfUtilBlendTransform.h"
 #include "n_gfUtilAimConstraint.h"
 #include "n_gfUtilParentConstraint.h"
@@ -62,6 +67,12 @@ const char* kRequiredAPIVersion = "Any";
 
 // gfDebug
 // gfRig
+const MString VectorAnglePSD::kNodeName = "gfRigPSDVectorAngle";
+const MString VectorAnglePSD::kNodeClassify = "utility/general";
+const MTypeId VectorAnglePSD::kNodeID = 0x00130d81;
+const MString IKVChainSolver::kNodeName = "gfRigIKVChain";
+const MString IKVChainSolver::kNodeClassify = "utility/general";
+const MTypeId IKVChainSolver::kNodeID = 0x00130d82;
 // gfUtil
 const MString BlendTransform::kNodeName = "gfUtilBlendTransform";
 const MString BlendTransform::kNodeClassify = "utility/general";
@@ -94,6 +105,8 @@ MStatus initializePlugin(MObject mobject){
     MFnPlugin mPlugin(mobject, kAuthor, kVersion, kRequiredAPIVersion, &status);
     status = mPlugin.setName("gfTools");
 
+    REGISTER_NODE(VectorAnglePSD, mPlugin);
+    REGISTER_NODE(IKVChainSolver, mPlugin);
     REGISTER_NODE(BlendTransform, mPlugin);
     REGISTER_NODE(AimConstraint, mPlugin);
     REGISTER_NODE(ParentConstraint, mPlugin);
@@ -110,6 +123,8 @@ MStatus uninitializePlugin(MObject mobject){
     MStatus status;
     MFnPlugin mPlugin(mobject, kAuthor, kVersion, kRequiredAPIVersion, &status);
 
+    DEREGISTER_NODE(VectorAnglePSD, mPlugin);
+    DEREGISTER_NODE(IKVChainSolver, mPlugin);
     DEREGISTER_NODE(BlendTransform, mPlugin);
     DEREGISTER_NODE(AimConstraint, mPlugin);
     DEREGISTER_NODE(ParentConstraint, mPlugin);
