@@ -222,7 +222,7 @@ MStatus IKVChainSolver::compute(const MPlug& plug, MDataBlock& dataBlock){
     float l3soft = 1.0f;
     if ((xDist > da) && (softValue > 0.0f)){
         float ds = dc - da;
-        float l3soft = ds * (1.0f - std::powf(static_cast<float>(M_E), (da - xDist) / ds)) + da;
+        l3soft = ds * (1.0f - std::powf(static_cast<float>(M_E), (da - xDist) / ds)) + da;
         l3 = l3soft;
     }
     else
@@ -284,7 +284,7 @@ MStatus IKVChainSolver::compute(const MPlug& plug, MDataBlock& dataBlock){
     MFloatMatrix mLocal;
     MFloatMatrix mResult;
 
-    if (hierarchyMode == true){
+    if (hierarchyMode){
         mScale = MFloatMatrix();
         mScale[0][0] = stretchFactor;
         mScale[1][1] = squashFactor;

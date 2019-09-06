@@ -62,13 +62,13 @@ MStatus AngularScalarMath::initialize(){
     outAngle = uAttr.create("outAngle", "oa", MFnUnitAttribute::kAngle, 0.0, &status);
     OUTPUT_ATTR(uAttr);
 
+    addAttribute(inOperation);
     addAttribute(inAngle);
     addAttribute(inScalar);
-    addAttribute(inOperation);
     addAttribute(outAngle);
+    attributeAffects(inOperation, outAngle);
     attributeAffects(inAngle, outAngle);
     attributeAffects(inScalar, outAngle);
-    attributeAffects(inOperation, outAngle);
 
     return status;
 }

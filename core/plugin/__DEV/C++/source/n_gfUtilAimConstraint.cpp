@@ -56,6 +56,7 @@ MStatus AimConstraint::initialize(){
     INPUT_ATTR(mAttr);
 
     inWorldUp = nAttr.createPoint("worldUp", "wu", &status);
+    nAttr.setDefault(0.0f, 1.0f, 0.0f);
     INPUT_ATTR(nAttr);
 
     inPivot = mAttr.create("pivot", "pivot", MFnMatrixAttribute::kFloat, &status);

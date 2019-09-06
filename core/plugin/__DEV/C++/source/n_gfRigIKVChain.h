@@ -1,7 +1,3 @@
-/*!
-TODO:
-    * Fix the stretch with soft value.
-*/
 #pragma once
 
 #ifdef _WIN64

@@ -1,0 +1,18 @@
+global proc AEgfUtilAimConstraintTemplate(string $nodeName){
+    editorTemplate -beginScrollLayout;
+        editorTemplate -beginLayout "gfUtilAimConstraint Attributes" -collapse 0;
+            editorTemplate -beginLayout "Up Vector Options" -collapse 0;
+                editorTemplate -addControl "upVectorType";
+                editorTemplate -addSeparator;
+                editorTemplate -addControl "worldUp";
+                editorTemplate -addControl "up";
+            editorTemplate -endLayout;
+            editorTemplate -beginLayout "Input Matrices" -collapse 1;
+                editorTemplate -addControl "target";
+                editorTemplate -addControl "pivot";
+            editorTemplate -endLayout;
+        editorTemplate -endLayout;
+        AEdependNodeTemplate $nodeName;
+    editorTemplate -addExtraControls;
+    editorTemplate -endScrollLayout;
+}
