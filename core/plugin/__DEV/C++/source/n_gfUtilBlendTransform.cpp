@@ -265,7 +265,7 @@ VisibilityData BlendTransform::visibilityCalculation(float blender){
         vis = false;
         revVis = true;
     }
-    else if (blender >= 0.0f - threshold){
+    else if (blender >= 1.0f - threshold){
         vis = true;
         revVis = false;
     }

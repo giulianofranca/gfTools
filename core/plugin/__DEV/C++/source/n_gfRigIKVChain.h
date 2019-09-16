@@ -14,8 +14,8 @@
 #include <maya\MFnNumericAttribute.h>
 #include <maya\MFnUnitAttribute.h>
 #include <maya\MFnEnumAttribute.h>
-#include <maya\MFloatMatrix.h>
-#include <maya\MFloatVector.h>
+#include <maya\MMatrix.h>
+#include <maya\MVector.h>
 #include <maya\MAngle.h>
 
 

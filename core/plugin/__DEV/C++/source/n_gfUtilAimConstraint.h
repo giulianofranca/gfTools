@@ -38,5 +38,7 @@ public:
     static MObject                      inWorldUp;
     static MObject                      inUpObj;
     static MObject                      inPivot;
+    static MObject                      inConstParInvMtx;
+    static MObject                      inConstJntOri;
     static MObject                      outConstraint;
 };

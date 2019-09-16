@@ -1,22 +1,17 @@
 # -*- coding: utf-8 -*-
 """
 Copyright (c) 2019 Giuliano França
-
 Redistribution:
     Something here.
-
 Maya Node:
     [This is a prototype version of the gfUtilAimConstraint node. You should be using the related C++ version.]
     This node is a test node and only performs test operations with one input value.
-
 Requirements:
     Maya 2017 or above.
-
 Todo:
     * Fix only works with X Primary and Y Secondary
     * Add maintain offset funcionality
     * Add manual twist functionality
-
 This code supports Pylint. Rc file in project.
 """
 
@@ -59,6 +54,8 @@ class AimConstraint(om2.MPxNode):
     inWorldUp = om2.MObject()
     inUpObj = om2.MObject()
     inPivot = om2.MObject()
+    inConstParInvMtx = om2.MObject()
+    inConstJntOri = om2.MObject()
     outConstraint = om2.MObject()
 
     def __init__(self):
@@ -100,6 +97,15 @@ class AimConstraint(om2.MPxNode):
         AimConstraint.inPivot = mAttr.create("pivot", "pivot", om2.MFnMatrixAttribute.kFloat)
         INPUT_ATTR(mAttr)
 
+        AimConstraint.inConstParInvMtx = mAttr.create("constraintParentInverseMatrix", "cpim", om2.MFnMatrixAttribute.kDouble)
+        INPUT_ATTR(mAttr)
+
+        jntOriX = uAttr.create("constraintJointOrientX", "cjorx", om2.MFnUnitAttribute.kAngle, 0.0)
+        jntOriY = uAttr.create("constraintJointOrientY", "cjory", om2.MFnUnitAttribute.kAngle, 0.0)
+        jntOriZ = uAttr.create("constraintJointOrientZ", "cjorz", om2.MFnUnitAttribute.kAngle, 0.0)
+        AimConstraint.inConstJntOri = nAttr.create("constraintJointOrient", "cjor", jntOriX, jntOriY, jntOriZ)
+        INPUT_ATTR(nAttr)
+
         outConstraintX = uAttr.create("constraintX", "cx", om2.MFnUnitAttribute.kAngle, 0.0)
         outConstraintY = uAttr.create("constraintY", "cy", om2.MFnUnitAttribute.kAngle, 0.0)
         outConstraintZ = uAttr.create("constraintZ", "cz", om2.MFnUnitAttribute.kAngle, 0.0)
@@ -111,12 +117,16 @@ class AimConstraint(om2.MPxNode):
         AimConstraint.addAttribute(AimConstraint.inUpObj)
         AimConstraint.addAttribute(AimConstraint.inWorldUp)
         AimConstraint.addAttribute(AimConstraint.inPivot)
+        AimConstraint.addAttribute(AimConstraint.inConstParInvMtx)
+        AimConstraint.addAttribute(AimConstraint.inConstJntOri)
         AimConstraint.addAttribute(AimConstraint.outConstraint)
         AimConstraint.attributeAffects(AimConstraint.inUpVecType, AimConstraint.outConstraint)
         AimConstraint.attributeAffects(AimConstraint.inTarget, AimConstraint.outConstraint)
         AimConstraint.attributeAffects(AimConstraint.inUpObj, AimConstraint.outConstraint)
         AimConstraint.attributeAffects(AimConstraint.inWorldUp, AimConstraint.outConstraint)
         AimConstraint.attributeAffects(AimConstraint.inPivot, AimConstraint.outConstraint)
+        AimConstraint.attributeAffects(AimConstraint.inConstParInvMtx, AimConstraint.outConstraint)
+        AimConstraint.attributeAffects(AimConstraint.inConstJntOri, AimConstraint.outConstraint)
 
     def compute(self, plug, dataBlock):
         """
@@ -130,6 +140,11 @@ class AimConstraint(om2.MPxNode):
         upType = dataBlock.inputValue(AimConstraint.inUpVecType).asShort()
         mTarget = dataBlock.inputValue(AimConstraint.inTarget).asFloatMatrix()
         mPivot = dataBlock.inputValue(AimConstraint.inPivot).asFloatMatrix()
+        mConstParInv = dataBlock.inputValue(AimConstraint.inConstParInvMtx).asMatrix()
+        eConstJntOri = om2.MEulerRotation(dataBlock.inputValue(AimConstraint.inConstJntOri).asDouble3())
+        mtxFn = om2.MTransformationMatrix()
+        mtxFn.rotateBy(eConstJntOri, om2.MSpace.kTransform)
+        mConstJntOri = mtxFn.asMatrix()
         vTarget = om2.MFloatVector(mTarget[12], mTarget[13], mTarget[14])
         vPivot = om2.MFloatVector(mPivot[12], mPivot[13], mPivot[14])
         vAim = vTarget - vPivot
@@ -150,8 +165,10 @@ class AimConstraint(om2.MPxNode):
                nBinormal.x, nBinormal.y, nBinormal.z, 0.0,
                0.0, 0.0, 0.0, 1.0]
         mAim = om2.MMatrix(aim)
-        mtxFn = om2.MTransformationMatrix(mAim)
-        eAim = mtxFn.rotation(asQuaternion=True).asEulerRotation().asVector()
+        mResult = mAim * mConstParInv * mConstJntOri.inverse()
+        mtxFn = om2.MTransformationMatrix(mResult)
+        eConstraint = mtxFn.rotation(asQuaternion=True).asEulerRotation()
+        vConstraint = eConstraint.asVector()
         outConstraintHandle = dataBlock.outputValue(AimConstraint.outConstraint)
-        outConstraintHandle.setMVector(eAim)
+        outConstraintHandle.setMVector(vConstraint)
         outConstraintHandle.setClean()

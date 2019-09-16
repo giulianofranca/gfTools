@@ -25,6 +25,8 @@ MObject AimConstraint::inTarget;
 MObject AimConstraint::inWorldUp;
 MObject AimConstraint::inUpObj;
 MObject AimConstraint::inPivot;
+MObject AimConstraint::inConstParInvMtx;
+MObject AimConstraint::inConstJntOri;
 MObject AimConstraint::outConstraint;
 
 void* AimConstraint::creator(){
@@ -62,6 +64,15 @@ MStatus AimConstraint::initialize(){
     inPivot = mAttr.create("pivot", "pivot", MFnMatrixAttribute::kFloat, &status);
     INPUT_ATTR(mAttr);
 
+    inConstParInvMtx = mAttr.create("constraintParentInverseMatrix", "cpim", MFnMatrixAttribute::kDouble, &status);
+    INPUT_ATTR(mAttr);
+
+    MObject jntOriX = uAttr.create("constraintJointOrientX", "cjorx", MFnUnitAttribute::kAngle, 0.0, &status);
+    MObject jntOriY = uAttr.create("constraintJointOrientY", "cjory", MFnUnitAttribute::kAngle, 0.0, &status);
+    MObject jntOriZ = uAttr.create("constraintJointOrientZ", "cjorz", MFnUnitAttribute::kAngle, 0.0, &status);
+    inConstJntOri = nAttr.create("constraintJointOrient", "cjor", jntOriX, jntOriY, jntOriZ, &status);
+    INPUT_ATTR(nAttr);
+
     MObject outConstraintX = uAttr.create("contraintX", "cx", MFnUnitAttribute::kAngle, 0.0, &status);
     MObject outConstraintY = uAttr.create("contraintY", "cy", MFnUnitAttribute::kAngle, 0.0, &status);
     MObject outConstraintZ = uAttr.create("contraintZ", "cz", MFnUnitAttribute::kAngle, 0.0, &status);
@@ -73,12 +84,16 @@ MStatus AimConstraint::initialize(){
     addAttribute(inUpObj);
     addAttribute(inWorldUp);
     addAttribute(inPivot);
+    addAttribute(inConstParInvMtx);
+    addAttribute(inConstJntOri);
     addAttribute(outConstraint);
     attributeAffects(inUpVecType, outConstraint);
     attributeAffects(inTarget, outConstraint);
     attributeAffects(inUpObj, outConstraint);
     attributeAffects(inWorldUp, outConstraint);
     attributeAffects(inPivot, outConstraint);
+    attributeAffects(inConstParInvMtx, outConstraint);
+    attributeAffects(inConstJntOri, outConstraint);
 
     return status;
 }
@@ -95,6 +110,11 @@ MStatus AimConstraint::compute(const MPlug& plug, MDataBlock& dataBlock){
     short upType = dataBlock.inputValue(inUpVecType).asShort();
     MFloatMatrix mTarget = dataBlock.inputValue(inTarget).asFloatMatrix();
     MFloatMatrix mPivot = dataBlock.inputValue(inPivot).asFloatMatrix();
+    MMatrix mConstParInv = dataBlock.inputValue(inConstParInvMtx).asMatrix();
+    MEulerRotation eConstJntOri = MEulerRotation(dataBlock.inputValue(inConstJntOri).asDouble3());
+    MTransformationMatrix mtxFn = MTransformationMatrix();
+    mtxFn.rotateBy(eConstJntOri, MSpace::kTransform);
+    MMatrix mConstJntOri = mtxFn.asMatrix();
     MFloatVector vTarget = MFloatVector(mTarget[3][0], mTarget[3][1], mTarget[3][2]);
     MFloatVector vPivot = MFloatVector(mPivot[3][0], mPivot[3][1], mPivot[3][2]);
     MFloatVector vAim = vTarget - vPivot;
@@ -121,10 +141,12 @@ MStatus AimConstraint::compute(const MPlug& plug, MDataBlock& dataBlock){
         {0.0f, 0.0f, 0.0f, 1.0f}
     };
     MMatrix mAim = MMatrix(aim);
-    MTransformationMatrix mtxFn = MTransformationMatrix(mAim);
-    MVector eAim = mtxFn.rotation().asEulerRotation().asVector();
+    MMatrix mResult = mAim * mConstParInv * mConstJntOri.inverse();
+    mtxFn = MTransformationMatrix(mResult);
+    MEulerRotation eConstraint = mtxFn.rotation().asEulerRotation();
+    MVector vConstraint = eConstraint.asVector();
     MDataHandle outConstraintHandle = dataBlock.outputValue(outConstraint);
-    outConstraintHandle.setMVector(eAim);
+    outConstraintHandle.setMVector(vConstraint);
     outConstraintHandle.setClean();
 
     return MStatus::kSuccess;

@@ -11,6 +11,7 @@ Source:
     * https://docs.python.org/2/extending/embedding.html
     * https://www.youtube.com/watch?v=P9edayG8rkg
 """
+import math
 import maya.cmds as cmds
 import maya.api._OpenMaya_py2 as om2
 
@@ -193,11 +194,11 @@ def createAttribute(longName, shortName, attrType, length=1,
             else:
                 attr = attrFn.create(longName, shortName, attrData)
                 if default is not None:
-                    attrFn.default = default[0:1]
+                    attrFn.default = default[0]
                 if minVal is not None:
-                    attrFn.setMin(minVal[0:1])
+                    attrFn.setMin(minVal[0])
                 if maxVal is not None:
-                    attrFn.setMax(maxVal[0:1])
+                    attrFn.setMax(maxVal[0])
             if keyable:
                 attrFn.keyable = True
             else:
@@ -387,14 +388,14 @@ def createObjectOnTransform(objType="transform", namePreffix=None):
     om2.MGlobal.setActiveSelectionList(sel)
     return parentObjName
 
-def getPoleVectorPosition(distance=0.0):
+def getPoleVectorPosition(distance=1.0):
     """Find the right pole vector position based on selection.
 
     Create an transform object in the right position. To use this command select 3 dag nodes in the scene.
     (More than 3 object will be ignored).
 
     Args:
-        distance (float: 0.0 [Optional]): The distance between the joint chain and the pole vector position.
+        distance (float: 1.0 [Optional]): The distance multiplier between the joint chain and the pole vector position.
 
     Returns:
         string: The path of the transform object created on position.
@@ -418,7 +419,10 @@ def getPoleVectorPosition(distance=0.0):
         nStartEnd = vStartEnd.normal()
         vProj = nStartEnd * proj
         vArrow = vStartMid - vProj
-        vArrow *= 0.0
+        try:
+            vArrow *= distance
+        except ValueError:
+            raise ValueError("Distance argument must be a float type.")
         vFinal = vArrow + vMid
         vCross1 = vStartEnd ^ vStartMid
         vCross1.normalize()
@@ -439,11 +443,6 @@ def getPoleVectorPosition(distance=0.0):
         nodeFn.setObject(posObj)
         posObjPath = om2.MSelectionList().add(nodeFn.name()).getDagPath(0)
         transFn.setObject(posObjPath)
-        try:
-            vFinal += om2.MVector(distance, 0.0, 0.0)
-        except ValueError:
-            cmds.delete(posObjPath.fullPathName())
-            raise ValueError("Distance argument must be a float type.")
         transFn.translateBy(vFinal, om2.MSpace.kTransform)
         transFn.rotateBy(quat, om2.MSpace.kTransform)
         objSel = om2.MSelectionList().add(posObjPath)
@@ -452,3 +451,36 @@ def getPoleVectorPosition(distance=0.0):
         return posObjPath.fullPathName()
     else:
         raise RuntimeError("Selection list is less than 3. Select at least 3 objects.")
+
+def findPreferredAngleIK():
+    """Find preferred angle for the gfRigIKVChain node.
+
+    Select the root joint, handle Joint and the pole vector control and run the command.
+
+    Args:
+
+    Returns:
+        float: The angle of the rotation between pole vector and world x axis.
+
+    Raises:
+    """
+    sel = om2.MGlobal.getActiveSelectionList()
+    rootJntPath = sel.getDagPath(0)
+    handleJntPath = sel.getDagPath(1)
+    pvPath = sel.getDagPath(2)
+    transFn = om2.MFnTransform(rootJntPath)
+    vRoot = transFn.translation(om2.MSpace.kWorld)
+    transFn.setObject(handleJntPath)
+    vHandle = transFn.translation(om2.MSpace.kWorld)
+    transFn.setObject(pvPath)
+    vUpVector = transFn.translation(om2.MSpace.kWorld)
+
+    nXAxis = vHandle - vRoot
+    nXAxis.normalize()
+    vUpDirection = vUpVector - vRoot
+    nYAxis = vUpDirection - ((vUpDirection * nXAxis) * nXAxis)
+    nYAxis.normalize()
+    nWXAxis = om2.MVector(1.0, 0.0, 0.0)
+
+    theta = math.acos(nWXAxis * nYAxis)
+    return theta

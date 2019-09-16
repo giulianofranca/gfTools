@@ -169,7 +169,7 @@ def initializePlugin(mobject):
     """ Initializes the plug-in. """
     mplugin2 = om2.MFnPlugin(mobject, kAuthor, kVersion, kRequiredAPIVersion)
 
-    REGISTER_LOCATOR_NODE(m_DebugVector.DebugVector, mplugin2, m_DebugVector.DebugVectorDrawOverride)
+    # REGISTER_LOCATOR_NODE(m_DebugVector.DebugVector, mplugin2, m_DebugVector.DebugVectorDrawOverride)
     REGISTER_NODE(m_VectorAnglePSD.VectorAnglePSD, mplugin2)
     REGISTER_NODE(m_IKVChainSolver.IKVChainSolver, mplugin2)
     REGISTER_NODE(m_BlendTransform.BlendTransform, mplugin2)
@@ -186,7 +186,7 @@ def uninitializePlugin(mobject):
     """ Unitializes the plug-in. """
     mplugin2 = om2.MFnPlugin(mobject, kAuthor, kVersion, kRequiredAPIVersion)
 
-    DEREGISTER_LOCATOR_NODE(m_DebugVector.DebugVector, mplugin2)
+    # DEREGISTER_LOCATOR_NODE(m_DebugVector.DebugVector, mplugin2)
     DEREGISTER_NODE(m_VectorAnglePSD.VectorAnglePSD, mplugin2)
     DEREGISTER_NODE(m_IKVChainSolver.IKVChainSolver, mplugin2)
     DEREGISTER_NODE(m_BlendTransform.BlendTransform, mplugin2)
