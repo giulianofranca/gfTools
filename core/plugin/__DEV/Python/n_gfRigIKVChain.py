@@ -17,6 +17,7 @@ Todo:
     * Create and develop the stretchMult attrs.
     * Create and develop the squashMult attrs.
     * Create and develop the slidePv attr.
+    * Fix and create the auto pv mode (skewing/stretching the basis mtx)
 
 This code supports Pylint. Rc file in project.
 """
@@ -59,6 +60,7 @@ class IKVChainSolver(om2.MPxNode):
     inRoot = om2.MObject()
     inHandle = om2.MObject()
     inUpVector = om2.MObject()
+    inParInvMtx = om2.MObject()
     inJointOrient = om2.MObject()
     inPreferredAngle = om2.MObject()
     inPvMode = om2.MObject()
@@ -102,6 +104,9 @@ class IKVChainSolver(om2.MPxNode):
         INPUT_ATTR(mAttr)
 
         IKVChainSolver.inUpVector = mAttr.create("upVector", "up", om2.MFnMatrixAttribute.kDouble)
+        INPUT_ATTR(mAttr)
+
+        IKVChainSolver.inParInvMtx = mAttr.create("parentInverseMatrix", "pim", om2.MFnMatrixAttribute.kDouble)
         INPUT_ATTR(mAttr)
 
         jntOriX = uAttr.create("jointOrientX", "jox", om2.MFnUnitAttribute.kAngle, 0.0)
@@ -173,6 +178,7 @@ class IKVChainSolver(om2.MPxNode):
         IKVChainSolver.addAttribute(IKVChainSolver.inRoot)
         IKVChainSolver.addAttribute(IKVChainSolver.inHandle)
         IKVChainSolver.addAttribute(IKVChainSolver.inUpVector)
+        IKVChainSolver.addAttribute(IKVChainSolver.inParInvMtx)
         IKVChainSolver.addAttribute(IKVChainSolver.inJointOrient)
         IKVChainSolver.addAttribute(IKVChainSolver.inPreferredAngle)
         IKVChainSolver.addAttribute(IKVChainSolver.inPvMode)
@@ -190,6 +196,7 @@ class IKVChainSolver(om2.MPxNode):
         IKVChainSolver.attributeAffects(IKVChainSolver.inRoot, IKVChainSolver.outChain)
         IKVChainSolver.attributeAffects(IKVChainSolver.inHandle, IKVChainSolver.outChain)
         IKVChainSolver.attributeAffects(IKVChainSolver.inUpVector, IKVChainSolver.outChain)
+        IKVChainSolver.attributeAffects(IKVChainSolver.inParInvMtx, IKVChainSolver.outChain)
         IKVChainSolver.attributeAffects(IKVChainSolver.inJointOrient, IKVChainSolver.outChain)
         IKVChainSolver.attributeAffects(IKVChainSolver.inPreferredAngle, IKVChainSolver.outChain)
         IKVChainSolver.attributeAffects(IKVChainSolver.inPvMode, IKVChainSolver.outChain)
@@ -232,22 +239,28 @@ class IKVChainSolver(om2.MPxNode):
             vYDirection = vUpDirection - ((vUpDirection * nXAxis) * nXAxis)
             nYAxis = vYDirection.normal()
         else:
-            nYAxis = om2.MVector(math.cos(prefAngle), 0.0, math.sin(prefAngle))
+            vAutoPosWorld = vRoot + om2.MVector(math.cos(twist + prefAngle), 0.0, math.sin(twist + prefAngle))
+            vAutoPosLocal = vAutoPosWorld - vRoot
+            nYAxis = vAutoPosLocal.normal()
+            # nYAxis = om2.MVector(math.cos(prefAngle), 0.0, math.sin(prefAngle))
+        om2.MGlobal.displayInfo(str(nYAxis))
         nZAxis = nXAxis ^ nYAxis
         basis = [nXAxis.x, nXAxis.y, nXAxis.z, 0.0,
                  nYAxis.x, nYAxis.y, nYAxis.z, 0.0,
                  nZAxis.x, nZAxis.y, nZAxis.z, 0.0,
                  vRoot.x, vRoot.y, vRoot.z, 1.0]
         mBasisLocal = om2.MMatrix(basis)
-        mTwist = om2.MMatrix()
-        mTwist[5] = math.cos(twist)
-        mTwist[6] = math.sin(twist)
-        mTwist[9] = -math.sin(twist)
-        mTwist[10] = math.cos(twist)
-        if pvMode == 0:
-            mBasis = mBasisLocal
-        else:
-            mBasis = mTwist * mBasisLocal
+        # mTwist = om2.MMatrix()
+        # mTwist[5] = math.cos(twist)
+        # mTwist[6] = math.sin(twist)
+        # mTwist[9] = -math.sin(twist)
+        # mTwist[10] = math.cos(twist)
+        # if pvMode == 0:
+        mBasis = mBasisLocal
+        # else:
+        #     mBasis = mTwist * mBasisLocal
+            # om2.MGlobal.displayInfo(str(mTwist))
+            # om2.MGlobal.displayInfo(str(mBasisLocal))
 
         # Solve triangle
         l1 = dataBlock.inputValue(IKVChainSolver.inRestLength1).asFloat()  # UpperArm
@@ -321,6 +334,7 @@ class IKVChainSolver(om2.MPxNode):
             mOri = mtxFn.asMatrix()
             jntOriList.append(mOri)
         if hierarchyMode:
+            mParInv = dataBlock.inputValue(IKVChainSolver.inParInvMtx).asMatrix()
             mScale = om2.MMatrix()
             mScale[0] = stretchFactor
             mScale[5] = squashFactor
@@ -331,9 +345,9 @@ class IKVChainSolver(om2.MPxNode):
             mLocal[4] = -betaSin
             mLocal[5] = betaCos
             try:
-                mResult = jntOriList[0].inverse() * mScale * mLocal * mBasis
+                mResult = (mScale * mLocal * mBasis) * mParInv * jntOriList[0].inverse()
             except IndexError:
-                mResult = mScale * mLocal * mBasis
+                mResult = (mScale * mLocal * mBasis) * mParInv
             srtList.append(mResult)
             mLocal = om2.MMatrix()
             mLocal[0] = gammaComplementCos
@@ -342,9 +356,9 @@ class IKVChainSolver(om2.MPxNode):
             mLocal[5] = gammaComplementCos
             mResult = mScale * mLocal
             try:
-                mResult = jntOriList[1].inverse() * mScale * mLocal
+                mResult = (mScale * mLocal) * jntOriList[1].inverse()
             except IndexError:
-                mResult = mScale * mLocal
+                mResult = (mScale * mLocal)
             mResult[12] = l1m
             srtList.append(mResult)
             mLocal = om2.MMatrix()

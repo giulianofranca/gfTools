@@ -48,3 +48,5 @@ cmds.parent(r=True, s=True)
 cmds.setAttr("leg_L_legIK_cNode.pa", cmds.getAttr("leg_L_thighIK_srt.rx"))
 cmds.setAttr("multMatrix2.matrixIn[1]", cmds.getAttr("leg_L_ankleIK_srt.worldInverseMatrix"), type="matrix")
 cmds.setAttr("multMatrix4.matrixIn[1]", cmds.getAttr("leg_L_toeIK_srt.worldInverseMatrix"), type="matrix")
+
+snippets.createAttribute("angle", "angle", snippets.AttributeTypes.kAngle)
