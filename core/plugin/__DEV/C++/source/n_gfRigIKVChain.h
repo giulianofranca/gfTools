@@ -17,6 +17,8 @@
 #include <maya\MMatrix.h>
 #include <maya\MVector.h>
 #include <maya\MAngle.h>
+#include <maya\MEulerRotation.h>
+#include <maya\MTransformationMatrix.h>
 
 
 class IKVChainSolver : MPxNode{
@@ -40,6 +42,8 @@ public:
     static MObject                      inRoot;
     static MObject                      inHandle;
     static MObject                      inUpVector;
+    static MObject                      inParInvMtx;
+    static MObject                      inJointOrient;
     static MObject                      inPreferredAngle;
     static MObject                      inPvMode;
     static MObject                      inTwist;

@@ -37,6 +37,7 @@ Todo:
 #include "n_gfUtilAngleTrigMath.h"
 #include "n_gfUtilAngleToDouble.h"
 #include "n_gfUtilDoubleToAngle.h"
+#include "n_gfUtilDecompRowMatrix.h"
 
 #include <maya\MFnPlugin.h>
 #include <maya\MString.h>
@@ -98,6 +99,9 @@ const MTypeId AngleToDouble::kNodeID = 0x00130d89;
 const MString DoubleToAngle::kNodeName = "gfUtilDoubleToAngle";
 const MString DoubleToAngle::kNodeClassify = "utility/general";
 const MTypeId DoubleToAngle::kNodeID = 0x00130d8a;
+const MString DecomposeRowMatrix::kNodeName = "gfUtilDecompRowMtx";
+const MString DecomposeRowMatrix::kNodeClassify = "utility/general";
+const MTypeId DecomposeRowMatrix::kNodeID = 0x00130d8c;
 
 
 MStatus initializePlugin(MObject mobject){
@@ -115,6 +119,7 @@ MStatus initializePlugin(MObject mobject){
     REGISTER_NODE(AngularTrigMath, mPlugin);
     REGISTER_NODE(AngleToDouble, mPlugin);
     REGISTER_NODE(DoubleToAngle, mPlugin);
+    REGISTER_NODE(DecomposeRowMatrix, mPlugin);
 
     return status;
 }
@@ -133,6 +138,7 @@ MStatus uninitializePlugin(MObject mobject){
     DEREGISTER_NODE(AngularTrigMath, mPlugin);
     DEREGISTER_NODE(AngleToDouble, mPlugin);
     DEREGISTER_NODE(DoubleToAngle, mPlugin);
+    DEREGISTER_NODE(DecomposeRowMatrix, mPlugin);
 
     return status;
 }

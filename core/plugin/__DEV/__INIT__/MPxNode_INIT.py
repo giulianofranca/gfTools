@@ -28,11 +28,9 @@ Todo:
 
 This code supports Pylint. Rc file in project.
 """
-# pylint: disable=import-error
-# import-error = Supress Maya modules import error
 
 import sys
-import maya.api.OpenMaya as om2
+import maya.api._OpenMaya_py2 as om2
 
 
 def maya_useNewAPI():
@@ -62,9 +60,9 @@ def OUTPUT_ATTR(FNATTR):
 class TestNode(om2.MPxNode):
     """ Main class of gfTestNode node. """
 
-    kNODE_NAME = "gfTestNode"
-    kNODE_CLASSIFY = "utility/general"
-    kNODE_ID = om2.MTypeId(0x0012f7c2)
+    kNodeName = "gfTestNode"
+    kNodeClassify = "utility/general"
+    kNodeID = om2.MTypeId(0x0012f7c2)
 
     inAttr = om2.MObject()
     outAttr = om2.MObject()
@@ -116,10 +114,10 @@ def initializePlugin(mobject):
     """ Initializes the plug-in. """
     mplugin = om2.MFnPlugin(mobject)
     try:
-        mplugin.registerNode(TestNode.kNODE_NAME, TestNode.kNODE_ID, TestNode.creator,
-                             TestNode.initialize, om2.MPxNode.kDependNode, TestNode.kNODE_CLASSIFY)
+        mplugin.registerNode(TestNode.kNodeName, TestNode.kNodeID, TestNode.creator,
+                             TestNode.initialize, om2.MPxNode.kDependNode, TestNode.kNodeClassify)
     except:
-        sys.stderr.write("Failed to register node: " + TestNode.kNODE_NAME)
+        sys.stderr.write("Failed to register node: " + TestNode.kNodeName)
         raise
 
 
@@ -127,7 +125,7 @@ def uninitializePlugin(mobject):
     """ Unitializes the plug-in. """
     mplugin = om2.MFnPlugin(mobject)
     try:
-        mplugin.deregisterNode(TestNode.kNODE_ID)
+        mplugin.deregisterNode(TestNode.kNodeID)
     except:
-        sys.stderr.write("Failed to deregister node: " + TestNode.kNODE_NAME)
+        sys.stderr.write("Failed to deregister node: " + TestNode.kNodeName)
         raise

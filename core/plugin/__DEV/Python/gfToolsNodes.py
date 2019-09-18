@@ -48,6 +48,8 @@ import n_gfUtilAngleScalarMath as m_AngularScalarMath
 import n_gfUtilAngleTrigMath as m_AngularTrigMath
 import n_gfUtilAngleToDouble as m_AngleToDouble
 import n_gfUtilDoubleToAngle as m_DoubleToAngle
+# import n_gfUtilEulerMath as m_EulerMath
+import n_gfUtilDecompRowMatrix as m_DecomposeRowMatrix
 # gfDebug
 reload(m_DebugVector)
 # gfRig
@@ -62,6 +64,8 @@ reload(m_AngularScalarMath)
 reload(m_AngularTrigMath)
 reload(m_AngleToDouble)
 reload(m_DoubleToAngle)
+# reload(m_EulerMath)
+reload(m_DecomposeRowMatrix)
 
 
 def maya_useNewAPI():
@@ -163,6 +167,12 @@ m_AngleToDouble.AngleToDouble.kNodeID = om2.MTypeId(0x0012f7c9)
 m_DoubleToAngle.DoubleToAngle.kNodeName = "gfUtilDoubleToAngle_P"
 m_DoubleToAngle.DoubleToAngle.kNodeClassify = "utility/general"
 m_DoubleToAngle.DoubleToAngle.kNodeID = om2.MTypeId(0x0012f7ca)
+# m_EulerMath.EulerMath.kNodeName = "gfUtilEulerMath_P"
+# m_EulerMath.EulerMath.kNodeClassify = "utility/general"
+# m_EulerMath.EulerMath.kNodeID = om2.MTypeId(0x0012f7cb)
+m_DecomposeRowMatrix.DecomposeRowMatrix.kNodeName = "gfUtilDecompRowMtx_P"
+m_DecomposeRowMatrix.DecomposeRowMatrix.kNodeClassify = "utility/general"
+m_DecomposeRowMatrix.DecomposeRowMatrix.kNodeID = om2.MTypeId(0x0012f7cc)
 
 
 def initializePlugin(mobject):
@@ -180,6 +190,8 @@ def initializePlugin(mobject):
     REGISTER_NODE(m_AngularTrigMath.AngularTrigMath, mplugin2)
     REGISTER_NODE(m_AngleToDouble.AngleToDouble, mplugin2)
     REGISTER_NODE(m_DoubleToAngle.DoubleToAngle, mplugin2)
+    # REGISTER_NODE(m_EulerMath.EulerMath, mplugin2)
+    REGISTER_NODE(m_DecomposeRowMatrix.DecomposeRowMatrix, mplugin2)
 
 
 def uninitializePlugin(mobject):
@@ -197,3 +209,5 @@ def uninitializePlugin(mobject):
     DEREGISTER_NODE(m_AngularTrigMath.AngularTrigMath, mplugin2)
     DEREGISTER_NODE(m_AngleToDouble.AngleToDouble, mplugin2)
     DEREGISTER_NODE(m_DoubleToAngle.DoubleToAngle, mplugin2)
+    # DEREGISTER_NODE(m_EulerMath.EulerMath, mplugin2)
+    DEREGISTER_NODE(m_DecomposeRowMatrix.DecomposeRowMatrix, mplugin2)

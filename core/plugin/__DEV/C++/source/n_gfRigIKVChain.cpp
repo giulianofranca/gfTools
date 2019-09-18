@@ -24,6 +24,8 @@ IKVChainSolver::~IKVChainSolver() {}
 MObject IKVChainSolver::inRoot;
 MObject IKVChainSolver::inHandle;
 MObject IKVChainSolver::inUpVector;
+MObject IKVChainSolver::inParInvMtx;
+MObject IKVChainSolver::inJointOrient;
 MObject IKVChainSolver::inPreferredAngle;
 MObject IKVChainSolver::inPvMode;
 MObject IKVChainSolver::inTwist;
@@ -63,6 +65,16 @@ MStatus IKVChainSolver::initialize(){
 
     inUpVector = mAttr.create("upVector", "up", MFnMatrixAttribute::kDouble, &status);
     INPUT_ATTR(mAttr);
+
+    inParInvMtx = mAttr.create("parentInverseMatrix", "pim", MFnMatrixAttribute::kDouble, &status);
+    INPUT_ATTR(mAttr);
+
+    MObject jntOriX = uAttr.create("jointOrientX", "jox", MFnUnitAttribute::kAngle, 0.0, &status);
+    MObject jntOriY = uAttr.create("jointOrientY", "joy", MFnUnitAttribute::kAngle, 0.0, &status);
+    MObject jntOriZ = uAttr.create("jointOrientZ", "joz", MFnUnitAttribute::kAngle, 0.0, &status);
+    inJointOrient = nAttr.create("jointOrient", "jo", jntOriX, jntOriY, jntOriZ, &status);
+    nAttr.setArray(true);
+    INPUT_ATTR(nAttr);
 
     inPreferredAngle = uAttr.create("preferredAngle", "pa", MFnUnitAttribute::kAngle, 0.0, &status);
     uAttr.setMin(0.0);
@@ -126,6 +138,8 @@ MStatus IKVChainSolver::initialize(){
     addAttribute(inRoot);
     addAttribute(inHandle);
     addAttribute(inUpVector);
+    addAttribute(inParInvMtx);
+    addAttribute(inJointOrient);
     addAttribute(inPreferredAngle);
     addAttribute(inPvMode);
     addAttribute(inTwist);
@@ -142,6 +156,8 @@ MStatus IKVChainSolver::initialize(){
     attributeAffects(inRoot, outChain);
     attributeAffects(inHandle, outChain);
     attributeAffects(inUpVector, outChain);
+    attributeAffects(inParInvMtx, outChain);
+    attributeAffects(inJointOrient, outChain);
     attributeAffects(inPreferredAngle, outChain);
     attributeAffects(inPvMode, outChain);
     attributeAffects(inTwist, outChain);
@@ -180,14 +196,18 @@ MStatus IKVChainSolver::compute(const MPlug& plug, MDataBlock& dataBlock){
     MVector vXDirection = vHandle - vRoot;
     double xDist = vXDirection.length();
     MVector nXAxis = vXDirection.normal();
-    MVector nYAxis;
+    MVector nYAxis, vYDirection;
     if (pvMode == 0){
         MVector vUpDirection = vUpVector - vRoot;
-        MVector vYDirection = vUpDirection - ((vUpDirection * nXAxis) * nXAxis);
+        vYDirection = vUpDirection - ((vUpDirection * nXAxis) * nXAxis);
         nYAxis = vYDirection.normal();
     }
-    else
-        nYAxis = MVector(std::cos(prefAngle), 0.0, std::sin(prefAngle));
+    else{
+        MVector vAutoPosWorld = vRoot + MVector(std::cos(twist + prefAngle), 0.0, std::sin(twist + prefAngle));
+        MVector vAutoPosLocal = vAutoPosWorld - vRoot;
+        vYDirection = vAutoPosLocal - ((vAutoPosLocal * nXAxis) * nXAxis);
+        nYAxis = vYDirection.normal();
+    }
     MVector nZAxis = nXAxis ^ nYAxis;
     double basis[4][4] = {
         nXAxis.x, nXAxis.y, nXAxis.z, 0.0,
@@ -195,17 +215,7 @@ MStatus IKVChainSolver::compute(const MPlug& plug, MDataBlock& dataBlock){
         nZAxis.x, nZAxis.y, nZAxis.z, 0.0,
         vRoot.x, vRoot.y, vRoot.z, 1.0
     };
-    MMatrix mBasisLocal = MMatrix(basis);
-    MMatrix mTwist = MMatrix();
-    mTwist[1][1] = std::cos(twist);
-    mTwist[1][2] = std::sin(twist);
-    mTwist[2][1] = -std::sin(twist);
-    mTwist[2][2] = std::cos(twist);
-    MMatrix mBasis;
-    if (pvMode == 0)
-        mBasis = mBasisLocal;
-    else
-        mBasis = mTwist * mBasisLocal;
+    MMatrix mBasis = MMatrix(basis);
 
     // Solve triangle
     float l1 = dataBlock.inputValue(inRestLength1).asFloat();
@@ -279,10 +289,18 @@ MStatus IKVChainSolver::compute(const MPlug& plug, MDataBlock& dataBlock){
     // Output transforms
     MArrayDataHandle outChainHandle = dataBlock.outputArrayValue(outChain);
     std::vector<MMatrix> srtList;
-
-    MMatrix mId = MMatrix();
-
+    std::vector<MMatrix> jntOriList;
+    MArrayDataHandle jntOriHandle = dataBlock.inputArrayValue(inJointOrient);
+    for (uint32_t i = 0; i < jntOriHandle.elementCount(); i++){
+        jntOriHandle.jumpToArrayElement(i);
+        MEulerRotation eOri = MEulerRotation(jntOriHandle.inputValue().asDouble3());
+        MTransformationMatrix mtxFn = MTransformationMatrix();
+        mtxFn.rotateBy(eOri, MSpace::kTransform);
+        MMatrix mOri = mtxFn.asMatrix();
+        jntOriList.push_back(mOri);
+    }
     if (hierarchyMode){
+        MMatrix mParInv = dataBlock.inputValue(inParInvMtx).asMatrix();
         MMatrix mScale = MMatrix();
         MMatrix mLocal = MMatrix();
         MMatrix mResult = MMatrix();
@@ -295,7 +313,10 @@ MStatus IKVChainSolver::compute(const MPlug& plug, MDataBlock& dataBlock){
         mLocal[1][0] = -betaSin;
         mLocal[1][1] = betaCos;
         mResult = MMatrix();
-        mResult = mScale * mLocal * mBasis;
+        if (jntOriList.size() >= 1)
+            mResult = mScale * mLocal * mBasis * mParInv * jntOriList[0].inverse();
+        else
+            mResult = mScale * mLocal * mBasis * mParInv;
         srtList.push_back(mResult);
         mLocal = MMatrix();
         mLocal[0][0] = gammaComplementCos;
@@ -303,7 +324,10 @@ MStatus IKVChainSolver::compute(const MPlug& plug, MDataBlock& dataBlock){
         mLocal[1][0] = -gammaComplementSin;
         mLocal[1][1] = gammaComplementCos;
         mResult = MMatrix();
-        mResult = mScale * mLocal;
+        if (jntOriList.size() >= 2)
+            mResult = mScale * mLocal * jntOriList[1].inverse();
+        else
+            mResult = mScale * mLocal;
         mResult[3][0] = l1m;
         srtList.push_back(mResult);
         mLocal = MMatrix();

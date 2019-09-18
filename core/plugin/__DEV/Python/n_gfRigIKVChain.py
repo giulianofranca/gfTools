@@ -17,7 +17,6 @@ Todo:
     * Create and develop the stretchMult attrs.
     * Create and develop the squashMult attrs.
     * Create and develop the slidePv attr.
-    * Fix and create the auto pv mode (skewing/stretching the basis mtx)
 
 This code supports Pylint. Rc file in project.
 """
@@ -241,26 +240,14 @@ class IKVChainSolver(om2.MPxNode):
         else:
             vAutoPosWorld = vRoot + om2.MVector(math.cos(twist + prefAngle), 0.0, math.sin(twist + prefAngle))
             vAutoPosLocal = vAutoPosWorld - vRoot
-            nYAxis = vAutoPosLocal.normal()
-            # nYAxis = om2.MVector(math.cos(prefAngle), 0.0, math.sin(prefAngle))
-        om2.MGlobal.displayInfo(str(nYAxis))
+            vYDirection = vAutoPosLocal - ((vAutoPosLocal * nXAxis) * nXAxis)
+            nYAxis = vYDirection.normal()
         nZAxis = nXAxis ^ nYAxis
         basis = [nXAxis.x, nXAxis.y, nXAxis.z, 0.0,
                  nYAxis.x, nYAxis.y, nYAxis.z, 0.0,
                  nZAxis.x, nZAxis.y, nZAxis.z, 0.0,
                  vRoot.x, vRoot.y, vRoot.z, 1.0]
-        mBasisLocal = om2.MMatrix(basis)
-        # mTwist = om2.MMatrix()
-        # mTwist[5] = math.cos(twist)
-        # mTwist[6] = math.sin(twist)
-        # mTwist[9] = -math.sin(twist)
-        # mTwist[10] = math.cos(twist)
-        # if pvMode == 0:
-        mBasis = mBasisLocal
-        # else:
-        #     mBasis = mTwist * mBasisLocal
-            # om2.MGlobal.displayInfo(str(mTwist))
-            # om2.MGlobal.displayInfo(str(mBasisLocal))
+        mBasis = om2.MMatrix(basis)
 
         # Solve triangle
         l1 = dataBlock.inputValue(IKVChainSolver.inRestLength1).asFloat()  # UpperArm
@@ -354,7 +341,6 @@ class IKVChainSolver(om2.MPxNode):
             mLocal[1] = gammaComplementSin
             mLocal[4] = -gammaComplementSin
             mLocal[5] = gammaComplementCos
-            mResult = mScale * mLocal
             try:
                 mResult = (mScale * mLocal) * jntOriList[1].inverse()
             except IndexError:
