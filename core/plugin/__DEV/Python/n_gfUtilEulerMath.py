@@ -54,8 +54,10 @@ class EulerMath(om2.MPxNode):
 
     inOperation = om2.MObject()
     inEuler1 = om2.MObject()
+    inEuler1RotOrder = om2.MObject()
     inEuler2 = om2.MObject()
-    inRotOrder = om2.MObject()
+    inEuler2RotOrder = om2.MObject()
+    inResRotOrder = om2.MObject()
     outEuler = om2.MObject()
 
     def __init__(self):
@@ -82,9 +84,7 @@ class EulerMath(om2.MPxNode):
         eAttr.addField("No Operation", 0)
         eAttr.addField("Add", 1)
         eAttr.addField("Subtract", 2)
-        eAttr.addField("Power", 3)
-        eAttr.addField("Max", 4)
-        eAttr.addField("Min", 5)
+        eAttr.addField("Multiply", 3)
         INPUT_ATTR(eAttr)
 
         euler1X = uAttr.create("euler1X", "e1x", om2.MFnUnitAttribute.kAngle, 0.0)
@@ -93,13 +93,22 @@ class EulerMath(om2.MPxNode):
         EulerMath.inEuler1 = nAttr.create("euler1", "e1", euler1X, euler1Y, euler1Z)
         INPUT_ATTR(nAttr)
 
+        EulerMath.inEuler1RotOrder = eAttr.create("euler1RotateOrder", "e1ro", 0)
+        eAttr.addField("xyz", 0)
+        eAttr.addField("yzx", 1)
+        eAttr.addField("zxy", 2)
+        eAttr.addField("xzy", 3)
+        eAttr.addField("yxz", 4)
+        eAttr.addField("zyx", 5)
+        INPUT_ATTR(eAttr)
+
         euler2X = uAttr.create("euler2X", "e2x", om2.MFnUnitAttribute.kAngle, 0.0)
         euler2Y = uAttr.create("euler2Y", "e2y", om2.MFnUnitAttribute.kAngle, 0.0)
         euler2Z = uAttr.create("euler2Z", "e2z", om2.MFnUnitAttribute.kAngle, 0.0)
         EulerMath.inEuler2 = nAttr.create("euler2", "e2", euler2X, euler2Y, euler2Z)
         INPUT_ATTR(nAttr)
 
-        EulerMath.inRotOrder = eAttr.create("rotationOrder", "ro", 0)
+        EulerMath.inEuler2RotOrder = eAttr.create("euler2RotateOrder", "e2ro", 0)
         eAttr.addField("xyz", 0)
         eAttr.addField("yzx", 1)
         eAttr.addField("zxy", 2)
@@ -114,15 +123,28 @@ class EulerMath(om2.MPxNode):
         EulerMath.outEuler = nAttr.create("outEuler", "oe", outEulerX, outEulerY, outEulerZ)
         OUTPUT_ATTR(nAttr)
 
+        EulerMath.inResRotOrder = eAttr.create("outEulerRotateOrder", "oro", 0)
+        eAttr.addField("xyz", 0)
+        eAttr.addField("yzx", 1)
+        eAttr.addField("zxy", 2)
+        eAttr.addField("xzy", 3)
+        eAttr.addField("yxz", 4)
+        eAttr.addField("zyx", 5)
+        INPUT_ATTR(eAttr)
+
         EulerMath.addAttribute(EulerMath.inOperation)
         EulerMath.addAttribute(EulerMath.inEuler1)
+        EulerMath.addAttribute(EulerMath.inEuler1RotOrder)
         EulerMath.addAttribute(EulerMath.inEuler2)
-        EulerMath.addAttribute(EulerMath.inRotOrder)
+        EulerMath.addAttribute(EulerMath.inEuler2RotOrder)
+        EulerMath.addAttribute(EulerMath.inResRotOrder)
         EulerMath.addAttribute(EulerMath.outEuler)
         EulerMath.attributeAffects(EulerMath.inOperation, EulerMath.outEuler)
         EulerMath.attributeAffects(EulerMath.inEuler1, EulerMath.outEuler)
+        EulerMath.attributeAffects(EulerMath.inEuler1RotOrder, EulerMath.outEuler)
         EulerMath.attributeAffects(EulerMath.inEuler2, EulerMath.outEuler)
-        EulerMath.attributeAffects(EulerMath.inRotOrder, EulerMath.outEuler)
+        EulerMath.attributeAffects(EulerMath.inEuler2RotOrder, EulerMath.outEuler)
+        EulerMath.attributeAffects(EulerMath.inResRotOrder, EulerMath.outEuler)
 
     def compute(self, plug, dataBlock):
         """
@@ -134,27 +156,39 @@ class EulerMath(om2.MPxNode):
         if plug != EulerMath.outEuler:
             return om2.kUnknownParameter
 
-        rotOrder = dataBlock.inputValue(EulerMath.inRotOrder).asShort()
         operation = dataBlock.inputValue(EulerMath.inOperation).asShort()
-        qEuler1 = om2.MEulerRotation(dataBlock.inputValue(EulerMath.inEuler1).asDouble3()).asQuaternion()
-        qEuler2 = om2.MEulerRotation(dataBlock.inputValue(EulerMath.inEuler2).asDouble3()).asQuaternion()
+        euler1 = dataBlock.inputValue(EulerMath.inEuler1).asDouble3()
+        euler2 = dataBlock.inputValue(EulerMath.inEuler2).asDouble3()
+        euler1RotOder = dataBlock.inputValue(EulerMath.inEuler1RotOrder).asShort()
+        euler2RotOrder = dataBlock.inputValue(EulerMath.inEuler2RotOrder).asShort()
+        outRotOrder = dataBlock.inputValue(EulerMath.inResRotOrder).asShort()
+
+        eEuler1 = om2.MEulerRotation(euler1, euler1RotOder)
+        eEuler2 = om2.MEulerRotation(euler2, euler2RotOrder)
 
         outEulerHandle = dataBlock.outputValue(EulerMath.outEuler)
 
         if operation == 0:
-            vResult = qEuler1.asEulerRotation().asVector()
+            eEuler1.reorderIt(outRotOrder)
+            vResult = eEuler1.asVector()
             outEulerHandle.setMVector(vResult)
         elif operation == 1:
-            vEuler1 = qEuler1.asEulerRotation().asVector()
-            vEuler2 = qEuler2.asEulerRotation().asVector()
-            vResult = vEuler1 + vEuler2
+            eEuler1.reorderIt(outRotOrder)
+            eEuler2.reorderIt(outRotOrder)
+            eOutEuler = eEuler1 + eEuler2
+            vResult = eOutEuler.asVector()
             outEulerHandle.setMVector(vResult)
         elif operation == 2:
-            vEuler1 = qEuler1.asEulerRotation().asVector()
-            vEuler2 = qEuler2.asEulerRotation().asVector()
-            vResult = vEuler1 - vEuler2
+            eEuler1.reorderIt(outRotOrder)
+            eEuler2.reorderIt(outRotOrder)
+            eOutEuler = eEuler1 - eEuler2
+            vResult = eOutEuler.asVector()
             outEulerHandle.setMVector(vResult)
         elif operation == 3:
-            pass
+            eEuler1.reorderIt(outRotOrder)
+            eEuler2.reorderIt(outRotOrder)
+            eOutEuler = eEuler1 * eEuler2
+            vResult = eOutEuler.asVector()
+            outEulerHandle.setMVector(vResult)
 
         outEulerHandle.setClean()

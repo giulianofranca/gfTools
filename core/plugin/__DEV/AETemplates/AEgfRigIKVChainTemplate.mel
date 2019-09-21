@@ -1,10 +1,12 @@
 global proc AEgfRigIKVChainTemplate(string $nodeName){
     editorTemplate -beginScrollLayout;
         editorTemplate -beginLayout "gfRigIKVChain Attributes" -collapse 0; // Create groupbox | editorTemplate -addSeparator
-            editorTemplate -beginLayout "Input Matrices" -collapse 1;
+            editorTemplate -beginLayout "Input Informations" -collapse 1;
                 editorTemplate -addControl "root";
                 editorTemplate -addControl "handle";
                 editorTemplate -addControl "upVector";
+                editorTemplate -addControl "parentInverseMatrix";
+                editorTemplate -addControl "jointOrient";
             editorTemplate -endLayout;
             editorTemplate -beginLayout "Inverse Kinematics Options" -collapse 0;
                 editorTemplate -addControl "hierarchyMode";

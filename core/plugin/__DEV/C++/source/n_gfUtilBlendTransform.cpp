@@ -25,11 +25,14 @@ MObject BlendTransform::inRotInterp;
 MObject BlendTransform::inTrans1;
 MObject BlendTransform::inRot1;
 MObject BlendTransform::inSca1;
+MObject BlendTransform::inRot1Order;
 MObject BlendTransform::inTransform1;
 MObject BlendTransform::inTrans2;
 MObject BlendTransform::inRot2;
 MObject BlendTransform::inSca2;
+MObject BlendTransform::inRot2Order;
 MObject BlendTransform::inTransform2;
+MObject BlendTransform::inOutRotOrder;
 MObject BlendTransform::outTrans;
 MObject BlendTransform::outRot;
 MObject BlendTransform::outSca;
@@ -79,10 +82,21 @@ MStatus BlendTransform::initialize(){
     nAttr.setArray(true);
     INPUT_ATTR(nAttr);
 
+    inRot1Order = eAttr.create("rotateOrder1", "rro1", 0, &status);
+    eAttr.addField("xyz", 0);
+    eAttr.addField("yzx", 1);
+    eAttr.addField("zxy", 2);
+    eAttr.addField("xzy", 3);
+    eAttr.addField("yxz", 4);
+    eAttr.addField("zyx", 5);
+    eAttr.setArray(true);
+    INPUT_ATTR(eAttr);
+
     inTransform1 = cAttr.create("transform1", "tr1", &status);
     cAttr.addChild(inTrans1);
     cAttr.addChild(inRot1);
     cAttr.addChild(inSca1);
+    cAttr.addChild(inRot1Order);
 
     inTrans2 = nAttr.createPoint("translate2", "t2", &status);
     nAttr.setArray(true);
@@ -99,10 +113,31 @@ MStatus BlendTransform::initialize(){
     nAttr.setArray(true);
     INPUT_ATTR(nAttr);
 
+    inRot2Order = eAttr.create("rotateOrder2", "rro2", 0, &status);
+    eAttr.addField("xyz", 0);
+    eAttr.addField("yzx", 1);
+    eAttr.addField("zxy", 2);
+    eAttr.addField("xzy", 3);
+    eAttr.addField("yxz", 4);
+    eAttr.addField("zyx", 5);
+    eAttr.setArray(true);
+    INPUT_ATTR(eAttr);
+
     inTransform2 = cAttr.create("transform2", "tr2", &status);
     cAttr.addChild(inTrans2);
     cAttr.addChild(inRot2);
     cAttr.addChild(inSca2);
+    cAttr.addChild(inRot2Order);
+
+    inOutRotOrder = eAttr.create("outRotateOrder", "orro", 0, &status);
+    eAttr.addField("xyz", 0);
+    eAttr.addField("yzx", 1);
+    eAttr.addField("zxy", 2);
+    eAttr.addField("xzy", 3);
+    eAttr.addField("yxz", 4);
+    eAttr.addField("zyx", 5);
+    eAttr.setArray(true);
+    INPUT_ATTR(eAttr);
 
     outTrans = nAttr.createPoint("outTranslate", "ot", &status);
     nAttr.setArray(true);
@@ -129,6 +164,7 @@ MStatus BlendTransform::initialize(){
     addAttribute(inRotInterp);
     addAttribute(inTransform1);
     addAttribute(inTransform2);
+    addAttribute(inOutRotOrder);
     addAttribute(outTrans);
     addAttribute(outRot);
     addAttribute(outSca);
@@ -140,7 +176,10 @@ MStatus BlendTransform::initialize(){
     attributeAffects(inBlender, outRot);
     attributeAffects(inRotInterp, outRot);
     attributeAffects(inRot1, outRot);
+    attributeAffects(inRot1Order, outRot);
     attributeAffects(inRot2, outRot);
+    attributeAffects(inRot2Order, outRot);
+    attributeAffects(inOutRotOrder, outRot);
     attributeAffects(inBlender, outSca);
     attributeAffects(inSca1, outSca);
     attributeAffects(inSca2, outSca);
@@ -186,21 +225,36 @@ MStatus BlendTransform::compute(const MPlug& plug, MDataBlock& dataBlock){
         MArrayDataHandle rot1Handle = dataBlock.inputArrayValue(inRot1);
         MArrayDataHandle rot2Handle = dataBlock.inputArrayValue(inRot2);
         MArrayDataHandle outRotHandle = dataBlock.outputArrayValue(outRot);
+        MArrayDataHandle rotOrder1Handle = dataBlock.inputArrayValue(inRot1Order);
+        MArrayDataHandle rotOrder2Handle = dataBlock.inputArrayValue(inRot2Order);
+        MArrayDataHandle outRotOrderHandle = dataBlock.inputArrayValue(inOutRotOrder);
         std::vector<MVector> outList;
         double blenderD = (double)blender;
         uint32_t index = std::min(rot1Handle.elementCount(), rot2Handle.elementCount());
         for (uint32_t i = 0; i < index; i++){
             rot1Handle.jumpToArrayElement(i);
             rot2Handle.jumpToArrayElement(i);
-            MVector vRot1 = rot1Handle.inputValue().asVector();
-            MVector vRot2 = rot2Handle.inputValue().asVector();
+            short rotOrder1 = BlendTransform::checkRotateOrderArrayHandle(rotOrder1Handle, i);
+            short rotOrder2 = BlendTransform::checkRotateOrderArrayHandle(rotOrder2Handle, i);
+            short outRotOrder = BlendTransform::checkRotateOrderArrayHandle(outRotOrderHandle, i);
+            MVector rot1 = rot1Handle.inputValue().asVector();
+            MVector rot2 = rot2Handle.inputValue().asVector();
+            MEulerRotation eRot1 = BlendTransform::createMEulerRotation(rot1, rotOrder1);
+            MEulerRotation eRot2 = BlendTransform::createMEulerRotation(rot2, rotOrder2);
+            BlendTransform::reorderMEulerRotation(eRot1, outRotOrder);
+            BlendTransform::reorderMEulerRotation(eRot2, outRotOrder);
             MVector vOut;
-            if (rotInterp == 0)
+            if (rotInterp == 0){
+                MVector vRot1 = eRot1.asVector();
+                MVector vRot2 = eRot2.asVector();
                 vOut = (1.0 - blenderD) * vRot1 + blenderD * vRot2;
+            }
             else{
-                MQuaternion qRot1 = MEulerRotation(vRot1).asQuaternion();
-                MQuaternion qRot2 = MEulerRotation(vRot2).asQuaternion();
-                vOut = slerp(qRot1, qRot2, blenderD).asEulerRotation().asVector();
+                MQuaternion qRot1 = eRot1.asQuaternion();
+                MQuaternion qRot2 = eRot2.asQuaternion();
+                MEulerRotation eSlerp = slerp(qRot1, qRot2, blenderD).asEulerRotation();
+                BlendTransform::reorderMEulerRotation(eSlerp, outRotOrder);
+                vOut = eSlerp.asVector();
             }
             outList.push_back(vOut);
         }
@@ -258,6 +312,7 @@ VisibilityData BlendTransform::visibilityCalculation(float blender){
     Calculate the visibility of the objects based on blender value. Threshold can be changed
     in code to affect the calculation.
     */
+    VisibilityData data;
     float threshold = 0.25f;
     bool vis = true;
     bool revVis = false;
@@ -273,6 +328,81 @@ VisibilityData BlendTransform::visibilityCalculation(float blender){
         vis = true;
         revVis = true;
     }
+    data.visibility = vis;
+    data.reverseVisibility = revVis;
 
-    return {vis, revVis};
+    return data;
+}
+
+short BlendTransform::checkRotateOrderArrayHandle(MArrayDataHandle& arrayHandle, uint32_t iterValue){
+    /*
+    Check if rotate order MArrayDataHandle is done. If it is return default kXYZ, otherwise
+    return the input value.
+    */
+    short value;
+    uint32_t index = arrayHandle.elementCount();
+    if (index > 0 && iterValue <= index){
+        arrayHandle.jumpToArrayElement(iterValue);
+        value = arrayHandle.inputValue().asShort();
+    }
+    else
+        value = 0;
+    return value;
+}
+
+MEulerRotation BlendTransform::createMEulerRotation(MVector& value, short rotOrder){
+    /*
+    Create an MEulerRotation instance based on a double3 typed values and short typed
+    rotation order.
+    */
+    MEulerRotation::RotationOrder order = MEulerRotation::kXYZ;
+    switch (rotOrder)
+    {
+    case 0:
+        order = MEulerRotation::kXYZ;
+        break;
+    case 1:
+        order = MEulerRotation::kYZX;
+        break;
+    case 2:
+        order = MEulerRotation::kZXY;
+        break;
+    case 3:
+        order = MEulerRotation::kXZY;
+        break;
+    case 4:
+        order = MEulerRotation::kYXZ;
+        break;
+    case 5:
+        order = MEulerRotation::kZYX;
+        break;
+    }
+    MEulerRotation eResult = MEulerRotation(value, order);
+    return eResult;
+}
+
+void BlendTransform::reorderMEulerRotation(MEulerRotation& euler, short rotOrder){
+    MEulerRotation::RotationOrder order;
+    switch (rotOrder)
+    {
+    case 0:
+        order = MEulerRotation::kXYZ;
+        break;
+    case 1:
+        order = MEulerRotation::kYZX;
+        break;
+    case 2:
+        order = MEulerRotation::kZXY;
+        break;
+    case 3:
+        order = MEulerRotation::kXZY;
+        break;
+    case 4:
+        order = MEulerRotation::kYXZ;
+        break;
+    case 5:
+        order = MEulerRotation::kZYX;
+        break;
+    }
+    euler.reorderIt(order);
 }

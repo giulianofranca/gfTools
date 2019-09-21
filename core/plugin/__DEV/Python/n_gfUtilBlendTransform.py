@@ -57,11 +57,14 @@ class BlendTransform(om2.MPxNode):
     inTrans1 = om2.MObject()
     inRot1 = om2.MObject()
     inSca1 = om2.MObject()
+    inRot1Order = om2.MObject()
     inTransform1 = om2.MObject()
     inTrans2 = om2.MObject()
     inRot2 = om2.MObject()
     inSca2 = om2.MObject()
+    inRot2Order = om2.MObject()
     inTransform2 = om2.MObject()
+    inOutRotOrder = om2.MObject()
     outTrans = om2.MObject()
     outRot = om2.MObject()
     outSca = om2.MObject()
@@ -114,10 +117,21 @@ class BlendTransform(om2.MPxNode):
         nAttr.array = True
         INPUT_ATTR(nAttr)
 
+        BlendTransform.inRot1Order = eAttr.create("rotateOrder1", "rro1", 0)
+        eAttr.addField("xyz", 0)
+        eAttr.addField("yzx", 1)
+        eAttr.addField("zxy", 2)
+        eAttr.addField("xzy", 3)
+        eAttr.addField("yxz", 4)
+        eAttr.addField("zyx", 5)
+        eAttr.array = True
+        INPUT_ATTR(eAttr)
+
         BlendTransform.inTransform1 = cAttr.create("transform1", "tr1")
         cAttr.addChild(BlendTransform.inTrans1)
         cAttr.addChild(BlendTransform.inRot1)
         cAttr.addChild(BlendTransform.inSca1)
+        cAttr.addChild(BlendTransform.inRot1Order)
 
         BlendTransform.inTrans2 = nAttr.createPoint("translate2", "t2")
         nAttr.array = True
@@ -134,10 +148,31 @@ class BlendTransform(om2.MPxNode):
         nAttr.array = True
         INPUT_ATTR(nAttr)
 
+        BlendTransform.inRot2Order = eAttr.create("rotateOrder2", "rro2", 0)
+        eAttr.addField("xyz", 0)
+        eAttr.addField("yzx", 1)
+        eAttr.addField("zxy", 2)
+        eAttr.addField("xzy", 3)
+        eAttr.addField("yxz", 4)
+        eAttr.addField("zyx", 5)
+        eAttr.array = True
+        INPUT_ATTR(eAttr)
+
         BlendTransform.inTransform2 = cAttr.create("transform2", "tr2")
         cAttr.addChild(BlendTransform.inTrans2)
         cAttr.addChild(BlendTransform.inRot2)
         cAttr.addChild(BlendTransform.inSca2)
+        cAttr.addChild(BlendTransform.inRot2Order)
+
+        BlendTransform.inOutRotOrder = eAttr.create("outRotateOrder", "orro", 0)
+        eAttr.addField("xyz", 0)
+        eAttr.addField("yzx", 1)
+        eAttr.addField("zxy", 2)
+        eAttr.addField("xzy", 3)
+        eAttr.addField("yxz", 4)
+        eAttr.addField("zyx", 5)
+        eAttr.array = True
+        INPUT_ATTR(eAttr)
 
         BlendTransform.outTrans = nAttr.createPoint("outTranslate", "ot")
         nAttr.array = True
@@ -164,19 +199,22 @@ class BlendTransform(om2.MPxNode):
         BlendTransform.addAttribute(BlendTransform.inRotInterp)
         BlendTransform.addAttribute(BlendTransform.inTransform1)
         BlendTransform.addAttribute(BlendTransform.inTransform2)
+        BlendTransform.addAttribute(BlendTransform.inOutRotOrder)
         BlendTransform.addAttribute(BlendTransform.outTrans)
         BlendTransform.addAttribute(BlendTransform.outRot)
         BlendTransform.addAttribute(BlendTransform.outSca)
         BlendTransform.addAttribute(BlendTransform.outVis)
         BlendTransform.addAttribute(BlendTransform.outRevVis)
-
         BlendTransform.attributeAffects(BlendTransform.inBlender, BlendTransform.outTrans)
         BlendTransform.attributeAffects(BlendTransform.inTrans1, BlendTransform.outTrans)
         BlendTransform.attributeAffects(BlendTransform.inTrans2, BlendTransform.outTrans)
         BlendTransform.attributeAffects(BlendTransform.inBlender, BlendTransform.outRot)
         BlendTransform.attributeAffects(BlendTransform.inRotInterp, BlendTransform.outRot)
         BlendTransform.attributeAffects(BlendTransform.inRot1, BlendTransform.outRot)
+        BlendTransform.attributeAffects(BlendTransform.inRot1Order, BlendTransform.outRot)
         BlendTransform.attributeAffects(BlendTransform.inRot2, BlendTransform.outRot)
+        BlendTransform.attributeAffects(BlendTransform.inRot2Order, BlendTransform.outRot)
+        BlendTransform.attributeAffects(BlendTransform.inOutRotOrder, BlendTransform.outRot)
         BlendTransform.attributeAffects(BlendTransform.inBlender, BlendTransform.outSca)
         BlendTransform.attributeAffects(BlendTransform.inSca1, BlendTransform.outSca)
         BlendTransform.attributeAffects(BlendTransform.inSca2, BlendTransform.outSca)
@@ -217,18 +255,32 @@ class BlendTransform(om2.MPxNode):
             rot1Handle = dataBlock.inputArrayValue(BlendTransform.inRot1)
             rot2Handle = dataBlock.inputArrayValue(BlendTransform.inRot2)
             outRotHandle = dataBlock.outputArrayValue(BlendTransform.outRot)
+            rotOrder1Handle = dataBlock.inputArrayValue(BlendTransform.inRot1Order)
+            rotOrder2Handle = dataBlock.inputArrayValue(BlendTransform.inRot2Order)
+            outRotOrderHandle = dataBlock.inputArrayValue(BlendTransform.inOutRotOrder)
             outList = []
             for i in range(min(len(rot1Handle), len(rot2Handle))):
                 rot1Handle.jumpToLogicalElement(i)
                 rot2Handle.jumpToLogicalElement(i)
-                vRot1 = rot1Handle.inputValue().asVector()
-                vRot2 = rot2Handle.inputValue().asVector()
+                rotOrder1 = BlendTransform.checkRotateOrderArrayHandle(rotOrder1Handle, i)
+                rotOrder2 = BlendTransform.checkRotateOrderArrayHandle(rotOrder2Handle, i)
+                outRotOrder = BlendTransform.checkRotateOrderArrayHandle(outRotOrderHandle, i)
+                rot1 = rot1Handle.inputValue().asVector()
+                rot2 = rot2Handle.inputValue().asVector()
+                eRot1 = BlendTransform.createMEulerRotation(rot1, rotOrder1)
+                eRot2 = BlendTransform.createMEulerRotation(rot2, rotOrder2)
+                BlendTransform.reorderMEulerRotation(eRot1, outRotOrder)
+                BlendTransform.reorderMEulerRotation(eRot2, outRotOrder)
                 if rotInterp == 0:
+                    vRot1 = eRot1.asVector()
+                    vRot2 = eRot2.asVector()
                     vOut = (1.0 - blender) * vRot1 + blender * vRot2
                 else:
-                    qRot1 = om2.MEulerRotation(vRot1).asQuaternion()
-                    qRot2 = om2.MEulerRotation(vRot2).asQuaternion()
-                    vOut = om2.MQuaternion.slerp(qRot1, qRot2, blender).asEulerRotation().asVector()
+                    qRot1 = eRot1.asQuaternion()
+                    qRot2 = eRot2.asQuaternion()
+                    eSlerp = om2.MQuaternion.slerp(qRot1, qRot2, blender).asEulerRotation()
+                    BlendTransform.reorderMEulerRotation(eSlerp, outRotOrder)
+                    vOut = eSlerp.asVector()
                 outList.append(vOut)
             for i in range(len(outRotHandle)):
                 outRotHandle.jumpToLogicalElement(i)
@@ -289,3 +341,57 @@ class BlendTransform(om2.MPxNode):
             revVis = True
 
         return vis, revVis
+
+    @staticmethod
+    def checkRotateOrderArrayHandle(arrayHandle, iterValue):
+        """
+        Check if rotate order MArrayDataHandle is done. If it is return default kXYZ, otherwise
+        return the input value.
+        """
+        index = len(arrayHandle)
+        if index > 0 and iterValue <= index:
+            arrayHandle.jumpToLogicalElement(iterValue)
+            value = arrayHandle.inputValue().asShort()
+        else:
+            value = 0
+        return value
+
+    @staticmethod
+    def createMEulerRotation(value, rotOrder):
+        """
+        Create an MEulerRotation instance based on a double3 typed values and short typed
+        rotation order.
+        """
+        if rotOrder == 0:
+            order = om2.MEulerRotation.kXYZ
+        elif rotOrder == 1:
+            order = om2.MEulerRotation.kYZX
+        elif rotOrder == 2:
+            order = om2.MEulerRotation.kZXY
+        elif rotOrder == 3:
+            order = om2.MEulerRotation.kXZY
+        elif rotOrder == 4:
+            order = om2.MEulerRotation.kYXZ
+        elif rotOrder == 5:
+            order = om2.MEulerRotation.kZYX
+        eResult = om2.MEulerRotation(value, order)
+        return eResult
+
+    @staticmethod
+    def reorderMEulerRotation(euler, rotOrder):
+        """
+        Reorder an MEulerRotation instance based on a short typed rotation order.
+        """
+        if rotOrder == 0:
+            order = om2.MEulerRotation.kXYZ
+        elif rotOrder == 1:
+            order = om2.MEulerRotation.kYZX
+        elif rotOrder == 2:
+            order = om2.MEulerRotation.kZXY
+        elif rotOrder == 3:
+            order = om2.MEulerRotation.kXZY
+        elif rotOrder == 4:
+            order = om2.MEulerRotation.kYXZ
+        elif rotOrder == 5:
+            order = om2.MEulerRotation.kZYX
+        euler.reorderIt(order)

@@ -28,7 +28,6 @@ Todo:
 
 This code supports Pylint. Rc file in project.
 """
-
 import sys
 import maya.api._OpenMaya_py2 as om2
 
@@ -60,9 +59,9 @@ def OUTPUT_ATTR(FNATTR):
 class TestNode(om2.MPxNode):
     """ Main class of gfTestNode node. """
 
-    kNodeName = "gfTestNode"
-    kNodeClassify = "utility/general"
-    kNodeID = om2.MTypeId(0x0012f7c2)
+    kNodeName = ""
+    kNodeClassify = ""
+    kNodeID = ""
 
     inAttr = om2.MObject()
     outAttr = om2.MObject()
@@ -102,30 +101,54 @@ class TestNode(om2.MPxNode):
             * dataBlock contains the data on which we will base our computations.
         """
         # pylint: disable=no-self-use
-        if plug == TestNode.outAttr:
-            inAttrValue = dataBlock.inputValue(TestNode.inAttr).asFloat3()
+        if plug != TestNode.outAttr:
+            return om2.kUnknownParameter
 
-            outAttrHandle = dataBlock.outputValue(TestNode.outAttr)
-            outAttrHandle.set3Float(inAttrValue[0], inAttrValue[1], inAttrValue[2])
-            outAttrHandle.setClean()
+        inAttrValue = dataBlock.inputValue(TestNode.inAttr).asVector()
+
+        outAttrHandle = dataBlock.outputValue(TestNode.outAttr)
+        outAttrHandle.set3Float(inAttrValue[0], inAttrValue[1], inAttrValue[2])
+        outAttrHandle.setClean()
+
+
+def REGISTER_NODE(NODE, PLUGIN):
+    """ Register a MPxNode. """
+    # pylint: disable=invalid-name
+    try:
+        PLUGIN.registerNode(NODE.kNodeName, NODE.kNodeID, NODE.creator,
+                            NODE.initialize, om2.MPxNode.kDependNode, NODE.kNodeClassify)
+    except BaseException:
+        sys.stderr.write("Failed to register node: %s" % NODE.kNodeName)
+        raise
+
+def DEREGISTER_NODE(NODE, PLUGIN):
+    """ Deregister a MPxNode. """
+    # pylint: disable=invalid-name
+    try:
+        PLUGIN.deregisterNode(NODE.kNodeID)
+    except BaseException:
+        sys.stderr.write("Failed to deregister node: %s" % NODE.kNodeName)
+        raise
+
+
+kAuthor = "Giuliano Franca"
+kVersion = "1.0"
+kRequiredAPIVersion = "Any"
+
+TestNode.kNodeName = "gfTestNode"
+TestNode.kNodeClassify = "utility/general"
+TestNode.kNodeID = om2.MTypeId(0x000fff)
 
 
 def initializePlugin(mobject):
     """ Initializes the plug-in. """
-    mplugin = om2.MFnPlugin(mobject)
-    try:
-        mplugin.registerNode(TestNode.kNodeName, TestNode.kNodeID, TestNode.creator,
-                             TestNode.initialize, om2.MPxNode.kDependNode, TestNode.kNodeClassify)
-    except:
-        sys.stderr.write("Failed to register node: " + TestNode.kNodeName)
-        raise
+    mPlugin = om2.MFnPlugin(mobject, kAuthor, kVersion, kRequiredAPIVersion)
+
+    REGISTER_NODE(TestNode, mPlugin)
 
 
 def uninitializePlugin(mobject):
     """ Unitializes the plug-in. """
-    mplugin = om2.MFnPlugin(mobject)
-    try:
-        mplugin.deregisterNode(TestNode.kNodeID)
-    except:
-        sys.stderr.write("Failed to deregister node: " + TestNode.kNodeName)
-        raise
+    mPlugin = om2.MFnPlugin(mobject, kAuthor, kVersion, kRequiredAPIVersion)
+
+    DEREGISTER_NODE(TestNode, mPlugin)

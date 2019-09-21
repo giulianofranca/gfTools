@@ -48,7 +48,8 @@ import n_gfUtilAngleScalarMath as m_AngularScalarMath
 import n_gfUtilAngleTrigMath as m_AngularTrigMath
 import n_gfUtilAngleToDouble as m_AngleToDouble
 import n_gfUtilDoubleToAngle as m_DoubleToAngle
-# import n_gfUtilEulerMath as m_EulerMath
+import n_gfUtilEulerMath as m_EulerMath
+import n_gfUtilEulerScalarMath as m_EulerScalarMath
 import n_gfUtilDecompRowMatrix as m_DecomposeRowMatrix
 # gfDebug
 reload(m_DebugVector)
@@ -64,7 +65,8 @@ reload(m_AngularScalarMath)
 reload(m_AngularTrigMath)
 reload(m_AngleToDouble)
 reload(m_DoubleToAngle)
-# reload(m_EulerMath)
+reload(m_EulerMath)
+reload(m_EulerScalarMath)
 reload(m_DecomposeRowMatrix)
 
 
@@ -170,9 +172,12 @@ m_DoubleToAngle.DoubleToAngle.kNodeID = om2.MTypeId(0x0012f7ca)
 # m_EulerMath.EulerMath.kNodeName = "gfUtilEulerMath_P"
 # m_EulerMath.EulerMath.kNodeClassify = "utility/general"
 # m_EulerMath.EulerMath.kNodeID = om2.MTypeId(0x0012f7cb)
+# m_EulerScalarMath.EulerScalarMath.kNodeName = "gfUtilEulerScalarMath_P"
+# m_EulerScalarMath.EulerScalarMath.kNodeClassify = "utility/general"
+# m_EulerScalarMath.EulerScalarMath.kNodeID = om2.MTypeId(0x0012f7cc)
 m_DecomposeRowMatrix.DecomposeRowMatrix.kNodeName = "gfUtilDecompRowMtx_P"
 m_DecomposeRowMatrix.DecomposeRowMatrix.kNodeClassify = "utility/general"
-m_DecomposeRowMatrix.DecomposeRowMatrix.kNodeID = om2.MTypeId(0x0012f7cc)
+m_DecomposeRowMatrix.DecomposeRowMatrix.kNodeID = om2.MTypeId(0x0012f7cd)
 
 
 def initializePlugin(mobject):
@@ -191,6 +196,7 @@ def initializePlugin(mobject):
     REGISTER_NODE(m_AngleToDouble.AngleToDouble, mplugin2)
     REGISTER_NODE(m_DoubleToAngle.DoubleToAngle, mplugin2)
     # REGISTER_NODE(m_EulerMath.EulerMath, mplugin2)
+    # REGISTER_NODE(m_EulerScalarMath.EulerScalarMath, mplugin2)
     REGISTER_NODE(m_DecomposeRowMatrix.DecomposeRowMatrix, mplugin2)
 
 
@@ -210,4 +216,5 @@ def uninitializePlugin(mobject):
     DEREGISTER_NODE(m_AngleToDouble.AngleToDouble, mplugin2)
     DEREGISTER_NODE(m_DoubleToAngle.DoubleToAngle, mplugin2)
     # DEREGISTER_NODE(m_EulerMath.EulerMath, mplugin2)
+    # DEREGISTER_NODE(m_EulerScalarMath.EulerScalarMath, mplugin2)
     DEREGISTER_NODE(m_DecomposeRowMatrix.DecomposeRowMatrix, mplugin2)

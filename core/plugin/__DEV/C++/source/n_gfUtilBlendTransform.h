@@ -34,6 +34,9 @@ public:
     static void*                        creator();
 
     static VisibilityData               visibilityCalculation(float blender);
+    static short                        checkRotateOrderArrayHandle(MArrayDataHandle& arrayHandle, uint32_t iterValue);
+    static MEulerRotation               createMEulerRotation(MVector& value, short rotOrder);
+    static void                         reorderMEulerRotation(MEulerRotation& euler, short rotOrder);
 
 public:
     const static MString                kNodeName;
@@ -45,11 +48,14 @@ public:
     static MObject                      inTrans1;
     static MObject                      inRot1;
     static MObject                      inSca1;
+    static MObject                      inRot1Order;
     static MObject                      inTransform1;
     static MObject                      inTrans2;
     static MObject                      inRot2;
     static MObject                      inSca2;
+    static MObject                      inRot2Order;
     static MObject                      inTransform2;
+    static MObject                      inOutRotOrder;
     static MObject                      outTrans;
     static MObject                      outRot;
     static MObject                      outSca;
