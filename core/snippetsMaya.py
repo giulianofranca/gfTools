@@ -20,7 +20,8 @@ snippets.createComponent("Mother", "arm_L")
 snippets.createComponent("Mother", "arm_R")
 
 snippets.getPoleVectorPosition(distance=4.0)
-snippets.createObjectOnTransform("joint")
+snippets.createObjectOnTransform("transform")
+snippets.createObject("unknownTransform", "Test")
 
 thigh = [11.641, 152.323, 1.056]
 shin = [13.322, 82.643, 0.026]
@@ -42,6 +43,15 @@ cmds.setAttr("%s.TOE" % om2.MGlobal.getActiveSelectionList().getDagPath(0), 0, l
 snippets.createAttribute("stretch", "stretch", snippets.AttributeTypes.kFloat, minVal=[0.001], default=[1.0])
 snippets.createAttribute("squashFB", "squashFB", snippets.AttributeTypes.kFloat, minVal=[0.001], default=[1.0])
 snippets.createAttribute("squashLR", "squashLR", snippets.AttributeTypes.kFloat, minVal=[0.001], default=[1.0])
+enum = {
+    "xyz": 0,
+    "yzx": 1,
+    "zxy": 2,
+    "xzy": 3,
+    "yxz": 4,
+    "zyx": 5
+}
+snippets.createAttribute("rotationOrder", "rotationOrder", snippets.AttributeTypes.kEnum, enum=enum)
 
 
 cmds.parent(r=True, s=True)

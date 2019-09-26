@@ -14,6 +14,7 @@ Requirements:
 
 Todo:
     * NDA
+    * https://github.com/mgear-dev/mgear_core/blob/4b363aba97794b23363b5a15de58aa9710d7d8e0/scripts/mgear/core/attribute.py
 
 This code supports Pylint. Rc file in project.
 """

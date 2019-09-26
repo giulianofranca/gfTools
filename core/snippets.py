@@ -1,4 +1,3 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
 """
 Testing.
@@ -16,6 +15,39 @@ import maya.cmds as cmds
 import maya.api._OpenMaya_py2 as om2
 
 
+kCharOutlinerColor = om2.MColor([0.988, 0.961, 0.392])
+
+
+def connectAttr(startAttr, endAttr):
+    """Connect attributes from two nodes.
+
+    Args:
+        startAttr (string): The name of the output plug attribute.
+        endAttr (string): The name of the input plug attribute.
+
+    Returns:
+        True: If succeed.
+
+    Raises:
+        TypeError: If the objects passed is not a dag node.
+    """
+    startNodeName = startAttr.split(".")[0]
+    startAttrName = startAttr.split(".")[1]
+    endNodeName = endAttr.split(".")[0]
+    endAttrName = endAttr.split(".")[1]
+    startObj = om2.MSelectionList().add(startNodeName).getDependNode(0)
+    endObj = om2.MSelectionList().add(endNodeName).getDependNode(0)
+    if not startObj.hasFn(om2.MFn.kDagNode) or not endObj.hasFn(om2.MFn.kDagNode):
+        raise TypeError("Objects must be a dag node.")
+    dagFn = om2.MFnDagNode(startObj)
+    startPlug = dagFn.findPlug(startAttrName, False)
+    dagFn.setObject(endObj)
+    endPlug = dagFn.findPlug(endAttrName, False)
+    mdgmod = om2.MDGModifier()
+    mdgmod.connect(startPlug, endPlug)
+    mdgmod.doIt()
+    return True
+
 def createChar(name):
     """Create a character node hierarchy.
 
@@ -25,21 +57,26 @@ def createChar(name):
     Returns:
         string: The Dag Path of the char node.
     """
-    charObj = om2.MFnDagNode().create("transform", "%s_char" % name)
-    om2.MFnDagNode().create("transform", "deform_hrc", charObj)
-    om2.MFnDagNode().create("transform", "geometry_hrc", charObj)
+    charObj = om2.MFnDagNode().create("unknownTransform", "%s_char" % name)
+    om2.MFnDagNode().create("unknownTransform", "deform_hrc", charObj)
+    om2.MFnDagNode().create("unknownTransform", "geometry_hrc", charObj)
     nodeFn = om2.MFnDependencyNode(charObj)
     plug = nodeFn.findPlug("useOutlinerColor", True)
     plug.setBool(True)
     plug = nodeFn.findPlug("outlinerColor", True)
     dataHandle = plug.asMDataHandle()
-    dataHandle.set3Float(0.988, 0.961, 0.392)
+    dataHandle.set3Float(kCharOutlinerColor.r, kCharOutlinerColor.g, kCharOutlinerColor.b)
     plug.setMDataHandle(dataHandle)
+    om2.MGlobal.setSelectionMode(om2.MGlobal.kSelectObjectMode)
+    selList = om2.MSelectionList().add(charObj)
+    om2.MGlobal.setActiveSelectionList(selList)
+    createMessageAttribute("components", "components")
+    createMessageAttribute("APICharacter", "APICharacter")
     sel = om2.MSelectionList().add(nodeFn.name())
     charPath = sel.getDagPath(0)
     om2.MGlobal.setSelectionMode(om2.MGlobal.kSelectObjectMode)
     om2.MGlobal.setActiveSelectionList(sel)
-    return charPath
+    return charPath.fullPathName()
 
 def createComponent(char, name):
     """Create a component node hierarchy in a char node hierarchy.
@@ -54,38 +91,53 @@ def createComponent(char, name):
     Raises:
         RuntimeError: If char don't exists.
     """
-    if "_char" not in char:
-        charName = "".join([char, "_char"])
-    else:
-        charName = char
-    charPath = om2.MSelectionList().add(charName).getDagPath(0)
-    dagFn = om2.MFnDagNode(charPath)
-    deformObj = None
-    for i in range(dagFn.childCount()):
-        nextChildName = om2.MFnDependencyNode(dagFn.child(i)).name()
-        if nextChildName == "deform_hrc":
-            deformObj = om2.MSelectionList().add("%s|deform_hrc" % charPath.fullPathName()).getDependNode(0)
-            break
-    if deformObj is None:
+    charName = char if "_char" in char else "".join([char, "_char"])
+    charObj = om2.MSelectionList().add(charName).getDependNode(0)
+    nodeFn = om2.MFnDependencyNode(charObj)
+    if not charObj.hasFn(om2.MFn.kDagNode) or not nodeFn.hasAttribute("APICharacter"):
         raise RuntimeError("The specified char name is not a char or don't exists.")
-    cmpntObj = om2.MFnDagNode().create("transform", "%s_cmpnt" % name, deformObj)
-    om2.MFnDagNode().create("transform", "%s_ioConnections_srt" % name, cmpntObj)
-    om2.MFnDagNode().create("transform", "%s_joints_hrc" % name, cmpntObj)
-    om2.MFnDagNode().create("transform", "%s_controls_hrc" % name, cmpntObj)
-    om2.MFnDagNode().create("transform", "%s_ikHandles_hrc" % name, cmpntObj)
-    om2.MFnDagNode().create("transform", "%s_misc_hrc" % name, cmpntObj)
-    sel = om2.MSelectionList().add(om2.MFnDependencyNode(cmpntObj).name())
-    cmpntPath = sel.getDagPath(0)
     om2.MGlobal.setSelectionMode(om2.MGlobal.kSelectObjectMode)
+    charPath = om2.MDagPath().getAPathTo(charObj)
+    deformObj = charPath.child(0)
+    cmpntObj = om2.MFnDagNode().create("unknownTransform", "%s_cmpnt" % name, deformObj)
+    cmpntPath = om2.MDagPath().getAPathTo(cmpntObj)
+    ioConnObj = om2.MFnDagNode().create("unknownTransform", "%s_ioConnections_srt" % name, cmpntObj)
+    ioConnPath = om2.MDagPath().getAPathTo(ioConnObj)
+    om2.MFnDagNode().create("unknownTransform", "%s_joints_hrc" % name, cmpntObj)
+    om2.MFnDagNode().create("unknownTransform", "%s_controls_hrc" % name, cmpntObj)
+    om2.MFnDagNode().create("unknownTransform", "%s_ikHandles_hrc" % name, cmpntObj)
+    om2.MFnDagNode().create("unknownTransform", "%s_misc_hrc" % name, cmpntObj)
+    charComponentsAttr = "%s.components" % charPath.fullPathName()
+    selList = om2.MSelectionList().add(cmpntObj)
+    om2.MGlobal.setActiveSelectionList(selList)
+    createMessageAttribute("character", "character")
+    createMessageAttribute("joints", "joints")
+    createMessageAttribute("controls", "controls")
+    createMessageAttribute("ikHandles", "ikHandles")
+    createMessageAttribute("ioConn", "ioConn")
+    cmpntCharacterAttr = "%s.character" % cmpntPath.fullPathName()
+    cmpntIoAttr = "%s.ioConn" % cmpntPath.fullPathName()
+    selList = om2.MSelectionList().add(ioConnObj)
+    om2.MGlobal.setActiveSelectionList(selList)
+    createMessageAttribute("component", "component")
+    createNumericAttribute("displayJoints", "displayJoints", AttributeTypes.kBool)
+    createNumericAttribute("displayControls", "displayControls", AttributeTypes.kBool)
+    ioComponentAttr = "%s.component" % ioConnPath.fullPathName()
+    connectAttr(charComponentsAttr, cmpntCharacterAttr)
+    connectAttr(cmpntIoAttr, ioComponentAttr)
+    sel = om2.MSelectionList().add(cmpntObj)
     om2.MGlobal.setActiveSelectionList(sel)
-    return cmpntPath
+    return cmpntPath.fullPathName()
 
 class AttributeTypes(object):
     """Enum of attribute types.
 
-    This can be used to create an attribute with createAttribute() function. Constant types are:
+    This can be used to create an attribute with createAttribute() function.
+
+    Constant types are:
     kInt, kFloat, kDouble, kShort, kLong, kBool, kAngle, kDistance, kTime, kFloatMatrix, kDoubleMatrix,
-    kString, kMesh, kNurbsCurve, kNurbsSurface and kEnum.
+    kString, kMesh, kNurbsCurve, kNurbsSurface, kLattice, kIntArray, kDoubleArray, kPointArray,
+    kVectorArray and kStringArray.
     """
     kInt = 0
     kFloat = 1
@@ -102,169 +154,409 @@ class AttributeTypes(object):
     kMesh = 12
     kNurbsCurve = 13
     kNurbsSurface = 14
-    kEnum = 15
+    kLattice = 15
+    kIntArray = 16
+    kDoubleArray = 17
+    kPointArray = 18
+    kVectorArray = 19
+    kStringArray = 20
 
-def createAttribute(longName, shortName, attrType, length=1,
-                    minVal=None, maxVal=None, default=None, keyable=True, enum=None):
-    """Create custom attribute types in selected objects.
+def createNumericAttribute(longName, shortName, attrType, minVal=None, maxVal=None, default=0,
+                           writable=True, readable=True, keyable=True, storable=True, channelBox=False):
+    """Create a custom numeric attribute in selected objects.
 
     Args:
-        longName (string): The longName of the attribute about to be created.
+        longName (string): The long name of the attribute about to be created.
         shortName (string): The short name of the attribute about to be created.
         attrType ({AttributeTypes} Type constant): The type of the attribute.
-        length (int: 1 [Optional]): The number of childs, used to create vector types.
-        minVal (list: None [Optional]): The minimum value of the attribute.
-        maxVal (list: None [Optional]): The maximum value of the attribute.
-        default (list: None [Optional]): The default value of the attribute.
+        minVal (float: None [Optional]): The minimum value of the attribute.
+        maxVal (float: None [Optional]): The maximum value of the attribute.
+        default (float: 0 [Optional]): The default value of the attribute.
+        writable (bool: True [Optional]): Create as writable attribute.
+        readable (bool: True [Optional]): Create as readable attribute.
         keyable (bool: True [Optional]): Create as keyable attribute.
-        enum (dict: None [Optional]): Create an enum attr with a dict key as name and dick value as index.
+        storable (bool: True [Optional]): Create as storable attribute.
+        channelBox (bool: False [Optional]): Create as channelBox attribute.
 
     Returns:
-        True: If succeed.
+        list: The names of the attributes created.
 
     Raises:
-        ValueError: If the attribute type is not a `AttributeTypes` class constant.
-        KeyError: If the attribute type is kEnum and `enum` attribute was not specified.
+        TypeError: If the attrType is not a numeric type.
     """
-    sel = om2.MGlobal.getActiveSelectionList()
-    for i in range(sel.length()):
-        currentNode = om2.MFnDependencyNode(sel.getDependNode(i))
-        attr = om2.MObject()
-        attrFn = None
-        attrFnVec = None
-        attrData = None
+    selList = om2.MGlobal.getActiveSelectionList()
+    if selList.length() < 1:
+        return None
+    if attrType < 0 or attrType > 5:
+        raise TypeError("Argument attrType must be a numeric type.")
+    if attrType == 0:
+        data = om2.MFnNumericData.kInt
+    elif attrType == 1:
+        data = om2.MFnNumericData.kFloat
+    elif attrType == 2:
+        data = om2.MFnNumericData.kDouble
+    elif attrType == 3:
+        data = om2.MFnNumericData.kShort
+    elif attrType == 4:
+        data = om2.MFnNumericData.kLong
+    else:
+        data = om2.MFnNumericData.kBoolean
+    objectNames = []
+    for i in range(selList.length()):
+        curObj = selList.getDependNode(i)
+        nodeFn = om2.MFnDependencyNode(curObj)
+        objectNames.append("%s.%s" % (nodeFn.name(), longName))
+        attrFn = om2.MFnNumericAttribute()
+        attr = attrFn.create(longName, shortName, data, default)
+        attrFn.writable = writable
+        attrFn.readable = readable
+        attrFn.keyable = keyable
+        attrFn.storable = storable
+        attrFn.channelBox = channelBox
+        if minVal is not None:
+            attrFn.setMin(minVal)
+        if maxVal is not None:
+            attrFn.setMax(maxVal)
+        nodeFn.addAttribute(attr)
+    return objectNames
 
-        if attrType >= 0 and attrType <= 5:
+def createUnitAttribute(longName, shortName, attrType, minVal=None, maxVal=None, default=0,
+                        writable=True, readable=True, keyable=True, storable=True, channelBox=False):
+    """Create custom unit attribute in selected objects.
+
+    Args:
+        longName (string): The long name of the attribute about to be created.
+        shortName (string): The short name of the attribute about to be created.
+        attrType ({AttributeTypes} Type constant): The type of the attribute.
+        minVal (float: None [Optional]): The minimum value of the attribute.
+        maxVal (float: None [Optional]): The maximum value of the attribute.
+        default (float: 0 [Optional]): The default value of the attribute.
+        writable (bool: True [Optional]): Create as writable attribute.
+        readable (bool: True [Optional]): Create as readable attribute.
+        keyable (bool: True [Optional]): Create as keyable attribute.
+        storable (bool: True [Optional]): Create as storable attribute.
+        channelBox (bool: False [Optional]): Create as channelBox attribute.
+
+    Returns:
+        list: The names of the attributes created.
+
+    Raises:
+        TypeError: If the attrType is not a unit type.
+    """
+    selList = om2.MGlobal.getActiveSelectionList()
+    if selList.length() < 1:
+        return None
+    if attrType < 6 or attrType > 8:
+        raise TypeError("Argument attrType must be a unit type.")
+    if attrType == 6:
+        data = om2.MFnUnitAttribute.kAngle
+    elif attrType == 7:
+        data = om2.MFnUnitAttribute.kDistance
+    else:
+        data = om2.MFnUnitAttribute.kTime
+    objectNames = []
+    for i in range(selList.length()):
+        curObj = selList.getDependNode(i)
+        nodeFn = om2.MFnDependencyNode(curObj)
+        objectNames.append("%s.%s" % (nodeFn.name(), longName))
+        attrFn = om2.MFnUnitAttribute()
+        attr = attrFn.create(longName, shortName, data, default)
+        attrFn.writable = writable
+        attrFn.readable = readable
+        attrFn.keyable = keyable
+        attrFn.storable = storable
+        attrFn.channelBox = channelBox
+        if minVal is not None:
+            attrFn.setMin(minVal)
+        if maxVal is not None:
+            attrFn.setMax(maxVal)
+        nodeFn.addAttribute(attr)
+    return objectNames
+
+def createMatrixAttribute(longName, shortName, attrType, writable=True, readable=True,
+                          keyable=True, storable=True, channelBox=False):
+    """Create custom matrix attribute in selected objects.
+
+    Args:
+        longName (string): The long name of the attribute about to be created.
+        shortName (string): The short name of the attribute about to be created.
+        attrType ({AttributeTypes} Type constant): The type of the attribute.
+        writable (bool: True [Optional]): Create as writable attribute.
+        readable (bool: True [Optional]): Create as readable attribute.
+        keyable (bool: True [Optional]): Create as keyable attribute.
+        storable (bool: True [Optional]): Create as storable attribute.
+        channelBox (bool: False [Optional]): Create as channelBox attribute.
+
+    Returns:
+        list: The names of the attributes created.
+
+    Raises:
+        TypeError: If the attrType is not a matrix type.
+    """
+    selList = om2.MGlobal.getActiveSelectionList()
+    if selList.length() < 1:
+        return None
+    if attrType < 9 or attrType > 10:
+        raise TypeError("Argument attrType must be a matrix type.")
+    if attrType == 9:
+        data = om2.MFnMatrixAttribute.kFloat
+    else:
+        data = om2.MFnMatrixAttribute.kDouble
+    objectNames = []
+    for i in range(selList.length()):
+        curObj = selList.getDependNode(i)
+        nodeFn = om2.MFnDependencyNode(curObj)
+        objectNames.append("%s.%s" % (nodeFn.name(), longName))
+        attrFn = om2.MFnMatrixAttribute()
+        attr = attrFn.create(longName, shortName, data)
+        attrFn.writable = writable
+        attrFn.readable = readable
+        attrFn.keyable = keyable
+        attrFn.storable = storable
+        attrFn.channelBox = channelBox
+        nodeFn.addAttribute(attr)
+    return objectNames
+
+def createTypedAttribute(longName, shortName, attrType, writable=True, readable=True,
+                         keyable=True, storable=True, channelBox=False):
+    """Create custom typed  attribute in selected objects.
+
+    Args:
+        longName (string): The long name of the attribute about to be created.
+        shortName (string): The short name of the attribute about to be created.
+        attrType ({AttributeTypes} Type constant): The type of the attribute.
+        writable (bool: True [Optional]): Create as writable attribute.
+        readable (bool: True [Optional]): Create as readable attribute.
+        keyable (bool: True [Optional]): Create as keyable attribute.
+        storable (bool: True [Optional]): Create as storable attribute.
+        channelBox (bool: False [Optional]): Create as channelBox attribute.
+
+    Returns:
+        list: The names of the attributes created.
+
+    Raises:
+        TypeError: If the attrType is not a typed type.
+    """
+    selList = om2.MGlobal.getActiveSelectionList()
+    if selList.length() < 1:
+        return None
+    if attrType < 11 or attrType > 20:
+        raise TypeError("Argument attrType must be a typed type.")
+    if attrType == 11:
+        data = om2.MFnData.kString
+    elif attrType == 12:
+        data = om2.MFnData.kMesh
+    elif attrType == 13:
+        data = om2.MFnData.kNurbsCurve
+    elif attrType == 14:
+        data = om2.MFnData.kNurbsSurface
+    elif attrType == 15:
+        data = om2.MFnData.kLattice
+    elif attrType == 16:
+        data = om2.MFnData.kIntArray
+    elif attrType == 17:
+        data = om2.MFnData.kDoubleArray
+    elif attrType == 18:
+        data = om2.MFnData.kPointArray
+    elif attrType == 19:
+        data = om2.MFnData.kVectorArray
+    elif attrType == 20:
+        data = om2.MFnData.kStringArray
+    objectNames = []
+    for i in range(selList.length()):
+        curObj = selList.getDependNode(i)
+        nodeFn = om2.MFnDependencyNode(curObj)
+        objectNames.append("%s.%s" % (nodeFn.name(), longName))
+        attrFn = om2.MFnTypedAttribute()
+        attr = attrFn.create(longName, shortName, data)
+        attrFn.writable = writable
+        attrFn.readable = readable
+        attrFn.keyable = keyable
+        attrFn.storable = storable
+        attrFn.channelBox = channelBox
+        nodeFn.addAttribute(attr)
+    return objectNames
+
+def createEnumAttribute(longName, shortName, enum, writable=True, readable=True,
+                        keyable=True, storable=True, channelBox=False):
+    """Create custom enum attribute in selected objects.
+
+    Args:
+        longName (string): The long name of the attribute about to be created.
+        shortName (string): The short name of the attribute about to be created.
+        enum (dict): Create an enum attr with a dict key as name and dict value as index.
+        writable (bool: True [Optional]): Create as writable attribute.
+        readable (bool: True [Optional]): Create as readable attribute.
+        keyable (bool: True [Optional]): Create as keyable attribute.
+        storable (bool: True [Optional]): Create as storable attribute.
+        channelBox (bool: False [Optional]): Create as channelBox attribute.
+
+    Returns:
+        list: The names of the attributes created.
+
+    Raises:
+        RuntimeError: If the enum argument is not a dict or its empty.
+    """
+    selList = om2.MGlobal.getActiveSelectionList()
+    if selList.length() < 1:
+        return None
+    if not isinstance(enum, dict) or not bool(enum):
+        raise RuntimeError("Argument enum must be a filled dict.")
+    objectNames = []
+    for i in range(selList.length()):
+        curObj = selList.getDependNode(i)
+        nodeFn = om2.MFnDependencyNode(curObj)
+        objectNames.append("%s.%s" % (nodeFn.name(), longName))
+        attrFn = om2.MFnEnumAttribute()
+        attr = attrFn.create(longName, shortName)
+        sortedEnums = sorted(enum.items(), key=lambda x: x[1])
+        for field in sortedEnums:
+            attrFn.addField(field[0], field[1])
+        attrFn.default = min(enum.values())
+        attrFn.writable = writable
+        attrFn.readable = readable
+        attrFn.keyable = keyable
+        attrFn.storable = storable
+        attrFn.channelBox = channelBox
+        nodeFn.addAttribute(attr)
+    return objectNames
+
+def createMessageAttribute(longName, shortName, writable=True, readable=True,
+                           keyable=True, storable=True, channelBox=False):
+    """Create custom message attribute in selected objects.
+
+    Args:
+        longName (string): The long name of the attribute about to be created.
+        shortName (string): The short name of the attribute about to be created.
+        writable (bool: True [Optional]): Create as writable attribute.
+        readable (bool: True [Optional]): Create as readable attribute.
+        keyable (bool: True [Optional]): Create as keyable attribute.
+        storable (bool: True [Optional]): Create as storable attribute.
+        channelBox (bool: False [Optional]): Create as channelBox attribute.
+
+    Returns:
+        list: The names of the attributes created.
+    """
+    selList = om2.MGlobal.getActiveSelectionList()
+    if selList.length() < 1:
+        return None
+    objectNames = []
+    for i in range(selList.length()):
+        curObj = selList.getDependNode(i)
+        nodeFn = om2.MFnDependencyNode(curObj)
+        objectNames.append("%s.%s" % (nodeFn.name(), longName))
+        attrFn = om2.MFnMessageAttribute()
+        attr = attrFn.create(longName, shortName)
+        attrFn.writable = writable
+        attrFn.readable = readable
+        attrFn.keyable = keyable
+        attrFn.storable = storable
+        attrFn.channelBox = channelBox
+        nodeFn.addAttribute(attr)
+    return objectNames
+
+def createVectorAttribute(longName, shortName, attrType, length=3, writable=True,
+                          readable=True, keyable=True, storable=True, channelBox=False):
+    """Create a custom vector attribute in selected objects.
+
+    Args:
+        longName (string): The long name of the attribute about to be created.
+        shortName (string): The short name of the attribute about to be created.
+        attrType ({AttributeTypes} Type constant): The type of the attribute.
+        length (int: 3 [Optional]): The length of the vector (must be 2 or 3).
+        writable (bool: True [Optional]): Create as writable attribute.
+        readable (bool: True [Optional]): Create as readable attribute.
+        keyable (bool: True [Optional]): Create as keyable attribute.
+        storable (bool: True [Optional]): Create as storable attribute.
+        channelBox (bool: False [Optional]): Create as channelBox attribute.
+
+    Returns:
+        list: The names of the attributes created.
+
+    Raises:
+        IndexError: If the length argument is different than 2 and 3.
+        TypeError: If the attrType argument is not a numeric type.
+    """
+    selList = om2.MGlobal.getActiveSelectionList()
+    if selList.length() < 1:
+        return None
+    if length < 2 or length > 3:
+        raise IndexError("Argument length must be 2 or 3")
+    if attrType < 0 or attrType > 7 or attrType == 5:
+        raise TypeError("Argument attrType must be a numeric type.")
+    if attrType == 0:
+        data = om2.MFnNumericData.kInt
+    elif attrType == 1:
+        data = om2.MFnNumericData.kFloat
+    elif attrType == 2:
+        data = om2.MFnNumericData.kDouble
+    elif attrType == 3:
+        data = om2.MFnNumericData.kShort
+    elif attrType == 4:
+        data = om2.MFnNumericData.kLong
+    elif attrType == 6:
+        data = om2.MFnUnitAttribute.kAngle
+    elif attrType == 7:
+        data = om2.MFnUnitAttribute.kDistance
+    objectNames = []
+    for i in range(selList.length()):
+        curObj = selList.getDependNode(i)
+        nodeFn = om2.MFnDependencyNode(curObj)
+        objectNames.append("%s.%s" % (nodeFn.name(), longName))
+        if attrType < 5:
             attrFn = om2.MFnNumericAttribute()
-            attrFnVec = om2.MFnNumericAttribute()
-            if attrType == 0:
-                attrData = om2.MFnNumericData.kInt
-            elif attrType == 1:
-                attrData = om2.MFnNumericData.kFloat
-            elif attrType == 2:
-                attrData = om2.MFnNumericData.kDouble
-            elif attrType == 3:
-                attrData = om2.MFnNumericData.kShort
-            elif attrType == 4:
-                attrData = om2.MFnNumericData.kLong
-            elif attrType == 5:
-                attrData = om2.MFnNumericData.kBoolean
-        elif attrType >= 6 and attrType <= 8:
-            attrFn = om2.MFnUnitAttribute()
-            attrFnVec = om2.MFnNumericAttribute()
-            if attrType == 6:
-                attrData = om2.MFnUnitAttribute.kAngle
-            elif attrType == 7:
-                attrData = om2.MFnUnitAttribute.kDistance
-            elif attrType == 8:
-                attrData = om2.MFnUnitAttribute.kTime
-        elif attrType >= 9 and attrType <= 10:
-            attrFn = om2.MFnMatrixAttribute()
-            attrFnVec = om2.MFnNumericAttribute()
-            if attrType == 9:
-                attrData = om2.MFnMatrixAttribute.kFloat
-            elif attrType == 10:
-                attrData = om2.MFnMatrixAttribute.kDouble
-        elif attrType >= 11 and attrType <= 14:
-            attrFn = om2.MFnTypedAttribute()
-            attrFnVec = om2.MFnNumericAttribute()
-            if attrType == 11:
-                attrData = om2.MFnData.kString
-            elif attrType == 12:
-                attrData = om2.MFnData.kMesh
-            elif attrType == 13:
-                attrData = om2.MFnData.kNurbsCurve
-            elif attrType == 14:
-                attrData = om2.MFnData.kNurbsSurface
-        elif attrType == 15:
-            attrFn = om2.MFnEnumAttribute()
         else:
-            raise ValueError("Attribute type must be a AttributeTypes class constant.")
+            attrFn = om2.MFnUnitAttribute()
+        attrX = attrFn.create("%sX" % longName, "%sx" % shortName, data)
+        attrY = attrFn.create("%sY" % longName, "%sy" % shortName, data)
+        if length == 3:
+            attrZ = attrFn.create("%sZ" % longName, "%sz" % shortName, data)
+        attrFn = om2.MFnNumericAttribute()
+        if length == 3:
+            attr = attrFn.create(longName, shortName, attrX, attrY, attrZ)
+        else:
+            attr = attrFn.create(longName, shortName, attrX, attrY)
+        attrFn.writable = writable
+        attrFn.readable = readable
+        attrFn.keyable = keyable
+        attrFn.storable = storable
+        attrFn.channelBox = channelBox
+        nodeFn.addAttribute(attr)
+    return objectNames
 
-        if length == 1:
-            if attrType == 15:
-                if enum is not None:
-                    attr = attrFn.create(longName, shortName)
-                    sortedEnums = sorted(enum.items(), key=lambda x: x[1])
-                    for field in sortedEnums:
-                        attrFn.addField(field[0], field[1])
-                    attrFn.default = min(enum.values())
-                else:
-                    raise KeyError("Attribute `enum` have to be specified to create a Enum Attribute.")
-            else:
-                attr = attrFn.create(longName, shortName, attrData)
-                if default is not None:
-                    attrFn.default = default[0]
-                if minVal is not None:
-                    attrFn.setMin(minVal[0])
-                if maxVal is not None:
-                    attrFn.setMax(maxVal[0])
-            if keyable:
-                attrFn.keyable = True
-            else:
-                attrFn.keyable = False
-            attrFn.writable = True
-            attrFn.readable = True
-            attrFn.storable = True
-            currentNode.addAttribute(attr)
-        elif length == 2:
-            if attrType == 15:
-                attrFnVec = attrFn
-                if enum is not None:
-                    attr = attrFnVec.create(longName, shortName)
-                    sortedEnums = sorted(enum, key=lambda x: x[1])
-                    for enum in sortedEnums:
-                        attrFnVec.addField(enum[0], enum[1])
-                else:
-                    raise KeyError("Attribute `enum` have to be specified to create a Enum Attribute.")
-            else:
-                attrX = attrFn.create("%sX" % longName, "%sx" % shortName, attrData)
-                attrY = attrFn.create("%sY" % longName, "%sy" % shortName, attrData)
-                attr = attrFnVec.create(longName, shortName, attrX, attrY)
-                if default is not None:
-                    attrFnVec.default = default[0:2]
-                if minVal is not None:
-                    attrFnVec.setMin(minVal[0:2])
-                if maxVal is not None:
-                    attrFnVec.setMax(maxVal[0:2])
-            if keyable:
-                attrFnVec.keyable = True
-            else:
-                attrFnVec.keyable = False
-            attrFnVec.writable = True
-            attrFnVec.readable = True
-            attrFnVec.storable = True
-            currentNode.addAttribute(attr)
-        elif length == 3:
-            if attrType == 15:
-                attrFnVec = attrFn
-                if enum is not None:
-                    attr = attrFnVec.create(longName, shortName)
-                    sortedEnums = sorted(enum, key=lambda x: x[1])
-                    for enum in sortedEnums:
-                        attrFnVec.addField(enum[0], enum[1])
-                else:
-                    raise KeyError("Attribute `enum` have to be specified to create a Enum Attribute.")
-            else:
-                attrX = attrFn.create("%sX" % longName, "%sx" % shortName, attrData)
-                attrY = attrFn.create("%sY" % longName, "%sy" % shortName, attrData)
-                attrZ = attrFn.create("%sZ" % longName, "%sz" % shortName, attrData)
-                attr = attrFnVec.create(longName, shortName, attrX, attrY, attrZ)
-                if default is not None:
-                    attrFnVec.default = default[0:3]
-                if minVal is not None:
-                    attrFnVec.setMin(minVal[0:3])
-                if maxVal is not None:
-                    attrFnVec.setMax(maxVal[0:3])
-            if keyable:
-                attrFnVec.keyable = True
-            else:
-                attrFnVec.keyable = False
-            attrFnVec.writable = True
-            attrFnVec.readable = True
-            attrFnVec.storable = True
-            currentNode.addAttribute(attr)
-    return True
+def createColorAttribute(longName, shortName, writable=True, readable=True, keyable=True,
+                         storable=True, channelBox=False):
+    """Create a custom color attribute in selected objects.
+
+    Args:
+        longName (string): The long name of the attribute about to be created.
+        shortName (string): The short name of the attribute about to be created.
+        writable (bool: True [Optional]): Create as writable attribute.
+        readable (bool: True [Optional]): Create as readable attribute.
+        keyable (bool: True [Optional]): Create as keyable attribute.
+        storable (bool: True [Optional]): Create as storable attribute.
+        channelBox (bool: False [Optional]): Create as channelBox attribute.
+
+    Returns:
+        list: The names of the attributes created.
+    """
+    selList = om2.MGlobal.getActiveSelectionList()
+    if selList.length() < 1:
+        return None
+    objectNames = []
+    for i in range(selList.length()):
+        curObj = selList.getDependNode(i)
+        nodeFn = om2.MFnDependencyNode(curObj)
+        objectNames.append("%s.%s" % (nodeFn.name(), longName))
+        attrFn = om2.MFnNumericAttribute()
+        attr = attrFn.createColor(longName, shortName)
+        attrFn.writable = writable
+        attrFn.readable = readable
+        attrFn.keyable = keyable
+        attrFn.storable = storable
+        attrFn.channelBox = channelBox
+        nodeFn.addAttribute(attr)
+    return objectNames
 
 def unfreezeTransformations():
     """Unfreeze selected objects translation.
@@ -309,8 +601,7 @@ def mirrorControlShape(xAxis=True, yAxis=True, zAxis=True):
             nextChild = dagFn.child(i)
             if nextChild.apiType() == om2.MFn.kNurbsCurve:
                 shapeObj = nextChild
-                shapeName = om2.MFnDependencyNode(shapeObj).name()
-                shapeObjPath = om2.MSelectionList().add(shapeName).getDagPath(0)
+                shapeObjPath = om2.MDagPath().getAPathTo(shapeObj)
                 break
         if shapeObjPath is None:
             raise TypeError("The selection must be a Nurbs Curve.")
@@ -338,15 +629,15 @@ def createObject(objType, name=None):
     """
     nodeFn = om2.MFnDependencyNode()
     obj = nodeFn.create(objType, name)
-    try:
+    if obj.hasFn(om2.MFn.kDagNode):
         dagFn = om2.MFnDagNode(obj)
         name = dagFn.fullPathName()
-    except RuntimeError:
+    else:
         nodeFn.setObject(obj)
         name = nodeFn.name()
     sel = om2.MSelectionList().add(name)
     om2.MGlobal.setSelectionMode(om2.MGlobal.kSelectObjectMode)
-    om2.MGlobal.setActiveSelectionList(sel, om2.MGlobal.kReplaceList)
+    om2.MGlobal.setActiveSelectionList(sel)
     return name
 
 def createObjectOnTransform(objType="transform", namePreffix=None):
@@ -364,29 +655,28 @@ def createObjectOnTransform(objType="transform", namePreffix=None):
     """
     sel = om2.MGlobal.getActiveSelectionList()
     dagFn = om2.MFnDagNode()
-    parentObj = dagFn.create("transform", namePreffix)
-    dagFn.setObject(parentObj)
-    parentObjName = dagFn.fullPathName()
-    try:
-        for i in range(sel.length()):
-            obj = sel.getDagPath(i)
-            transFn = om2.MFnTransform(obj)
-            objTrans = transFn.translation(om2.MSpace.kWorld)
-            objRot = transFn.rotation(om2.MSpace.kWorld, asQuaternion=True)
-            if namePreffix is not None:
-                newObj = dagFn.create(objType, "%s%s" % (namePreffix, i+1), parentObj)
-            else:
-                newObj = dagFn.create(objType, namePreffix, parentObj)
-            transFn.setObject(newObj)
-            transFn.translateBy(objTrans, om2.MSpace.kTransform)
-            transFn.rotateBy(objRot, om2.MSpace.kTransform)
-    except RuntimeError:
-        cmds.delete(parentObjName)
-        raise TypeError("The object type is not a DagNode or don't exists.")
-    sel = om2.MSelectionList().add(parentObj)
+    objsList = []
+    for i in range(sel.length()):
+        obj = sel.getDependNode(i)
+        if not obj.hasFn(om2.MFn.kDagNode):
+            objName = om2.MFnDependencyNode(obj).name()
+            raise TypeError("The object %s is not a dag node or don't exists." % objName)
+        objPath = om2.MDagPath().getAPathTo(obj)
+        transFn = om2.MFnTransform(objPath)
+        objTrans = transFn.translation(om2.MSpace.kWorld)
+        objRot = transFn.rotation(om2.MSpace.kWorld, asQuaternion=True)
+        if namePreffix is not None:
+            newObj = dagFn.create(objType, "%s%s" % (namePreffix, i+1))
+        else:
+            newObj = dagFn.create(objType, namePreffix)
+        transFn.setObject(newObj)
+        transFn.translateBy(objTrans, om2.MSpace.kTransform)
+        transFn.rotateBy(objRot, om2.MSpace.kTransform)
+        objsList.append(om2.MFnDependencyNode(newObj).name())
+    selList = om2.MSelectionList().add(newObj)
     om2.MGlobal.setSelectionMode(om2.MGlobal.kSelectObjectMode)
-    om2.MGlobal.setActiveSelectionList(sel)
-    return parentObjName
+    om2.MGlobal.setActiveSelectionList(selList)
+    return objsList
 
 def getPoleVectorPosition(distance=1.0):
     """Find the right pole vector position based on selection.
@@ -405,6 +695,8 @@ def getPoleVectorPosition(distance=1.0):
         ValueError: When the distance is not a float value.
     """
     sel = om2.MGlobal.getActiveSelectionList()
+    if not isinstance(distance, float):
+        raise ValueError("Distance argument must be a float type.")
     if sel.length() >= 3:
         transFn = om2.MFnTransform(sel.getDagPath(0))
         vStart = transFn.translation(om2.MSpace.kWorld)
@@ -419,10 +711,7 @@ def getPoleVectorPosition(distance=1.0):
         nStartEnd = vStartEnd.normal()
         vProj = nStartEnd * proj
         vArrow = vStartMid - vProj
-        try:
-            vArrow *= distance
-        except ValueError:
-            raise ValueError("Distance argument must be a float type.")
+        vArrow *= distance
         vFinal = vArrow + vMid
         vCross1 = vStartEnd ^ vStartMid
         vCross1.normalize()
