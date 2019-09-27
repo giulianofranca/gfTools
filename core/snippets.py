@@ -5,6 +5,7 @@ Testing.
 Todo:
     * TODO(createAttributeTypes): Add support to create Compounds.
     * TODO(addMetadataChar): Add metadata in char node create by createChar() and catch in createComponent().
+    * TODO(addSelectionAddAttrs): Add selection list support to create attribute functions.
 
 Source:
     * https://docs.python.org/2/extending/embedding.html
@@ -16,37 +17,99 @@ import maya.api._OpenMaya_py2 as om2
 
 
 kCharOutlinerColor = om2.MColor([0.988, 0.961, 0.392])
+kPrimaryControlColor = om2.MColor([1.0, 1.0, 1.0])
+kSecondaryControlColor = om2.MColor([1.0, 1.0, 1.0])
+kTertiaryControlColor = om2.MColor([1.0, 1.0, 1.0])
+kQuaternaryControlColor = om2.MColor([1.0, 1.0, 1.0])
+kGlobalControlColor = om2.MColor([1.0, 1.0, 1.0])
 
 
 def connectAttr(startAttr, endAttr):
     """Connect attributes from two nodes.
 
     Args:
-        startAttr (string): The name of the output plug attribute.
-        endAttr (string): The name of the input plug attribute.
+        startAttr (string or MPlug): The name of the output plug attribute.
+        endAttr (string or MPlug): The name of the input plug attribute.
 
     Returns:
         True: If succeed.
 
     Raises:
+        AttributeError: If any argument is not a string or a MPlug.
         TypeError: If the objects passed is not a dag node.
     """
-    startNodeName = startAttr.split(".")[0]
-    startAttrName = startAttr.split(".")[1]
-    endNodeName = endAttr.split(".")[0]
-    endAttrName = endAttr.split(".")[1]
-    startObj = om2.MSelectionList().add(startNodeName).getDependNode(0)
-    endObj = om2.MSelectionList().add(endNodeName).getDependNode(0)
-    if not startObj.hasFn(om2.MFn.kDagNode) or not endObj.hasFn(om2.MFn.kDagNode):
-        raise TypeError("Objects must be a dag node.")
-    dagFn = om2.MFnDagNode(startObj)
-    startPlug = dagFn.findPlug(startAttrName, False)
-    dagFn.setObject(endObj)
-    endPlug = dagFn.findPlug(endAttrName, False)
+    if not isinstance(startAttr, str) and not isinstance(startAttr, om2.MPlug):
+        raise AttributeError("Argument startAttr must be a string or MPlug.")
+    if not isinstance(endAttr, str) and not isinstance(endAttr, om2.MPlug):
+        raise AttributeError("Argument endAttr must be a string or MPlug.")
+    if isinstance(startAttr, str):
+        startNodeName = startAttr.split(".")[0]
+        startAttrName = startAttr.split(".")[1]
+        endNodeName = endAttr.split(".")[0]
+        endAttrName = endAttr.split(".")[1]
+        startObj = om2.MSelectionList().add(startNodeName).getDependNode(0)
+        endObj = om2.MSelectionList().add(endNodeName).getDependNode(0)
+        if not startObj.hasFn(om2.MFn.kDagNode) or not endObj.hasFn(om2.MFn.kDagNode):
+            raise TypeError("Objects must be a dag node.")
+        dagFn = om2.MFnDagNode(startObj)
+        startPlug = dagFn.findPlug(startAttrName, False)
+        dagFn.setObject(endObj)
+        endPlug = dagFn.findPlug(endAttrName, False)
+    else:
+        startPlug = startAttr
+        endPlug = endAttr
     mdgmod = om2.MDGModifier()
     mdgmod.connect(startPlug, endPlug)
     mdgmod.doIt()
     return True
+
+def lockAndHideAttributes(objects, attributes, lock=True, hide=True):
+    """Lock and hide attributes.
+
+    Args:
+        objects (list of string or list of MObjects): The list of objects.
+        attributes (list of string or list of MObjects): The list of attributes.
+        lock (bool: True [Optional]): The state of locking.
+        hide (bool: True [Optional]): The state of hiding.
+
+    Returns:
+        list: The names of the attributes locked.
+
+    Raises:
+        AttributeError: If any argument is not a list of strings or a list of MObjects.
+        RuntimeError: If any object or attribute don't exists.
+    """
+    if not isinstance(objects, list):
+        raise AttributeError("Argument objects must be a list of strings or a list of MObjects.")
+    for parseObj in objects:
+        if not isinstance(parseObj, str) and not isinstance(parseObj, om2.MObject):
+            raise AttributeError("Argument objects must be a list of strings or a list of MObjects.")
+    if not isinstance(attributes, list):
+        raise AttributeError("Argument attributes must be a list of strings or a list of MObjects.")
+    for parseAttr in attributes:
+        if not isinstance(parseAttr, str) and not isinstance(parseAttr, om2.MObject):
+            raise AttributeError("Argument attributes must be a list of strings or a list of MObjects.")
+    for obj in objects:
+        if isinstance(obj, str):
+            curObj = om2.MSelectionList().add(obj).getDependNode(0)
+        else:
+            curObj = obj
+        nodeFn = om2.MFnDependencyNode(curObj)
+        for attr in attributes:
+            if not nodeFn.hasAttribute(attr):
+                raise RuntimeError("Object %s don't have %s attribute." % (nodeFn.name(), attr))
+            curAttr = nodeFn.attribute(attr)
+            curPlug = om2.MPlug(curObj, curAttr)
+            curPlug.isLocked = lock
+            if curPlug.isCompound:
+                for i in range(curPlug.numChildren()):
+                    curChildPlug = curPlug.child(i)
+                    curChildPlug.isChannelBox = not hide
+                    curChildPlug.isKeyable = not hide
+            else:
+                curPlug.isChannelBox = not hide
+                curPlug.isKeyable = not hide
+    return None
 
 def createChar(name):
     """Create a character node hierarchy.
@@ -57,24 +120,31 @@ def createChar(name):
     Returns:
         string: The Dag Path of the char node.
     """
+    om2.MGlobal.setSelectionMode(om2.MGlobal.kSelectObjectMode)
     charObj = om2.MFnDagNode().create("unknownTransform", "%s_char" % name)
-    om2.MFnDagNode().create("unknownTransform", "deform_hrc", charObj)
-    om2.MFnDagNode().create("unknownTransform", "geometry_hrc", charObj)
+    deformObj = om2.MFnDagNode().create("unknownTransform", "deform_hrc", charObj)
+    geometryObj = om2.MFnDagNode().create("unknownTransform", "geometry_hrc", charObj)
+    geoIOObj = om2.MFnDagNode().create("unknownTransform", "geometry_settings_io", geometryObj)
     nodeFn = om2.MFnDependencyNode(charObj)
-    plug = nodeFn.findPlug("useOutlinerColor", True)
+    plug = nodeFn.findPlug("useOutlinerColor", False)
     plug.setBool(True)
-    plug = nodeFn.findPlug("outlinerColor", True)
+    plug = nodeFn.findPlug("outlinerColor", False)
     dataHandle = plug.asMDataHandle()
     dataHandle.set3Float(kCharOutlinerColor.r, kCharOutlinerColor.g, kCharOutlinerColor.b)
     plug.setMDataHandle(dataHandle)
-    om2.MGlobal.setSelectionMode(om2.MGlobal.kSelectObjectMode)
+    lockAndHideAttributes([charObj, deformObj, geometryObj, geoIOObj],
+                          ["translate", "rotate", "scale"])
+    lockAndHideAttributes([deformObj, geometryObj, geoIOObj], ["visibility"])
     selList = om2.MSelectionList().add(charObj)
     om2.MGlobal.setActiveSelectionList(selList)
     createMessageAttribute("components", "components")
     createMessageAttribute("APICharacter", "APICharacter")
-    sel = om2.MSelectionList().add(nodeFn.name())
-    charPath = sel.getDagPath(0)
-    om2.MGlobal.setSelectionMode(om2.MGlobal.kSelectObjectMode)
+    nodeFn.setObject(geoIOObj)
+    selList = om2.MSelectionList().add(geoIOObj)
+    om2.MGlobal.setActiveSelectionList(selList)
+    createEnumAttribute("displayGeo", "displayGeo", {"Hide": 0, "Show": 1, "Reference":2})
+    charPath = om2.MDagPath().getAPathTo(charObj)
+    sel = om2.MSelectionList().add(charPath)
     om2.MGlobal.setActiveSelectionList(sel)
     return charPath.fullPathName()
 
@@ -100,32 +170,50 @@ def createComponent(char, name):
     charPath = om2.MDagPath().getAPathTo(charObj)
     deformObj = charPath.child(0)
     cmpntObj = om2.MFnDagNode().create("unknownTransform", "%s_cmpnt" % name, deformObj)
-    cmpntPath = om2.MDagPath().getAPathTo(cmpntObj)
-    ioConnObj = om2.MFnDagNode().create("unknownTransform", "%s_ioConnections_srt" % name, cmpntObj)
-    ioConnPath = om2.MDagPath().getAPathTo(ioConnObj)
-    om2.MFnDagNode().create("unknownTransform", "%s_joints_hrc" % name, cmpntObj)
-    om2.MFnDagNode().create("unknownTransform", "%s_controls_hrc" % name, cmpntObj)
-    om2.MFnDagNode().create("unknownTransform", "%s_ikHandles_hrc" % name, cmpntObj)
-    om2.MFnDagNode().create("unknownTransform", "%s_misc_hrc" % name, cmpntObj)
-    charComponentsAttr = "%s.components" % charPath.fullPathName()
+    ioConnObj = om2.MFnDagNode().create("unknownTransform", "%s_settings_io" % name, cmpntObj)
+    jntsObj = om2.MFnDagNode().create("unknownTransform", "%s_joints_hrc" % name, cmpntObj)
+    ctrlsObj = om2.MFnDagNode().create("unknownTransform", "%s_controls_hrc" % name, cmpntObj)
+    ikHdlesObj = om2.MFnDagNode().create("unknownTransform", "%s_ikHandles_hrc" % name, cmpntObj)
+    miscObj = om2.MFnDagNode().create("unknownTransform", "%s_misc_hrc" % name, cmpntObj)
+    lockAndHideAttributes([cmpntObj, ioConnObj, jntsObj, ctrlsObj, ikHdlesObj, miscObj],
+                          ["translate", "rotate", "scale"])
+    charComponentsPlug = om2.MPlug(charObj, nodeFn.attribute("components"))
     selList = om2.MSelectionList().add(cmpntObj)
     om2.MGlobal.setActiveSelectionList(selList)
     createMessageAttribute("character", "character")
-    createMessageAttribute("joints", "joints")
+    createMessageAttribute("bindLayer1", "bindLayer1")
     createMessageAttribute("controls", "controls")
     createMessageAttribute("ikHandles", "ikHandles")
     createMessageAttribute("ioConn", "ioConn")
-    cmpntCharacterAttr = "%s.character" % cmpntPath.fullPathName()
-    cmpntIoAttr = "%s.ioConn" % cmpntPath.fullPathName()
+    nodeFn.setObject(cmpntObj)
+    cmpntCharacterPlug = om2.MPlug(cmpntObj, nodeFn.attribute("character"))
+    cmpntIoPlug = om2.MPlug(cmpntObj, nodeFn.attribute("ioConn"))
     selList = om2.MSelectionList().add(ioConnObj)
     om2.MGlobal.setActiveSelectionList(selList)
     createMessageAttribute("component", "component")
-    createNumericAttribute("displayJoints", "displayJoints", AttributeTypes.kBool)
-    createNumericAttribute("displayControls", "displayControls", AttributeTypes.kBool)
-    ioComponentAttr = "%s.component" % ioConnPath.fullPathName()
-    connectAttr(charComponentsAttr, cmpntCharacterAttr)
-    connectAttr(cmpntIoAttr, ioComponentAttr)
-    sel = om2.MSelectionList().add(cmpntObj)
+    createNumericAttribute("displayJoints", "displayJoints", AttributeTypes.kBool, default=True)
+    createNumericAttribute("displayControls", "displayControls", AttributeTypes.kBool, default=True)
+    createNumericAttribute("displayIKHandles", "displayIKHandles", AttributeTypes.kBool, default=True)
+    createNumericAttribute("displayMisc", "displayMisc", AttributeTypes.kBool, default=True)
+    nodeFn.setObject(ioConnObj)
+    ioComponentPlug = om2.MPlug(ioConnObj, nodeFn.attribute("component"))
+    ioDisplayJointsPlug = om2.MPlug(ioConnObj, nodeFn.attribute("displayJoints"))
+    ioDisplayControlsPlug = om2.MPlug(ioConnObj, nodeFn.attribute("displayControls"))
+    ioDisplayIKHandlesPlug = om2.MPlug(ioConnObj, nodeFn.attribute("displayIKHandles"))
+    ioDisplayMiscPlug = om2.MPlug(ioConnObj, nodeFn.attribute("displayMisc"))
+    jntsVisPlug = om2.MPlug(jntsObj, om2.MFnDependencyNode(jntsObj).attribute("visibility"))
+    ctrlsVisPlug = om2.MPlug(ctrlsObj, om2.MFnDependencyNode(ctrlsObj).attribute("visibility"))
+    ikHdlesVisPlug = om2.MPlug(ikHdlesObj, om2.MFnDependencyNode(ikHdlesObj).attribute("visibility"))
+    miscVisPlug = om2.MPlug(miscObj, om2.MFnDependencyNode(miscObj).attribute("visibility"))
+    connectAttr(charComponentsPlug, cmpntCharacterPlug)
+    connectAttr(cmpntIoPlug, ioComponentPlug)
+    connectAttr(ioDisplayJointsPlug, jntsVisPlug)
+    connectAttr(ioDisplayControlsPlug, ctrlsVisPlug)
+    connectAttr(ioDisplayIKHandlesPlug, ikHdlesVisPlug)
+    connectAttr(ioDisplayMiscPlug, miscVisPlug)
+    lockAndHideAttributes([ioConnObj, jntsObj, ctrlsObj, ikHdlesObj, miscObj], ["visibility"])
+    cmpntPath = om2.MDagPath().getAPathTo(cmpntObj)
+    sel = om2.MSelectionList().add(cmpntPath)
     om2.MGlobal.setActiveSelectionList(sel)
     return cmpntPath.fullPathName()
 
