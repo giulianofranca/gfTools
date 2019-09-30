@@ -5,6 +5,7 @@ global proc AEgfRigIKVChainTemplate(string $nodeName){
                 editorTemplate -addControl "root";
                 editorTemplate -addControl "handle";
                 editorTemplate -addControl "upVector";
+                editorTemplate -addControl "snapObject";
                 editorTemplate -addControl "parentInverseMatrix";
                 editorTemplate -addControl "jointOrient";
             editorTemplate -endLayout;
@@ -18,6 +19,7 @@ global proc AEgfRigIKVChainTemplate(string $nodeName){
                 editorTemplate -addControl "pvMode";
                 editorTemplate -addControl "preferredAngle";
                 editorTemplate -addControl "twist";
+                editorTemplate -addControl "snapPoleVector";
             editorTemplate -endLayout;
             editorTemplate -beginLayout "Cartoon Options" -collapse 1;
                 editorTemplate -addControl "stretch";

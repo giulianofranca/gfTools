@@ -34,6 +34,8 @@ MObject IKVChainSolver::inRestLength1;
 MObject IKVChainSolver::inRestLength2;
 MObject IKVChainSolver::inCompressionLimit;
 MObject IKVChainSolver::inSoftness;
+MObject IKVChainSolver::inSnapUpVector;
+MObject IKVChainSolver::inSnapObj;
 MObject IKVChainSolver::inStretch;
 MObject IKVChainSolver::inClampStretch;
 MObject IKVChainSolver::inClampValue;
@@ -111,6 +113,14 @@ MStatus IKVChainSolver::initialize(){
     nAttr.setMax(1.0f);
     INPUT_ATTR(nAttr);
 
+    inSnapUpVector = nAttr.create("snapPoleVector", "snap", MFnNumericData::kFloat, 0.0, &status);
+    nAttr.setMin(0.0f);
+    nAttr.setMax(1.0f);
+    INPUT_ATTR(nAttr);
+
+    inSnapObj = mAttr.create("snapObject", "sobj", MFnMatrixAttribute::kDouble, &status);
+    INPUT_ATTR(mAttr);
+
     inStretch = nAttr.create("stretch", "st", MFnNumericData::kDouble, 0.0, &status);
     nAttr.setMin(0.0);
     nAttr.setMax(1.0);
@@ -148,6 +158,8 @@ MStatus IKVChainSolver::initialize(){
     addAttribute(inRestLength2);
     addAttribute(inCompressionLimit);
     addAttribute(inSoftness);
+    addAttribute(inSnapUpVector);
+    addAttribute(inSnapObj);
     addAttribute(inStretch);
     addAttribute(inClampStretch);
     addAttribute(inClampValue);
@@ -166,6 +178,8 @@ MStatus IKVChainSolver::initialize(){
     attributeAffects(inRestLength2, outChain);
     attributeAffects(inCompressionLimit, outChain);
     attributeAffects(inSoftness, outChain);
+    attributeAffects(inSnapUpVector, outChain);
+    attributeAffects(inSnapObj, outChain);
     attributeAffects(inStretch, outChain);
     attributeAffects(inClampStretch, outChain);
     attributeAffects(inClampValue, outChain);
@@ -184,19 +198,24 @@ MStatus IKVChainSolver::compute(const MPlug& plug, MDataBlock& dataBlock){
         return MStatus::kUnknownParameter;
 
     // Get basis matrix
+    float snap = dataBlock.inputValue(inSnapUpVector).asFloat();
     short pvMode = dataBlock.inputValue(inPvMode).asShort();
     MMatrix mRoot = dataBlock.inputValue(inRoot).asMatrix();
     MMatrix mHandle = dataBlock.inputValue(inHandle).asMatrix();
     MMatrix mUpVector = dataBlock.inputValue(inUpVector).asMatrix();
+    MMatrix mSnap = dataBlock.inputValue(inSnapObj).asMatrix();
     double prefAngle = dataBlock.inputValue(inPreferredAngle).asAngle().asRadians();
     double twist = dataBlock.inputValue(inTwist).asAngle().asRadians();
     MVector vRoot = MVector(mRoot[3][0], mRoot[3][1], mRoot[3][2]);
     MVector vHandle = MVector(mHandle[3][0], mHandle[3][1], mHandle[3][2]);
     MVector vUpVector = MVector(mUpVector[3][0], mUpVector[3][1], mUpVector[3][2]);
+    MVector vSnap = MVector(mSnap[3][0], mSnap[3][1], mSnap[3][2]);
     MVector vXDirection = vHandle - vRoot;
     double xDist = vXDirection.length();
     MVector nXAxis = vXDirection.normal();
-    MVector nYAxis, vYDirection;
+    MVector vL1Snap = vSnap - vRoot;
+    MVector vL2Snap = vSnap - vHandle;
+    MVector nYAxis, nYAxisSnap, vYDirection;
     if (pvMode == 0){
         MVector vUpDirection = vUpVector - vRoot;
         vYDirection = vUpDirection - ((vUpDirection * nXAxis) * nXAxis);
@@ -208,10 +227,17 @@ MStatus IKVChainSolver::compute(const MPlug& plug, MDataBlock& dataBlock){
         vYDirection = vAutoPosLocal - ((vAutoPosLocal * nXAxis) * nXAxis);
         nYAxis = vYDirection.normal();
     }
-    MVector nZAxis = nXAxis ^ nYAxis;
+    if (snap > 0.0f){
+        MVector vSnapDirection = vL1Snap - ((vL1Snap * nXAxis) * nXAxis);
+        MVector nSnapDirection = vSnapDirection.normal();
+        nYAxisSnap = (1.0f - snap) * nYAxis + snap * nSnapDirection;
+    }
+    else
+        nYAxisSnap = nYAxis;
+    MVector nZAxis = nXAxis ^ nYAxisSnap;
     double basis[4][4] = {
         nXAxis.x, nXAxis.y, nXAxis.z, 0.0,
-        nYAxis.x, nYAxis.y, nYAxis.z, 0.0,
+        nYAxisSnap.x, nYAxisSnap.y, nYAxisSnap.z, 0.0,
         nZAxis.x, nZAxis.y, nZAxis.z, 0.0,
         vRoot.x, vRoot.y, vRoot.z, 1.0
     };
@@ -224,28 +250,34 @@ MStatus IKVChainSolver::compute(const MPlug& plug, MDataBlock& dataBlock){
     float softValue = dataBlock.inputValue(inSoftness).asFloat();
     double l1m = l1;
     double l2m = l2;
-    double chainLength = l1m + l2m;
+    double l1Snap = vL1Snap.length();
+    double l2Snap = vL2Snap.length();
+    double length1 = (1.0f - snap) * l1m + snap * l1Snap;
+    double length2 = (1.0f - snap) * l2m + snap * l2Snap;
+    double chainLength = (1.0f - snap) * (l1m + l2m) + snap * (l1Snap + l2Snap);
     double l3rigid = std::max(std::min(xDist, chainLength), chainLength * compressionLimit);
     double dc = chainLength;
     double da = (1.0f - softValue) * dc;
     double l3;
     double l3soft = 1.0f;
+    double l3SnapSoft = l3soft;
     if ((xDist > da) && (softValue > 0.0f)){
         double ds = dc - da;
         l3soft = ds * (1.0 - std::pow(M_E, (da - xDist) / ds)) + da;
-        l3 = l3soft;
+        l3SnapSoft = (1.0f - snap) * l3soft + snap * l3rigid;
+        l3 = l3SnapSoft;
     }
     else
         l3 = l3rigid;
 
     // Angle mesurement
     bool hierarchyMode = dataBlock.inputValue(inHierarchyMode).asBool();
-    double betaCos = (std::pow(l1m, 2.0) + std::pow(l3, 2.0) - std::pow(l2m, 2.0)) / (2.0 * l1m * l3);
+    double betaCos = (std::pow(length1, 2.0) + std::pow(l3, 2.0) - std::pow(length2, 2.0)) / (2.0 * length1 * l3);
     if (betaCos < -1.0)
         betaCos = -1.0;
     double beta = std::acos(betaCos);
     double betaSin = std::sin(beta);
-    double gammaCos = (std::pow(l1m, 2.0) + std::pow(l2m, 2.0) - std::pow(l3, 2.0)) / (2.0 * l1m * l2m);
+    double gammaCos = (std::pow(length1, 2.0) + std::pow(length2, 2.0) - std::pow(l3, 2.0)) / (2.0 * length1 * length2);
     if (gammaCos > 1.0)
         gammaCos = 1.0;
     double gamma = std::acos(gammaCos);
@@ -270,7 +302,7 @@ MStatus IKVChainSolver::compute(const MPlug& plug, MDataBlock& dataBlock){
         double squash = dataBlock.inputValue(inSquash).asDouble();
         double scaleFactor;
         if ((xDist > da) && (softValue > 0.0f))
-            scaleFactor = xDist / l3soft;
+            scaleFactor = xDist / l3SnapSoft;
         else
             scaleFactor = xDist / chainLength;
         if (xDist >= da){
@@ -328,14 +360,14 @@ MStatus IKVChainSolver::compute(const MPlug& plug, MDataBlock& dataBlock){
             mResult = mScale * mLocal * jntOriList[1].inverse();
         else
             mResult = mScale * mLocal;
-        mResult[3][0] = l1m;
+        mResult[3][0] = length1;
         srtList.push_back(mResult);
         mLocal = MMatrix();
         mLocal[0][0] = alphaCos;
         mLocal[0][1] = alphaSin;
         mLocal[1][0] = -alphaSin;
         mLocal[1][1] = alphaCos;
-        mLocal[3][0] = l2m;
+        mLocal[3][0] = length2;
         srtList.push_back(mLocal);
     }
     else{

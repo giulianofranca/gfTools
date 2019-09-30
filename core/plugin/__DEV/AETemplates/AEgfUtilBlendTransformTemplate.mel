@@ -20,6 +20,8 @@ global proc AEgfUtilBlendTransformTemplate(string $nodeName){
                 editorTemplate -addControl "rotateOrder2";
             editorTemplate -endLayout;
         editorTemplate -endLayout;
+        editorTemplate -suppress "transform1";
+        editorTemplate -suppress "transform2";
         AEdependNodeTemplate $nodeName;
     editorTemplate -addExtraControls;
     editorTemplate -endScrollLayout;

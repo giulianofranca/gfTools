@@ -52,6 +52,8 @@ public:
     static MObject                      inRestLength2;
     static MObject                      inCompressionLimit;
     static MObject                      inSoftness;
+    static MObject                      inSnapUpVector;
+    static MObject                      inSnapObj;
     static MObject                      inStretch;
     static MObject                      inClampStretch;
     static MObject                      inClampValue;

@@ -69,6 +69,8 @@ class IKVChainSolver(om2.MPxNode):
     inRestLength2 = om2.MObject()
     inCompressionLimit = om2.MObject()
     inSoftness = om2.MObject()
+    inSnapUpVector = om2.MObject()
+    inSnapObj = om2.MObject()
     inStretch = om2.MObject()
     inClampStretch = om2.MObject()
     inClampValue = om2.MObject()
@@ -150,6 +152,14 @@ class IKVChainSolver(om2.MPxNode):
         nAttr.setMax(1.0)
         INPUT_ATTR(nAttr)
 
+        IKVChainSolver.inSnapUpVector = nAttr.create("snapPoleVector", "snap", om2.MFnNumericData.kFloat, 0.0)
+        nAttr.setMin(0.0)
+        nAttr.setMax(1.0)
+        INPUT_ATTR(nAttr)
+
+        IKVChainSolver.inSnapObj = mAttr.create("snapObject", "sobj", om2.MFnMatrixAttribute.kDouble)
+        INPUT_ATTR(mAttr)
+
         IKVChainSolver.inStretch = nAttr.create("stretch", "st", om2.MFnNumericData.kDouble, 0.0)
         nAttr.setMin(0.0)
         nAttr.setMax(1.0)
@@ -187,6 +197,8 @@ class IKVChainSolver(om2.MPxNode):
         IKVChainSolver.addAttribute(IKVChainSolver.inRestLength2)
         IKVChainSolver.addAttribute(IKVChainSolver.inCompressionLimit)
         IKVChainSolver.addAttribute(IKVChainSolver.inSoftness)
+        IKVChainSolver.addAttribute(IKVChainSolver.inSnapUpVector)
+        IKVChainSolver.addAttribute(IKVChainSolver.inSnapObj)
         IKVChainSolver.addAttribute(IKVChainSolver.inStretch)
         IKVChainSolver.addAttribute(IKVChainSolver.inClampStretch)
         IKVChainSolver.addAttribute(IKVChainSolver.inClampValue)
@@ -205,6 +217,8 @@ class IKVChainSolver(om2.MPxNode):
         IKVChainSolver.attributeAffects(IKVChainSolver.inRestLength2, IKVChainSolver.outChain)
         IKVChainSolver.attributeAffects(IKVChainSolver.inCompressionLimit, IKVChainSolver.outChain)
         IKVChainSolver.attributeAffects(IKVChainSolver.inSoftness, IKVChainSolver.outChain)
+        IKVChainSolver.attributeAffects(IKVChainSolver.inSnapUpVector, IKVChainSolver.outChain)
+        IKVChainSolver.attributeAffects(IKVChainSolver.inSnapObj, IKVChainSolver.outChain)
         IKVChainSolver.attributeAffects(IKVChainSolver.inStretch, IKVChainSolver.outChain)
         IKVChainSolver.attributeAffects(IKVChainSolver.inClampStretch, IKVChainSolver.outChain)
         IKVChainSolver.attributeAffects(IKVChainSolver.inClampValue, IKVChainSolver.outChain)
@@ -221,18 +235,23 @@ class IKVChainSolver(om2.MPxNode):
             return om2.kUnknownParameter
 
         # Get basis matrix
+        snap = dataBlock.inputValue(IKVChainSolver.inSnapUpVector).asFloat()
         pvMode = dataBlock.inputValue(IKVChainSolver.inPvMode).asShort()
         mRoot = dataBlock.inputValue(IKVChainSolver.inRoot).asMatrix()
         mHandle = dataBlock.inputValue(IKVChainSolver.inHandle).asMatrix()
         mUpVector = dataBlock.inputValue(IKVChainSolver.inUpVector).asMatrix()
+        mSnap = dataBlock.inputValue(IKVChainSolver.inSnapObj).asMatrix()
         prefAngle = dataBlock.inputValue(IKVChainSolver.inPreferredAngle).asAngle().asRadians()
         twist = dataBlock.inputValue(IKVChainSolver.inTwist).asAngle().asRadians()
         vRoot = om2.MVector(mRoot[12], mRoot[13], mRoot[14])
         vHandle = om2.MVector(mHandle[12], mHandle[13], mHandle[14])
         vUpVector = om2.MVector(mUpVector[12], mUpVector[13], mUpVector[14])
+        vSnap = om2.MVector(mSnap[12], mSnap[13], mSnap[14])
         vXDirection = vHandle - vRoot
         xDist = vXDirection.length()
         nXAxis = vXDirection.normal()
+        vL1Snap = vSnap - vRoot
+        vL2Snap = vSnap - vHandle
         if pvMode == 0:
             vUpDirection = vUpVector - vRoot
             vYDirection = vUpDirection - ((vUpDirection * nXAxis) * nXAxis)
@@ -242,9 +261,15 @@ class IKVChainSolver(om2.MPxNode):
             vAutoPosLocal = vAutoPosWorld - vRoot
             vYDirection = vAutoPosLocal - ((vAutoPosLocal * nXAxis) * nXAxis)
             nYAxis = vYDirection.normal()
-        nZAxis = nXAxis ^ nYAxis
+        if snap > 0.0:
+            vSnapDirection = vL1Snap - ((vL1Snap * nXAxis) * nXAxis)
+            nSnapDirection = vSnapDirection.normal()
+            nYAxisSnap = (1.0 - snap) * nYAxis + snap * nSnapDirection
+        else:
+            nYAxisSnap = nYAxis
+        nZAxis = nXAxis ^ nYAxisSnap
         basis = [nXAxis.x, nXAxis.y, nXAxis.z, 0.0,
-                 nYAxis.x, nYAxis.y, nYAxis.z, 0.0,
+                 nYAxisSnap.x, nYAxisSnap.y, nYAxisSnap.z, 0.0,
                  nZAxis.x, nZAxis.y, nZAxis.z, 0.0,
                  vRoot.x, vRoot.y, vRoot.z, 1.0]
         mBasis = om2.MMatrix(basis)
@@ -256,25 +281,30 @@ class IKVChainSolver(om2.MPxNode):
         softValue = dataBlock.inputValue(IKVChainSolver.inSoftness).asFloat()
         l1m = l1 # * stretchMult1
         l2m = l2 # * stretchMult2
-        chainLength = l1m + l2m
+        l1Snap = vL1Snap.length()
+        l2Snap = vL2Snap.length()
+        length1 = (1.0 - snap) * l1m + snap * l1Snap
+        length2 = (1.0 - snap) * l2m + snap * l2Snap
+        chainLength = (1.0 - snap) * (l1m + l2m) + snap * (l1Snap + l2Snap)
         l3rigid = max(min(xDist, chainLength), chainLength * compressionLimit)
         dc = chainLength
         da = (1.0 - softValue) * dc
         if xDist > da and softValue > 0:
             ds = dc - da
             l3soft = ds * (1.0 - math.pow(math.e, (da - xDist) / ds)) + da
-            l3 = l3soft
+            l3SnapSoft = (1.0 - snap) * l3soft + snap * l3rigid
+            l3 = l3SnapSoft
         else:
             l3 = l3rigid
 
         # Angle mesurement
         hierarchyMode = dataBlock.inputValue(IKVChainSolver.inHierarchyMode).asBool()
-        betaCos = (math.pow(l1m, 2.0) + math.pow(l3, 2.0) - math.pow(l2m, 2.0)) / (2.0 * l1m * l3)
+        betaCos = (math.pow(length1, 2.0) + math.pow(l3, 2.0) - math.pow(length2, 2.0)) / (2.0 * length1 * l3)
         if betaCos < -1.0:
             betaCos = -1.0
         beta = math.acos(betaCos)
         betaSin = math.sin(beta)
-        gammaCos = (math.pow(l1m, 2.0) + math.pow(l2m, 2.0) - math.pow(l3, 2.0)) / (2.0 * l1m * l2m)
+        gammaCos = (math.pow(length1, 2.0) + math.pow(length2, 2.0) - math.pow(l3, 2.0)) / (2.0 * length1 * length2)
         if gammaCos > 1.0:
             gammaCos = 1.0
         gamma = math.acos(gammaCos)
@@ -295,7 +325,7 @@ class IKVChainSolver(om2.MPxNode):
             clampStretchValue = dataBlock.inputValue(IKVChainSolver.inClampValue).asDouble()
             squash = dataBlock.inputValue(IKVChainSolver.inSquash).asDouble()
             if xDist > da and softValue > 0:
-                scaleFactor = xDist / l3soft
+                scaleFactor = xDist / l3SnapSoft
             else:
                 scaleFactor = xDist / chainLength
             if xDist >= da:
@@ -331,28 +361,28 @@ class IKVChainSolver(om2.MPxNode):
             mLocal[1] = betaSin
             mLocal[4] = -betaSin
             mLocal[5] = betaCos
-            try:
-                mResult = (mScale * mLocal * mBasis) * mParInv * jntOriList[0].inverse()
-            except IndexError:
-                mResult = (mScale * mLocal * mBasis) * mParInv
+            if len(jntOriList) >= 1:
+                mResult = mScale * mLocal * mBasis * mParInv * jntOriList[0].inverse()
+            else:
+                mResult = mScale * mLocal * mBasis * mParInv
             srtList.append(mResult)
             mLocal = om2.MMatrix()
             mLocal[0] = gammaComplementCos
             mLocal[1] = gammaComplementSin
             mLocal[4] = -gammaComplementSin
             mLocal[5] = gammaComplementCos
-            try:
-                mResult = (mScale * mLocal) * jntOriList[1].inverse()
-            except IndexError:
-                mResult = (mScale * mLocal)
-            mResult[12] = l1m
+            if len(jntOriList) >= 2:
+                mResult = mScale * mLocal * jntOriList[1].inverse()
+            else:
+                mResult = mScale * mLocal
+            mResult[12] = length1
             srtList.append(mResult)
             mLocal = om2.MMatrix()
             mLocal[0] = alphaCos
             mLocal[1] = alphaSin
             mLocal[4] = -alphaSin
             mLocal[5] = alphaCos
-            mLocal[12] = l2m
+            mLocal[12] = length2
             srtList.append(mLocal)
         else:
             mScale = om2.MMatrix()
