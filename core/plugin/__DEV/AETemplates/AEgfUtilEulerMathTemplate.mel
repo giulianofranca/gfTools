@@ -1,0 +1,15 @@
+global proc AEgfUtilEulerMathTemplate(string $nodeName){
+    editorTemplate -beginScrollLayout;
+        editorTemplate -beginLayout "gfUtilEulerMath Attributes" -collapse 0; // Create groupbox | editorTemplate -addSeparator
+            editorTemplate -addControl "operation";
+            editorTemplate -addControl "euler1";
+            editorTemplate -addControl "rotateOrderEuler1";
+            editorTemplate -addControl "euler2";
+            editorTemplate -addControl "rotateOrderEuler2";
+            editorTemplate -addSeparator;
+            editorTemplate -addControl "rotateOrderOutEuler";
+        editorTemplate -endLayout;
+        AEdependNodeTemplate $nodeName;
+    editorTemplate -addExtraControls;
+    editorTemplate -endScrollLayout;
+}

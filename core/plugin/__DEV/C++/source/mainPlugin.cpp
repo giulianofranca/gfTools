@@ -37,6 +37,8 @@ Todo:
 #include "n_gfUtilAngleTrigMath.h"
 #include "n_gfUtilAngleToDouble.h"
 #include "n_gfUtilDoubleToAngle.h"
+#include "n_gfUtilEulerMath.h"
+#include "n_gfUtilEulerScalarMath.h"
 #include "n_gfUtilDecompRowMatrix.h"
 
 #include <maya\MFnPlugin.h>
@@ -99,9 +101,15 @@ const MTypeId AngleToDouble::kNodeID = 0x00130d89;
 const MString DoubleToAngle::kNodeName = "gfUtilDoubleToAngle";
 const MString DoubleToAngle::kNodeClassify = "utility/general";
 const MTypeId DoubleToAngle::kNodeID = 0x00130d8a;
+const MString EulerMath::kNodeName = "gfUtilEulerMath";
+const MString EulerMath::kNodeClassify = "utility/general";
+const MTypeId EulerMath::kNodeID = 0x00130d8b;
+const MString EulerScalarMath::kNodeName = "gfUtilEulerScalarMath";
+const MString EulerScalarMath::kNodeClassify = "utility/general";
+const MTypeId EulerScalarMath::kNodeID = 0x00130d8c;
 const MString DecomposeRowMatrix::kNodeName = "gfUtilDecompRowMtx";
 const MString DecomposeRowMatrix::kNodeClassify = "utility/general";
-const MTypeId DecomposeRowMatrix::kNodeID = 0x00130d8c;
+const MTypeId DecomposeRowMatrix::kNodeID = 0x00130d8f;
 
 
 MStatus initializePlugin(MObject mobject){
@@ -119,6 +127,8 @@ MStatus initializePlugin(MObject mobject){
     REGISTER_NODE(AngularTrigMath, mPlugin);
     REGISTER_NODE(AngleToDouble, mPlugin);
     REGISTER_NODE(DoubleToAngle, mPlugin);
+    REGISTER_NODE(EulerMath, mPlugin);
+    REGISTER_NODE(EulerScalarMath, mPlugin);
     REGISTER_NODE(DecomposeRowMatrix, mPlugin);
 
     return status;
@@ -138,6 +148,8 @@ MStatus uninitializePlugin(MObject mobject){
     DEREGISTER_NODE(AngularTrigMath, mPlugin);
     DEREGISTER_NODE(AngleToDouble, mPlugin);
     DEREGISTER_NODE(DoubleToAngle, mPlugin);
+    DEREGISTER_NODE(EulerMath, mPlugin);
+    DEREGISTER_NODE(EulerScalarMath, mPlugin);
     DEREGISTER_NODE(DecomposeRowMatrix, mPlugin);
 
     return status;

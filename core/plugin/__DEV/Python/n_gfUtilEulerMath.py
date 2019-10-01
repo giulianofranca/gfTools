@@ -93,7 +93,7 @@ class EulerMath(om2.MPxNode):
         EulerMath.inEuler1 = nAttr.create("euler1", "e1", euler1X, euler1Y, euler1Z)
         INPUT_ATTR(nAttr)
 
-        EulerMath.inEuler1RotOrder = eAttr.create("euler1RotateOrder", "e1ro", 0)
+        EulerMath.inEuler1RotOrder = eAttr.create("rotateOrderEuler1", "roe1", 0)
         eAttr.addField("xyz", 0)
         eAttr.addField("yzx", 1)
         eAttr.addField("zxy", 2)
@@ -108,7 +108,7 @@ class EulerMath(om2.MPxNode):
         EulerMath.inEuler2 = nAttr.create("euler2", "e2", euler2X, euler2Y, euler2Z)
         INPUT_ATTR(nAttr)
 
-        EulerMath.inEuler2RotOrder = eAttr.create("euler2RotateOrder", "e2ro", 0)
+        EulerMath.inEuler2RotOrder = eAttr.create("rotateOrderEuler2", "roe2", 0)
         eAttr.addField("xyz", 0)
         eAttr.addField("yzx", 1)
         eAttr.addField("zxy", 2)
@@ -123,7 +123,7 @@ class EulerMath(om2.MPxNode):
         EulerMath.outEuler = nAttr.create("outEuler", "oe", outEulerX, outEulerY, outEulerZ)
         OUTPUT_ATTR(nAttr)
 
-        EulerMath.inResRotOrder = eAttr.create("outEulerRotateOrder", "oro", 0)
+        EulerMath.inResRotOrder = eAttr.create("rotateOrderOutEuler", "rooe", 0)
         eAttr.addField("xyz", 0)
         eAttr.addField("yzx", 1)
         eAttr.addField("zxy", 2)
@@ -157,14 +157,14 @@ class EulerMath(om2.MPxNode):
             return om2.kUnknownParameter
 
         operation = dataBlock.inputValue(EulerMath.inOperation).asShort()
-        euler1 = dataBlock.inputValue(EulerMath.inEuler1).asDouble3()
-        euler2 = dataBlock.inputValue(EulerMath.inEuler2).asDouble3()
+        vEuler1 = dataBlock.inputValue(EulerMath.inEuler1).asVector()
+        vEuler2 = dataBlock.inputValue(EulerMath.inEuler2).asVector()
         euler1RotOder = dataBlock.inputValue(EulerMath.inEuler1RotOrder).asShort()
         euler2RotOrder = dataBlock.inputValue(EulerMath.inEuler2RotOrder).asShort()
         outRotOrder = dataBlock.inputValue(EulerMath.inResRotOrder).asShort()
 
-        eEuler1 = om2.MEulerRotation(euler1, euler1RotOder)
-        eEuler2 = om2.MEulerRotation(euler2, euler2RotOrder)
+        eEuler1 = om2.MEulerRotation(vEuler1, euler1RotOder)
+        eEuler2 = om2.MEulerRotation(vEuler2, euler2RotOrder)
 
         outEulerHandle = dataBlock.outputValue(EulerMath.outEuler)
 

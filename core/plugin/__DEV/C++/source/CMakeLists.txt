@@ -10,6 +10,8 @@ set(SOURCE_FILES
     "n_gfUtilAngleTrigMath.cpp" "n_gfUtilAngleTrigMath.h"
     "n_gfUtilAngleToDouble.cpp" "n_gfUtilAngleToDouble.h"
     "n_gfUtilDoubleToAngle.cpp" "n_gfUtilDoubleToAngle.h"
+    "n_gfUtilEulerMath.cpp" "n_gfUtilEulerMath.h"
+    "n_gfUtilEulerScalarMath.cpp" "n_gfUtilEulerScalarMath.h"
     "n_gfUtilDecompRowMatrix.cpp" "n_gfUtilDecompRowMatrix.h"
 )
 

@@ -91,7 +91,7 @@ class EulerScalarMath(om2.MPxNode):
         EulerScalarMath.inEuler = nAttr.create("euler", "e", eulerX, eulerY, eulerZ)
         INPUT_ATTR(nAttr)
 
-        EulerScalarMath.inEulerRotOrder = eAttr.create("eulerRotateOrder", "ero", 0)
+        EulerScalarMath.inEulerRotOrder = eAttr.create("rotateOrderEuler", "roe", 0)
         eAttr.addField("xyz", 0)
         eAttr.addField("yzx", 1)
         eAttr.addField("zxy", 2)
@@ -103,13 +103,7 @@ class EulerScalarMath(om2.MPxNode):
         EulerScalarMath.inScalar = nAttr.create("scalar", "scalar", om2.MFnNumericData.kDouble, 0.0)
         INPUT_ATTR(nAttr)
 
-        outEulerX = uAttr.create("outEulerX", "oex", om2.MFnUnitAttribute.kAngle, 0.0)
-        outEulerY = uAttr.create("outEulerY", "oey", om2.MFnUnitAttribute.kAngle, 0.0)
-        outEulerZ = uAttr.create("outEulerZ", "oez", om2.MFnUnitAttribute.kAngle, 0.0)
-        EulerScalarMath.outEuler = nAttr.create("outEuler", "oe", outEulerX, outEulerY, outEulerZ)
-        OUTPUT_ATTR(nAttr)
-
-        EulerScalarMath.inResRotOrder = eAttr.create("outEulerRotateOrder", "oro", 0)
+        EulerScalarMath.inResRotOrder = eAttr.create("rotateOrderOutEuler", "rooe", 0)
         eAttr.addField("xyz", 0)
         eAttr.addField("yzx", 1)
         eAttr.addField("zxy", 2)
@@ -117,6 +111,12 @@ class EulerScalarMath(om2.MPxNode):
         eAttr.addField("yxz", 4)
         eAttr.addField("zyx", 5)
         INPUT_ATTR(eAttr)
+
+        outEulerX = uAttr.create("outEulerX", "oex", om2.MFnUnitAttribute.kAngle, 0.0)
+        outEulerY = uAttr.create("outEulerY", "oey", om2.MFnUnitAttribute.kAngle, 0.0)
+        outEulerZ = uAttr.create("outEulerZ", "oez", om2.MFnUnitAttribute.kAngle, 0.0)
+        EulerScalarMath.outEuler = nAttr.create("outEuler", "oe", outEulerX, outEulerY, outEulerZ)
+        OUTPUT_ATTR(nAttr)
 
         EulerScalarMath.addAttribute(EulerScalarMath.inOperation)
         EulerScalarMath.addAttribute(EulerScalarMath.inEuler)
@@ -141,12 +141,12 @@ class EulerScalarMath(om2.MPxNode):
             return om2.kUnknownParameter
 
         operation = dataBlock.inputValue(EulerScalarMath.inOperation).asShort()
-        euler = dataBlock.inputValue(EulerScalarMath.inEuler).asDouble3()
+        vEuler = dataBlock.inputValue(EulerScalarMath.inEuler).asVector()
         scalar = dataBlock.inputValue(EulerScalarMath.inScalar).asDouble()
         eulerRotOder = dataBlock.inputValue(EulerScalarMath.inEulerRotOrder).asShort()
         outRotOrder = dataBlock.inputValue(EulerScalarMath.inResRotOrder).asShort()
 
-        eEuler = om2.MEulerRotation(euler, eulerRotOder)
+        eEuler = om2.MEulerRotation(vEuler, eulerRotOder)
 
         outEulerHandle = dataBlock.outputValue(EulerScalarMath.outEuler)
 
