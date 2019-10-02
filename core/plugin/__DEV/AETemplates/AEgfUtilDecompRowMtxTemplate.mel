@@ -1,0 +1,10 @@
+global proc AEgfUtilDecompRowMtxTemplate(string $nodeName){
+    editorTemplate -beginScrollLayout;
+        editorTemplate -beginLayout "gfUtilDecompRowMtx Attributes" -collapse 0;
+            editorTemplate -addControl "inputMatrix";
+            editorTemplate -addControl "normalizeOutput";
+        editorTemplate -endLayout;
+        AEdependNodeTemplate $nodeName;
+    editorTemplate -addExtraControls;
+    editorTemplate -endScrollLayout;
+}

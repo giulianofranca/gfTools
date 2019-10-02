@@ -12,6 +12,8 @@ set(SOURCE_FILES
     "n_gfUtilDoubleToAngle.cpp" "n_gfUtilDoubleToAngle.h"
     "n_gfUtilEulerMath.cpp" "n_gfUtilEulerMath.h"
     "n_gfUtilEulerScalarMath.cpp" "n_gfUtilEulerScalarMath.h"
+    "n_gfUtilEulerToVector.cpp" "n_gfUtilEulerToVector.h"
+    "n_gfUtilVectorToEuler.cpp" "n_gfUtilVectorToEuler.h"
     "n_gfUtilDecompRowMatrix.cpp" "n_gfUtilDecompRowMatrix.h"
 )
 

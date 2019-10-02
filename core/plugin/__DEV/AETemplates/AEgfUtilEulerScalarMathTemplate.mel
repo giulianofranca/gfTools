@@ -1,0 +1,14 @@
+global proc AEgfUtilEulerScalarMathTemplate(string $nodeName){
+    editorTemplate -beginScrollLayout;
+        editorTemplate -beginLayout "gfUtilEulerScalarMath Attributes" -collapse 0;
+            editorTemplate -addControl "operation";
+            editorTemplate -addControl "euler";
+            editorTemplate -addControl "rotateOrderEuler";
+            editorTemplate -addControl "scalar";
+            editorTemplate -addSeparator;
+            editorTemplate -addControl "rotateOrderOutEuler";
+        editorTemplate -endLayout;
+        AEdependNodeTemplate $nodeName;
+    editorTemplate -addExtraControls;
+    editorTemplate -endScrollLayout;
+}
