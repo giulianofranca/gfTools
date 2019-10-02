@@ -21,13 +21,11 @@ Todo:
 
 This code supports Pylint. Rc file in project.
 """
-# pylint: disable=no-name-in-module
 
 import math
 import maya.api._OpenMaya_py2 as om2
 import maya.api._OpenMayaUI_py2 as omui2
 import maya.api._OpenMayaRender_py2 as omr2
-import maya.OpenMayaRender as omr1
 
 
 def maya_useNewAPI():
@@ -65,12 +63,12 @@ class DebugVector(omui2.MPxLocatorNode):
     inLineWidth = om2.MObject()
     inColor = om2.MObject()
     inRadius = om2.MObject()
-    inTipSize = om2.MObject()
-    inSubdivisions = om2.MObject()
     inXRay = om2.MObject()
     inVec1 = om2.MObject()
     inVec2 = om2.MObject()
     inOperation = om2.MObject()
+
+    inSize = om2.MObject()
 
     def __init__(self):
         """ Constructor. """
@@ -105,25 +103,15 @@ class DebugVector(omui2.MPxLocatorNode):
         nAttr.default = (1.0, 1.0, 0.0)
         INPUT_ATTR(nAttr)
 
-        DebugVector.inTipSize = nAttr.create("tipSize", "tipSize", om2.MFnNumericData.kFloat, 0.1)
-        nAttr.setMin(0.1)
-        nAttr.setMax(1.0)
-        INPUT_ATTR(nAttr)
-
-        DebugVector.inSubdivisions = nAttr.create("subdivisions", "subd", om2.MFnNumericData.kInt, 4)
-        nAttr.setMin(2)
-        nAttr.setMax(12)
-        INPUT_ATTR(nAttr)
-
         DebugVector.inRadius = nAttr.create("radius", "radius", om2.MFnNumericData.kFloat, 1.0)
         nAttr.setMin(0.0)
-        nAttr.setSoftMax(5.0)
+        nAttr.setSoftMax(2.0)
         INPUT_ATTR(nAttr)
 
         DebugVector.inXRay = nAttr.create("XRay", "xray", om2.MFnNumericData.kBoolean, False)
         INPUT_ATTR(nAttr)
 
-        DebugVector.inOperation = eAttr.create("operation", "op", 0)
+        DebugVector.inOperation = eAttr.create("operation", "op", 1)
         eAttr.addField("No operation", 0)
         eAttr.addField("Add", 1)
         eAttr.addField("Subtract", 2)
@@ -137,76 +125,11 @@ class DebugVector(omui2.MPxLocatorNode):
 
         DebugVector.addAttribute(DebugVector.inLineWidth)
         DebugVector.addAttribute(DebugVector.inColor)
-        DebugVector.addAttribute(DebugVector.inTipSize)
-        DebugVector.addAttribute(DebugVector.inSubdivisions)
         DebugVector.addAttribute(DebugVector.inRadius)
         DebugVector.addAttribute(DebugVector.inXRay)
         DebugVector.addAttribute(DebugVector.inOperation)
         DebugVector.addAttribute(DebugVector.inVec1)
         DebugVector.addAttribute(DebugVector.inVec2)
-
-    @staticmethod
-    def drawArrow(startPnt, endPnt, size, radius, subd, lineW, vp2=False,
-                  glFT=None, lineList=None):
-        """Draw an aim arrow
-
-        Args:
-            startPnt (MFloatVector): The base of the vector.
-            endPnt (MFloatVector): The end of the vector.
-            size (float): The size of the arrow.
-            radius (float): The radius of the arrow.
-            subd (float): The number of subdivisions of the arrow.
-            lineW (float): The width of the lines.
-            vp2 (bool: False [Optional]): Draw inside of drawing override for viewport 2.0.
-            glFT (instance: None [Optional]): The GL Function Table to draw in viewport 1.0.
-            lineList (MPointArray: None [Optional]): The line list to append for drawing override.
-        """
-        tipSize = 1.0 - size
-        step = 2.0 * math.pi / subd
-        vAim = endPnt - startPnt
-        vBaseOrigin = vAim * tipSize
-        nAim = vAim.normal()
-        nWorld = om2.MFloatVector(0.0, 1.0, 0.0)
-        nBinormal = nWorld ^ nAim
-        nBinormal.normalize()
-        nNormal = nAim ^ nBinormal
-        nNormal.normalize()
-        aim = [nAim.x, nAim.y, nAim.z, 0.0,
-               nNormal.x, nNormal.y, nNormal.z, 0.0,
-               nBinormal.x, nBinormal.y, nBinormal.z, 0.0,
-               startPnt.x, startPnt.y, startPnt.z, 1.0]
-        mBase = om2.MFloatMatrix(aim)
-        mOrigin = om2.MFloatMatrix()
-        mOrigin[12] = vBaseOrigin.length()
-        mBaseOrigin = mOrigin * mBase
-        if vp2:
-            lineList.append(om2.MPoint(startPnt))
-            lineList.append(om2.MPoint(endPnt))
-        else:
-            glFT.glLineWidth(lineW)
-            glFT.glBegin(omr1.MGL_LINES)
-            glFT.glVertex3f(startPnt.x, startPnt.y, startPnt.z)
-            glFT.glVertex3f(endPnt.x, endPnt.y, endPnt.z)
-            glFT.glEnd()
-        for i in range(subd):
-            theta = step * i
-            mPoint = om2.MFloatMatrix()
-            mPoint[13] = math.cos(theta) * radius
-            mPoint[14] = math.sin(theta) * radius
-            mArrow = mPoint * mBaseOrigin
-            if vp2:
-                lineList.append(om2.MPoint(mBaseOrigin[12], mBaseOrigin[13], mBaseOrigin[14]))
-                lineList.append(om2.MPoint(mArrow[12], mArrow[13], mArrow[14]))
-                lineList.append(om2.MPoint(mArrow[12], mArrow[13], mArrow[14]))
-                lineList.append(om2.MPoint(endPnt))
-            else:
-                glFT.glBegin(omr1.MGL_LINES)
-                glFT.glVertex3f(mBaseOrigin[12], mBaseOrigin[13], mBaseOrigin[14])
-                glFT.glVertex3f(mArrow[12], mArrow[13], mArrow[14])
-                glFT.glVertex3f(mArrow[12], mArrow[13], mArrow[14])
-                glFT.glVertex3f(endPnt.x, endPnt.y, endPnt.z)
-                glFT.glEnd()
-        return None
 
     def compute(self, plug, dataBlock):
         """
@@ -229,33 +152,67 @@ class DebugVector(omui2.MPxLocatorNode):
             * status [M3dView.DisplayStatus] is the selection status of the object.
         """
         # pylint: disable=unused-argument
+        # thisMob = self.thisMObject()
+        # lineW = om2.MPlug(thisMob, DebugVector.inLineWidth).asFloat()
+        # colorLoc = om2.MPlug(thisMob, DebugVector.inColor).asMDataHandle().asFloatVector()
+        # radius = om2.MPlug(thisMob, DebugVector.inRadius).asFloat()
+        # xray = om2.MPlug(thisMob, DebugVector.inXRay).asBool()
+        # vVec1 = om2.MPlug(thisMob, DebugVector.inVec1).asMDataHandle().asFloatVector()
+        # vVec2 = om2.MPlug(thisMob, DebugVector.inVec2).asMDataHandle().asFloatVector()
+
+        # view.beginGL()
+
+        # import maya._OpenMayaRender as omr1
+        # glRenderer = omr1.MHardwareRenderer.theRenderer()
+        # glFT = glRenderer.glFunctionTable()
+
+        # glFT.glPushAttrib(omr1.MGL_CURRENT_BIT)
+        # glFT.glDisable(omr1.MGL_CULL_FACE)
+        # if xray:
+        #     glFT.glEnable(omr1.MGL_DEPTH_TEST)
+        #     glFT.glClear(omr1.MGL_DEPTH_BUFFER_BIT)
+
+        # if status == omui2.M3dView.kActive:
+        #     glFT.glColor3f(0.3, 1.0, 1.0)
+        # elif status == omui2.M3dView.kLead:
+        #     glFT.glColor3f(1.0, 1.0, 1.0)
+        # elif status == omui2.M3dView.kDormant:
+        #     glFT.glColor3f(colorLoc.x, colorLoc.y, colorLoc.z)
+
+        # glFT.glLineWidth(lineW)
+        # glFT.glBegin(omr1.MGL_LINES)
+        # glFT.glVertex3f(vVec1.x, vVec1.y, vVec1.z)
+        # glFT.glVertex3f(vVec2.x, vVec2.y, vVec2.z)
+        # glFT.glEnd()
+        # if xray:
+        #     glFT.glDisable(omr1.MGL_DEPTH_TEST)
+        # glFT.glPopAttrib()
+        # glFT.glLineWidth(1.0)
+
+        # view.endGL()
 
         thisMob = self.thisMObject()
         lineW = om2.MPlug(thisMob, DebugVector.inLineWidth).asFloat()
         color = om2.MPlug(thisMob, DebugVector.inColor).asMDataHandle().asFloatVector()
-        tipSize = om2.MPlug(thisMob, DebugVector.inTipSize).asFloat()
-        subd = om2.MPlug(thisMob, DebugVector.inSubdivisions).asInt()
-        radius = om2.MPlug(thisMob, DebugVector.inRadius).asFloat()
         xray = om2.MPlug(thisMob, DebugVector.inXRay).asBool()
 
         operation = om2.MPlug(thisMob, DebugVector.inOperation).asShort()
         vVector1 = om2.MPlug(thisMob, DebugVector.inVec1).asMDataHandle().asFloatVector()
         vVector2 = om2.MPlug(thisMob, DebugVector.inVec2).asMDataHandle().asFloatVector()
 
-        if operation == 0:
-            vStart = om2.MFloatVector()
-            vEnd = vVector1
-        elif operation == 1:
-            vFinal = vVector1 + vVector2
-            vStart = om2.MFloatVector()
-            vEnd = vFinal
-        elif operation == 2:
-            vFinal = vVector1 - vVector2
-            vStart = om2.MFloatVector()
-            vEnd = vFinal
+        tipSize = 1.0 - 0.1                # 0.1 can be an attr
+        radius = om2.MPlug(thisMob, DebugVector.inRadius).asFloat()
+        arrowSubd = 8
+        step = 2.0 * math.pi / arrowSubd
+        vAim = vVector2 - vVector1
+        vBaseOrigin = vAim * tipSize
+        vTip = vAim - vBaseOrigin
+        vTip += vBaseOrigin
 
         view.beginGL()
 
+        # pylint: disable=no-name-in-module
+        import maya.OpenMayaRender as omr1
         glRenderer = omr1.MHardwareRenderer.theRenderer()
         glFT = glRenderer.glFunctionTable()
 
@@ -272,8 +229,30 @@ class DebugVector(omui2.MPxLocatorNode):
         elif status == omui2.M3dView.kDormant:
             glFT.glColor3f(color.x, color.y, color.z)
 
-        DebugVector.drawArrow(vStart, vEnd, tipSize, radius, subd, lineW, glFT=glFT)
+        glFT.glLineWidth(lineW)
+        glFT.glBegin(omr1.MGL_LINES)
+        glFT.glVertex3f(vVector1.x, vVector1.y, vVector1.z)
+        glFT.glVertex3f(vBaseOrigin.x, vBaseOrigin.y, vBaseOrigin.z)
+        glFT.glVertex3f(vBaseOrigin.x, vBaseOrigin.y, vBaseOrigin.z)
+        glFT.glVertex3f(vTip.x, vTip.y, vTip.z)
 
+        nWorld = om2.MFloatVector(0.0, 1.0, 0.0)
+        nBinormal = vTip.normalize() ^ -nWorld
+        vPoint = vTip.normalize() ^ nBinormal
+        vArrow = vPoint - ((vPoint * vTip.normalize()) * vTip.normalize())
+        vArrow *= radius
+        vArrow += vBaseOrigin
+        glFT.glVertex3f(vBaseOrigin.x, vBaseOrigin.y, vBaseOrigin.z)
+        glFT.glVertex3f(vArrow.x, vArrow.y, vArrow.z)
+
+        # for i in range(arrowSubd):
+        #     theta = step * i
+        #     vPoint = om2.MFloatVector(0.0, math.cos(theta) * radius, math.sin(theta) * radius)
+        #     vArrow = vPoint - ((vPoint * vTip.normalize()) * vTip.normalize())
+        #     vArrow += vBaseOrigin
+        #     glFT.glVertex3f(vBaseOrigin.x, vBaseOrigin.y, vBaseOrigin.z)
+        #     glFT.glVertex3f(vArrow.x, vArrow.y, vArrow.z)
+        glFT.glEnd()
         if xray:
             glFT.glDisable(omr1.MGL_DEPTH_TEST)
         glFT.glPopAttrib()
@@ -294,11 +273,7 @@ class DebugVectorData(om2.MUserData):
         self.fLeadColor = om2.MColor()
         self.fLineList = om2.MPointArray()
         self.fLineWidth = 1.0
-        self.fTipSize = 0.1
-        self.fSubd = 4
-        self.fRadius = 1.0
-        self.fXRay = False
-        self.fOperation = 0
+        self.fXRay = 5
 
 
 class DebugVectorDrawOverride(omr2.MPxDrawOverride):
@@ -369,39 +344,22 @@ class DebugVectorDrawOverride(omr2.MPxDrawOverride):
 
         node = objPath.node()
         lineW = om2.MPlug(node, DebugVector.inLineWidth).asFloat()
-        color = om2.MPlug(node, DebugVector.inColor).asMDataHandle().asFloatVector()
-        tipSize = om2.MPlug(node, DebugVector.inTipSize).asFloat()
-        subd = om2.MPlug(node, DebugVector.inSubdivisions).asInt()
-        radius = om2.MPlug(node, DebugVector.inRadius).asFloat()
+        colorLoc = om2.MPlug(node, DebugVector.inColor).asMDataHandle().asFloatVector()
         xray = om2.MPlug(node, DebugVector.inXRay).asBool()
-        operation = om2.MPlug(node, DebugVector.inOperation).asShort()
-        vVector1 = om2.MPlug(node, DebugVector.inVec1).asMDataHandle().asFloatVector()
-        vVector2 = om2.MPlug(node, DebugVector.inVec2).asMDataHandle().asFloatVector()
+        vVec1 = om2.MPlug(node, DebugVector.inVec1).asMDataHandle().asFloatVector()
+        vVec2 = om2.MPlug(node, DebugVector.inVec2).asMDataHandle().asFloatVector()
 
-        data.fDormantColor = om2.MColor([color.x, color.y, color.z])
+        data.fLineList.clear()
+        data.fLineList.append(om2.MPoint(vVec1.x, vVec1.y, vVec1.z))
+        data.fLineList.append(om2.MPoint(vVec2.x, vVec2.y, vVec2.z))
+        data.fDormantColor = om2.MColor([colorLoc.x, colorLoc.y, colorLoc.z])
         data.fActiveColor = om2.MColor([0.3, 1.0, 1.0])
         data.fLeadColor = om2.MColor([1.0, 1.0, 1.0])
         data.fLineWidth = lineW
-        data.fTipSize = tipSize
-        data.fSubd = subd
-        data.fRadius = radius
-        data.fXRay = xray
-        data.fOperation = operation
-
-        if operation == 0:
-            vStart = om2.MFloatVector()
-            vEnd = vVector1
-        elif operation == 1:
-            vFinal = vVector1 + vVector2
-            vStart = om2.MFloatVector()
-            vEnd = vFinal
-        elif operation == 2:
-            vFinal = vVector1 - vVector2
-            vStart = om2.MFloatVector()
-            vEnd = vFinal
-
-        data.fLineList.clear()
-        DebugVector.drawArrow(vStart, vEnd, tipSize, radius, subd, lineW, vp2=True, lineList=data.fLineList)
+        if xray:
+            data.fXRay = True
+        else:
+            data.fXRay = False
 
         return data
 
