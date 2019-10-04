@@ -24,7 +24,8 @@ Requirements:
 Todo:
 	* NDA
 */
-
+// gfDebug
+#include "n_gfDebugVector.h"
 // gfRig
 #include "n_gfRigPSDVectorAngle.h"
 #include "n_gfRigIKVChain.h"
@@ -43,9 +44,13 @@ Todo:
 #include "n_gfUtilVectorToEuler.h"
 #include "n_gfUtilDecompRowMatrix.h"
 
-#include <maya\MFnPlugin.h>
-#include <maya\MString.h>
-#include <maya\MTypeId.h>
+#include <maya/MFnPlugin.h>
+#include <maya/MDrawRegistry.h>
+#include <maya/MString.h>
+#include <maya/MTypeId.h>
+
+#pragma warning(disable : 4996)
+static bool sUseLegacyDraw = (getenv("MAYA_ENABLE_VP2_PLUGIN_LOCATOR_LEGACY_DRAW") != NULL);
 
 
 #define REGISTER_NODE(NODE, PLUGIN)         \
@@ -65,12 +70,48 @@ Todo:
     );                                      \
     CHECK_MSTATUS(status);                  \
 
+#define REGISTER_LOCATOR_NODE(NODE, PLUGIN, DRAWOVERRIDE)                   \
+    status = PLUGIN.registerNode(                                           \
+        NODE::kNodeName,                                                    \
+        NODE::kNodeID,                                                      \
+        NODE::creator,                                                      \
+        NODE::initialize,                                                   \
+        MPxNode::kLocatorNode,                                              \
+        &NODE::kNodeClassify                                                \
+    );                                                                      \
+    CHECK_MSTATUS(status);                                                  \
+    if (!sUseLegacyDraw){                                                   \
+        status = MHWRender::MDrawRegistry::registerDrawOverrideCreator(     \
+            NODE::kNodeClassify,                                            \
+            NODE::kNodeRegistrantID,                                        \
+            DRAWOVERRIDE::creator                                           \
+        );                                                                  \
+        CHECK_MSTATUS(status);                                              \
+    };                                                                      \
+
+#define DEREGISTER_LOCATOR_NODE(NODE, PLUGIN)                               \
+    if (!sUseLegacyDraw){                                                   \
+        status = MHWRender::MDrawRegistry::deregisterDrawOverrideCreator(   \
+            NODE::kNodeClassify,                                            \
+            NODE::kNodeRegistrantID                                         \
+        );                                                                  \
+        CHECK_MSTATUS(status);                                              \
+    }                                                                       \
+    status = PLUGIN.deregisterNode(                                         \
+        NODE::kNodeID                                                       \
+    );                                                                      \
+    CHECK_MSTATUS(status);                                                  \
+
 
 const char* kAuthor = "Giuliano Franca";
 const char* kVersion = "1.0 Pro";
 const char* kRequiredAPIVersion = "Any";
 
 // gfDebug
+const MString DebugVector::kNodeName = "gfDebugVector";
+const MString DebugVector::kNodeClassify = "drawdb/geometry/locator";
+const MString DebugVector::kNodeRegistrantID = "gfDebugVectorNodePlugin";
+const MTypeId DebugVector::kNodeID = 0x00130d80;
 // gfRig
 const MString VectorAnglePSD::kNodeName = "gfRigPSDVectorAngle";
 const MString VectorAnglePSD::kNodeClassify = "utility/general";
@@ -125,6 +166,7 @@ MStatus initializePlugin(MObject mobject){
     MFnPlugin mPlugin(mobject, kAuthor, kVersion, kRequiredAPIVersion, &status);
     status = mPlugin.setName("gfTools");
 
+    REGISTER_LOCATOR_NODE(DebugVector, mPlugin, DebugVectorDrawOverride);
     REGISTER_NODE(VectorAnglePSD, mPlugin);
     REGISTER_NODE(IKVChainSolver, mPlugin);
     REGISTER_NODE(BlendTransform, mPlugin);
@@ -148,6 +190,7 @@ MStatus uninitializePlugin(MObject mobject){
     MStatus status;
     MFnPlugin mPlugin(mobject, kAuthor, kVersion, kRequiredAPIVersion, &status);
 
+    DEREGISTER_LOCATOR_NODE(DebugVector, mPlugin);
     DEREGISTER_NODE(VectorAnglePSD, mPlugin);
     DEREGISTER_NODE(IKVChainSolver, mPlugin);
     DEREGISTER_NODE(BlendTransform, mPlugin);
