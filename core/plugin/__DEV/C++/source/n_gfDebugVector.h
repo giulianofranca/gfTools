@@ -8,41 +8,48 @@
 
 #include <maya/MPxLocatorNode.h>
 
-#include <maya/M3dView.h>
 #include <maya/MFnNumericAttribute.h>
 #include <maya/MFnEnumAttribute.h>
+#include <maya/MGL.h>
+#include <maya/M3dView.h>
+#include <maya/MPlug.h>
+#include <maya/MVector.h>
 #include <maya/MFloatVector.h>
 #include <maya/MFloatMatrix.h>
 #include <maya/MMatrix.h>
 #include <maya/MColor.h>
+#include <maya/MDistance.h>
 #include <maya/MFnDependencyNode.h>
-#include <maya/MPlug.h>
 #include <maya/MGlobal.h>
-#include <maya/MEvaluationNode.h>
 
-#include <maya/MPointArray.h>
-#include <maya/MPoint.h>
-#include <maya/MUserData.h>
+// Viewport 2.0 includes
+#include <maya/MDrawRegistry.h>
 #include <maya/MPxDrawOverride.h>
+#include <maya/MUserData.h>
 #include <maya/MDrawContext.h>
 #include <maya/MHWGeometryUtilities.h>
+#include <maya/MPointArray.h>
+#include <maya/MPoint.h>
 #include <maya/MEventMessage.h>
 
 
 class DebugVector : public MPxLocatorNode{
 public:
-    DebugVector();
-    ~DebugVector();
+	DebugVector();
+	virtual ~DebugVector();
 
     virtual void                        postConstructor();
-    virtual MStatus                     compute(const MPlug& plug, MDataBlock& dataBlock);
-    virtual void                        draw(M3dView& view, const MDagPath& path, 
-                                             M3dView::DisplayStyle style,
-                                             M3dView::DisplayStatus status);
-    // virtual MStatus                     preEvaluation(const MDGContext& context,
-    //                                                   const MEvaluationNode& evaluationNode);
-    static MStatus                      initialize();
-    static void*                        creator();
+    virtual MStatus   		            compute(const MPlug& plug, MDataBlock& data);
+
+	virtual void                        draw(M3dView & view, const MDagPath & path,
+								             M3dView::DisplayStyle style,
+								             M3dView::DisplayStatus status);
+
+	virtual bool                        isBounded() const;
+	virtual MBoundingBox                boundingBox() const;
+
+	static  MStatus                     initialize();
+    static  void*                       creator();
 
     // drawArrow in Viewport 1.0
     static void                         drawArrow(MFloatVector& startPnt, MFloatVector& endPnt, 
@@ -55,9 +62,9 @@ public:
 
 public:
     const static MString                kNodeName;
-    const static MString                kNodeClassify;
-    const static MString                kNodeRegistrantID;
-    const static MTypeId                kNodeID;
+	const static MTypeId		        kNodeID;
+	const static MString		        kNodeClassify;
+	const static MString		        kNodeRegistrantID;
 
     static MObject                      inLineWidth;
     static MObject                      inColor;
@@ -78,8 +85,8 @@ public:
 
 class DebugVectorData : public MUserData{
 public:
-    DebugVectorData() : MUserData(false) {} // Don't delete after draw
-    ~DebugVectorData() override {}
+	DebugVectorData() : MUserData(false) {} // don't delete after draw
+	virtual ~DebugVectorData() {}
 
     MColor                              fDormantColor;
     MColor                              fActiveColor;
@@ -91,39 +98,45 @@ public:
     float                               fRadius;
     bool                                fXray;
     short                               fOperation;
-
 };
 
 
 class DebugVectorDrawOverride : public MHWRender::MPxDrawOverride{
-public:
-    ~DebugVectorDrawOverride() override; 
+private:
+    DebugVectorDrawOverride(const MObject& obj);
 
-    virtual MHWRender::DrawAPI          supportedDrawAPIs(){
+public:
+    virtual ~DebugVectorDrawOverride();
+
+    virtual MHWRender::DrawAPI          supportedDrawAPIs() const{
         return (MHWRender::kOpenGL | MHWRender::kDirectX11 | MHWRender::kOpenGLCoreProfile);
     }
 
     static MHWRender::MPxDrawOverride*  creator(const MObject& obj);
-    virtual bool                        isBounded(const MDagPath& objPath, 
-                                                  const MDagPath& cameraPath);
-    virtual MBoundingBox                boundingBox(const MDagPath& objPath,
-                                                    const MDagPath& cameraPath);
-    virtual bool                        disableInternalBoudingBoxDraw() {return true;}
-    virtual MUserData*                  prepareForDraw(const MDagPath& objPath,
-                                                       const MDagPath& cameraPath,
-                                                       const MHWRender::MFrameContext& frameContext,
-                                                       MUserData* oldData);
-    virtual bool                        hasUIDrawables() {return true;}
-    virtual void                        addUIDrawables(const MDagPath& objPath,
-                                                       MHWRender::MUIDrawManager& drawManager,
-                                                       const MHWRender::MFrameContext& frameContext,
-                                                       const MUserData* data);
-protected:
-    MBoundingBox                        mCurrentBoundingBox;
-    MObject                             fDebugVector;
-    MCallbackId                         fModelEditorChangedCbId;
+    static void                         draw(const MHWRender::MDrawContext& context, 
+                                             const MUserData* userData) {}
+
+	virtual bool                        isBounded(const MDagPath& objPath,
+		                                          const MDagPath& cameraPath) const;
+
+	virtual MBoundingBox                boundingBox(const MDagPath& objPath,
+		                                            const MDagPath& cameraPath) const;
+
+	virtual MUserData*                  prepareForDraw(const MDagPath& objPath,
+		                                               const MDagPath& cameraPath,
+		                                               const MHWRender::MFrameContext& frameContext,
+		                                               MUserData* oldData);
+
+	virtual bool                        hasUIDrawables() const { return true; }
+
+	virtual void                        addUIDrawables(const MDagPath& objPath,
+		                                               MHWRender::MUIDrawManager& drawManager,
+		                                               const MHWRender::MFrameContext& frameContext,
+		                                               const MUserData* data);
 
 private:
-    DebugVectorDrawOverride(const MObject& obj);
-    static void                         OnModelEditorChanged(void *clientData);
+	static void                         OnModelEditorChanged(void *clientData);
+
+	DebugVector*                        fDebugVector;
+	MCallbackId                         fModelEditorChangedCbId;
 };

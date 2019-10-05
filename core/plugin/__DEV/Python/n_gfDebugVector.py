@@ -494,10 +494,9 @@ class DebugVectorDrawOverride(omr2.MPxDrawOverride):
         # status = omui2.M3dView.displayStatus(objPath)
         status = omr2.MGeometryUtilities.displayStatus(objPath)
 
+        drawManager.beginDrawable()
         if locatorData.fXRay:
             drawManager.beginDrawInXray()
-        else:
-            drawManager.beginDrawable()
 
         if status == omr2.MGeometryUtilities.kActive:
             drawManager.setColor(locatorData.fActiveColor)
@@ -513,5 +512,4 @@ class DebugVectorDrawOverride(omr2.MPxDrawOverride):
 
         if locatorData.fXRay:
             drawManager.endDrawInXray()
-        else:
-            drawManager.endDrawable()
+        drawManager.endDrawable()

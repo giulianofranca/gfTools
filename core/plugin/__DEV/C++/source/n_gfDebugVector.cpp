@@ -35,29 +35,29 @@ MObject DebugVector::outVector;
 const MColor DebugVector::kActiveColor = MColor(0.3f, 1.0f, 1.0f);
 const MColor DebugVector::kLeadColor = MColor(1.0f, 1.0f, 1.0f);
 
+
 void DebugVector::postConstructor(){
     // Post Constructor.
     MObject thisMob = thisMObject();
     MFnDependencyNode(thisMob).setName("gfDebugVectorShape#");
 }
 
-
 void* DebugVector::creator(){
-    // Maya creator function.
-    return new DebugVector();
+	// Maya creator function.
+	return new DebugVector();
 }
 
 MStatus DebugVector::initialize(){
-    /*
+	/*
     Defines the set of attributes for this node. The attributes declared in this function are assigned
     as static members to DebugVector class. Instances of DebugVector will use these attributes to create plugs
     for use in the compute() method.
     */
-    MStatus status;
+   	MStatus status;
     MFnNumericAttribute nAttr;
     MFnEnumAttribute eAttr;
 
-    inLineWidth = nAttr.create("lineWidth", "lw", MFnNumericData::kFloat, 3.0f, &status);
+	inLineWidth = nAttr.create("lineWidth", "lw", MFnNumericData::kFloat, 3.0f, &status);
     nAttr.setMin(1.0f);
     nAttr.setSoftMax(5.0f);
     INPUT_ATTR(nAttr);
@@ -103,7 +103,7 @@ MStatus DebugVector::initialize(){
     outVector = nAttr.createPoint("outVector", "ov", &status);
     OUTPUT_ATTR(nAttr);
 
-    addAttribute(inLineWidth);
+	addAttribute(inLineWidth);
     addAttribute(inColor);
     addAttribute(inTipSize);
     addAttribute(inSubdivisions);
@@ -114,12 +114,57 @@ MStatus DebugVector::initialize(){
     addAttribute(inVec2);
     addAttribute(inNormalize);
     addAttribute(outVector);
-    attributeAffects(inOperation, outVector);
+	attributeAffects(inOperation, outVector);
     attributeAffects(inVec1, outVector);
     attributeAffects(inVec2, outVector);
     attributeAffects(inNormalize, outVector);
 
-    return status;
+	return status;
+}
+
+MStatus DebugVector::compute(const MPlug& plug, MDataBlock& dataBlock){
+	/*
+    Node computation method:
+        * plug is a connection point related to one of our node attributes (either an input or an output).
+        * dataBlock contains the data on which we will base our computations.
+    */
+	if (plug != outVector)
+		return MStatus::kUnknownParameter;
+
+	short operation = dataBlock.inputValue(inOperation).asShort();
+    MFloatVector vVector1 = dataBlock.inputValue(inVec1).asFloatVector();
+    MFloatVector vVector2 = dataBlock.inputValue(inVec2).asFloatVector();
+    bool normalize = dataBlock.inputValue(inNormalize).asBool();
+
+	MFloatVector vStart, vEnd, vFinal;
+    switch (operation)
+    {
+    case 0:
+        vEnd = vVector1;
+        break;
+    case 1:
+        vFinal = vVector1 + vVector2;
+        vEnd = vFinal;
+        break;
+    case 2:
+        vFinal = vVector1 - vVector2;
+        vEnd = vFinal;
+        break;
+    case 3:
+        vFinal = vVector1 ^ vVector2;
+        vEnd = vFinal;
+        break;
+    }
+
+    vStart = MFloatVector();
+    if (normalize)
+        vEnd.normalize();
+
+	MDataHandle outVectorHandle = dataBlock.outputValue(outVector);
+    outVectorHandle.setMFloatVector(vEnd);
+    outVectorHandle.setClean();
+
+	return MStatus::kSuccess;
 }
 
 void DebugVector::drawArrow(MFloatVector& startPnt, MFloatVector& endPnt, float size,
@@ -203,54 +248,10 @@ void DebugVector::drawArrow(MFloatVector& startPnt, MFloatVector& endPnt, float 
     }
 }
 
-MStatus DebugVector::compute(const MPlug& plug, MDataBlock& dataBlock){
-    /*
-    Node computation method:
-        * plug is a connection point related to one of our node attributes (either an input or an output).
-        * dataBlock contains the data on which we will base our computations.
-    */
-    if (plug != outVector)
-        return MStatus::kUnknownParameter;
-
-    short operation = dataBlock.inputValue(inOperation).asShort();
-    MFloatVector vVector1 = dataBlock.inputValue(inVec1).asFloatVector();
-    MFloatVector vVector2 = dataBlock.inputValue(inVec2).asFloatVector();
-    bool normalize = dataBlock.inputValue(inNormalize).asBool();
-
-    MFloatVector vStart, vEnd, vFinal;
-    switch (operation)
-    {
-    case 0:
-        vEnd = vVector1;
-        break;
-    case 1:
-        vFinal = vVector1 + vVector2;
-        vEnd = vFinal;
-        break;
-    case 2:
-        vFinal = vVector1 - vVector2;
-        vEnd = vFinal;
-        break;
-    case 3:
-        vFinal = vVector1 ^ vVector2;
-        vEnd = vFinal;
-        break;
-    }
-
-    vStart = MFloatVector();
-    if (normalize)
-        vEnd.normalize();
-
-    MDataHandle outVectorHandle = dataBlock.outputValue(outVector);
-    outVectorHandle.setMFloatVector(vEnd);
-    outVectorHandle.setClean();
-
-    return MStatus::kSuccess;
-}
-
-void DebugVector::draw(M3dView& view, const MDagPath& path, M3dView::DisplayStyle style,
-                       M3dView::DisplayStatus status){
-    /*
+void DebugVector::draw(M3dView & view, const MDagPath &,
+					   M3dView::DisplayStyle style,
+					   M3dView::DisplayStatus status){
+	/*
     Draw custom geometry in the viewport using OpenGL calls.
         * view [M3dView] is a 3D view that is being drawn into.
         * path [MDagPath] to the parent (transform node) of this locator in the DAG.  To obtain the locator shape node,
@@ -322,35 +323,82 @@ void DebugVector::draw(M3dView& view, const MDagPath& path, M3dView::DisplayStyl
 
     view.endGL();
 }
+
+bool DebugVector::isBounded() const
+{
+	return true;
+}
+
+MBoundingBox DebugVector::boundingBox() const
+{
+	// Return the bounding box
+    MObject thisMob = thisMObject();
+    short operation = MPlug(thisMob, inOperation).asShort();
+    MFloatVector vVector1 = MPlug(thisMob, inVec1).asMDataHandle().asFloatVector();
+    MFloatVector vVector2 = MPlug(thisMob, inVec2).asMDataHandle().asFloatVector();
+    bool normalize = MPlug(thisMob, inNormalize).asBool();
+
+    MFloatVector vStart, vEnd, vFinal;
+    switch (operation)
+    {
+    case 0:
+        vEnd = vVector1;
+        break;
+    case 1:
+        vFinal = vVector1 + vVector2;
+        vEnd = vFinal;
+        break;
+    case 2:
+        vFinal = vVector1 - vVector2;
+        vEnd = vFinal;
+        break;
+    case 3:
+        vFinal = vVector1 ^ vVector2;
+        vEnd = vFinal;
+        break;
+    }
+
+    vStart = MFloatVector();
+    if (normalize)
+        vEnd.normalize();
+
+    MPoint corner1 = MPoint(vStart.x, vStart.y, vStart.z);
+    MPoint corner2 = MPoint(vEnd.x, vEnd.y, vEnd.z);
+	return MBoundingBox(corner1, corner2);
+}
 //---------------------------------------------------------------------------------
 //---------------------------------------------------------------------------------
 //----------   Viewport 2.0 Implementation   --------------------------------------
 //---------------------------------------------------------------------------------
 //---------------------------------------------------------------------------------
-
 DebugVectorDrawOverride::DebugVectorDrawOverride(const MObject& obj)
-                       : MHWRender::MPxDrawOverride(obj, NULL, false)
-                       , fDebugVector(obj){
-    mCurrentBoundingBox = MBoundingBox();
-    fModelEditorChangedCbId = MEventMessage::addEventCallback(
-        "modelEditorChanged", OnModelEditorChanged, this);
+						: MHWRender::MPxDrawOverride(obj, NULL, false){
+	fModelEditorChangedCbId = MEventMessage::addEventCallback(
+		"modelEditorChanged", OnModelEditorChanged, this);
 
-    MGlobal::displayInfo("Constructed!");
+	MStatus status;
+	MFnDependencyNode node(obj, &status);
+	fDebugVector = status ? dynamic_cast<DebugVector*>(node.userNode()) : NULL;
 }
 
-DebugVectorDrawOverride::~DebugVectorDrawOverride() {
-    if (fModelEditorChangedCbId != 0){
-        MMessage::removeCallback(fModelEditorChangedCbId);
-        fModelEditorChangedCbId = 0;
-    }
+DebugVectorDrawOverride::~DebugVectorDrawOverride(){
+	fDebugVector = NULL;
+
+	if (fModelEditorChangedCbId != 0)
+	{
+		MMessage::removeCallback(fModelEditorChangedCbId);
+		fModelEditorChangedCbId = 0;
+	}
 }
 
-void DebugVectorDrawOverride::OnModelEditorChanged(void* clientData){
-    // Mark the node as being dirty so that it can update on display appearance
-    // switch among wireframe and shaded.
-    DebugVectorDrawOverride *ovr = static_cast<DebugVectorDrawOverride*>(clientData);
-    if (ovr)
-        MHWRender::MRenderer::setGeometryDrawDirty(ovr->fDebugVector);
+void DebugVectorDrawOverride::OnModelEditorChanged(void *clientData){
+	// Mark the node as being dirty so that it can update on display appearance
+	// switch among wireframe and shaded.
+	DebugVectorDrawOverride *ovr = static_cast<DebugVectorDrawOverride*>(clientData);
+	if (ovr && ovr->fDebugVector)
+	{
+		MHWRender::MRenderer::setGeometryDrawDirty(ovr->fDebugVector->thisMObject());
+	}
 }
 
 MHWRender::MPxDrawOverride* DebugVectorDrawOverride::creator(const MObject& obj){
@@ -358,15 +406,13 @@ MHWRender::MPxDrawOverride* DebugVectorDrawOverride::creator(const MObject& obj)
     return new DebugVectorDrawOverride(obj);
 }
 
-bool DebugVectorDrawOverride::isBounded(const MDagPath& objPath, 
-                                        const MDagPath& cameraPath){
-    // isBounded?
-    return true;
+bool DebugVectorDrawOverride::isBounded(const MDagPath& objPath,
+                                        const MDagPath& cameraPath) const{
+	return true;
 }
 
 MBoundingBox DebugVectorDrawOverride::boundingBox(const MDagPath& objPath,
-                                                  const MDagPath& cameraPath){
-    // Return the bounding box
+												  const MDagPath& cameraPath) const{
     MObject node = objPath.node();
     short operation = MPlug(node, DebugVector::inOperation).asShort();
     MFloatVector vVector1 = MPlug(node, DebugVector::inVec1).asMDataHandle().asFloatVector();
@@ -399,32 +445,24 @@ MBoundingBox DebugVectorDrawOverride::boundingBox(const MDagPath& objPath,
 
     MPoint corner1 = MPoint(vStart.x, vStart.y, vStart.z);
     MPoint corner2 = MPoint(vEnd.x, vEnd.y, vEnd.z);
-    this->mCurrentBoundingBox.clear();                // this->
-    this->mCurrentBoundingBox.expand(corner1);
-    this->mCurrentBoundingBox.expand(corner2);
-
-    return this->mCurrentBoundingBox;
+	return MBoundingBox(corner1, corner2);
 }
 
-MUserData* DebugVectorDrawOverride::prepareForDraw(const MDagPath& objPath, 
-                                                   const MDagPath& cameraPath,
-                                                   const MHWRender::MFrameContext& frameContext,
-                                                   MUserData* oldData){
-    /*
-    Called by Maya each time the object needs to be drawn.
-    Any data needed from the Maya dependency graph must be retrieved and cached in this stage.
-    Returns the data to be passed to the draw callback method.
-        * objPath [MDagPath] is the path to the object being drawn.
-        * cameraPath [MDagPath] is the path to the camera that is being used to draw.
-        * frameContext [MFrameContext] is the frame level context information.
-        * oldData [MUserData] is the data cached by the previous draw of the instance.
-    */
-    MGlobal::displayInfo("Getting ready to draw some cool stuff");
-    DebugVectorData* data = dynamic_cast<DebugVectorData*>(oldData);
-    if (!data)
-        data = new DebugVectorData();
+// Called by Maya each time the object needs to be drawn.
+MUserData* DebugVectorDrawOverride::prepareForDraw(const MDagPath& objPath,
+												   const MDagPath& cameraPath,
+												   const MHWRender::MFrameContext& frameContext,
+												   MUserData* oldData){
+	// Any data needed from the Maya dependency graph must be retrieved and cached in this stage.
+	// There is one cache data for each drawable instance, if it is not desirable to allow Maya to handle data
+	// caching, simply return null in this method and ignore user data parameter in draw callback method.
+	// e.g. in this sample, we compute and cache the data for usage later when we create the 
+	// MUIDrawManager to draw DebugVector in method addUIDrawables().
+	DebugVectorData* data = dynamic_cast<DebugVectorData*>(oldData);
+	if (!data)
+		data = new DebugVectorData();
 
-    MObject node = objPath.node();
+	MObject node = objPath.node();
     float lineW = MPlug(node, DebugVector::inLineWidth).asFloat();
     MFloatVector color = MPlug(node, DebugVector::inColor).asMDataHandle().asFloatVector();
     float tipSize = MPlug(node, DebugVector::inTipSize).asFloat();
@@ -436,7 +474,7 @@ MUserData* DebugVectorDrawOverride::prepareForDraw(const MDagPath& objPath,
     MFloatVector vVector2 = MPlug(node, DebugVector::inVec2).asMDataHandle().asFloatVector();
     bool normalize = MPlug(node, DebugVector::inNormalize).asBool();
 
-    data->fDormantColor = MColor(color.x, color.y, color.z);
+	data->fDormantColor = MColor(color.x, color.y, color.z);
     data->fActiveColor = DebugVector::kActiveColor;
     data->fLeadColor = DebugVector::kLeadColor;
     data->fLineWidth = lineW;
@@ -446,7 +484,7 @@ MUserData* DebugVectorDrawOverride::prepareForDraw(const MDagPath& objPath,
     data->fXray = xray;
     data->fOperation = operation;
 
-    MFloatVector vStart, vEnd, vFinal;
+	MFloatVector vStart, vEnd, vFinal;
     switch (operation)
     {
     case 0:
@@ -470,39 +508,31 @@ MUserData* DebugVectorDrawOverride::prepareForDraw(const MDagPath& objPath,
     if (normalize)
         vEnd.normalize();
 
-    data->fLineList.clear();
-    DebugVector::drawArrow(vStart, vEnd, tipSize, radius, subd, data->fLineList);
+	data->fLineList.clear();
+	DebugVector::drawArrow(vStart, vEnd, tipSize, radius, subd, data->fLineList);
 
-    MGlobal::displayInfo("Draw prepared! Draw some shit right here dude!");
-
-    return data;
+	return data;
 }
 
+// addUIDrawables() provides access to the MUIDrawManager, which can be used
+// to queue up operations for drawing simple UI elements such as lines, circles and
+// text. To enable addUIDrawables(), override hasUIDrawables() and make it return true.
 void DebugVectorDrawOverride::addUIDrawables(const MDagPath& objPath,
-                                             MHWRender::MUIDrawManager& drawManager,
-                                             const MHWRender::MFrameContext& frameContext,
-                                             const MUserData* data){
-    /*
-    Provides access to the MUIDrawManager, which can be used to queue up operations to draw simple UI
-    shapes like lines, circles, text, etc.
-    It is called after prepareForDraw() and carries the same restrictions on the sorts of operations it
-    can perform.
-        * objPath [MDagPath] is the path to the object being drawn.
-        * drawManager [MUIDrawManager] it can be used to draw some simple geometry including text.
-        * frameContext [MFrameContext] is the frame level context information.
-        * data [MUserData] is the data cached by the prepareForDraw().
-    */
-    DebugVectorData* locatorData = (DebugVectorData*)data;
-    if (!locatorData)
-        MGlobal::displayInfo("Returning from addUIDrawables");
-        return;
+											 MHWRender::MUIDrawManager& drawManager,
+											 const MHWRender::MFrameContext& frameContext,
+											 const MUserData* data){
+	// Get data cached by prepareForDraw() for each drawable instance, then MUIDrawManager 
+	// can draw simple UI by these data.
+	DebugVectorData* locatorData = (DebugVectorData*)data;
+	if (!locatorData)
+		return;
 
-    MHWRender::DisplayStatus status = MHWRender::MGeometryUtilities::displayStatus(objPath);
+	MHWRender::DisplayStatus status = MHWRender::MGeometryUtilities::displayStatus(objPath);
 
+	drawManager.beginDrawable();
     if (locatorData->fXray)
         drawManager.beginDrawInXray();
-    else
-        drawManager.beginDrawable();
+        
 
     if (status == MHWRender::DisplayStatus::kActive)
         drawManager.setColor(locatorData->fActiveColor);
@@ -518,9 +548,5 @@ void DebugVectorDrawOverride::addUIDrawables(const MDagPath& objPath,
 
     if (locatorData->fXray)
         drawManager.endDrawInXray();
-    else
-        drawManager.endDrawable();
-
-    MGlobal::displayInfo("Ending of drawing");
-
+	drawManager.endDrawable();
 }

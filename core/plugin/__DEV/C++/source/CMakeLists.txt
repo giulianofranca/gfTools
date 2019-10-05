@@ -26,7 +26,7 @@ set(SOURCE_FILES
 
 # Find FindMaya.cmake
 find_package(Maya REQUIRED)
-find_package(OpenGL)
+find_package(OpenGL REQUIRED)
 
 # Add a shared library and link Maya libs
 add_library(${PROJECT_NAME} SHARED ${SOURCE_FILES})
