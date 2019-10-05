@@ -121,7 +121,8 @@ if (NOT TARGET Maya::Maya)
 endif()
 
 # Add the other Maya libraries into the main Maya::Maya library
-set(_MAYA_LIBRARIES OpenMayaAnim OpenMayaFX OpenMayaRender OpenMayaUI Foundation clew)
+# Libraries to add if needed: OpenMayaFX, OpenMayaAnim, clew
+set(_MAYA_LIBRARIES OpenMayaRender OpenMayaUI Foundation)
 foreach(MAYA_LIB ${_MAYA_LIBRARIES})
     find_library(MAYA_${MAYA_LIB}_LIBRARY
         NAMES 

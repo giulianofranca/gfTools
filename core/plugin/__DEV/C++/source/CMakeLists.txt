@@ -1,5 +1,6 @@
 set(SOURCE_FILES
     "mainPlugin.cpp"
+    "n_gfDebugVector.cpp" "n_gfDebugVector.h"
     "n_gfRigPSDVectorAngle.cpp" "n_gfRigPSDVectorAngle.h"
     "n_gfRigIKVChain.h" "n_gfRigIKVChain.cpp"
     "n_gfUtilBlendTransform.cpp" "n_gfUtilBlendTransform.h"
@@ -25,10 +26,11 @@ set(SOURCE_FILES
 
 # Find FindMaya.cmake
 find_package(Maya REQUIRED)
+find_package(OpenGL REQUIRED)
 
 # Add a shared library and link Maya libs
 add_library(${PROJECT_NAME} SHARED ${SOURCE_FILES})
-target_link_libraries(${PROJECT_NAME} PRIVATE Maya::Maya)
+target_link_libraries(${PROJECT_NAME} PRIVATE Maya::Maya ${OPENGL_gl_LIBRARY})
 target_include_directories(${PROJECT_NAME} PRIVATE Maya::Maya)
 target_compile_options(${PROJECT_NAME} PRIVATE ${COMPILE_FLAGS})
 
