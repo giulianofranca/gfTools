@@ -22,7 +22,6 @@
 #include <maya/MFnDependencyNode.h>
 #include <maya/MGlobal.h>
 
-// Viewport 2.0 includes
 #include <maya/MDrawRegistry.h>
 #include <maya/MPxDrawOverride.h>
 #include <maya/MUserData.h>
@@ -118,7 +117,6 @@ public:
 
 	virtual bool                        isBounded(const MDagPath& objPath,
 		                                          const MDagPath& cameraPath) const;
-
 	virtual MBoundingBox                boundingBox(const MDagPath& objPath,
 		                                            const MDagPath& cameraPath) const;
 
@@ -128,15 +126,8 @@ public:
 		                                               MUserData* oldData);
 
 	virtual bool                        hasUIDrawables() const { return true; }
-
 	virtual void                        addUIDrawables(const MDagPath& objPath,
 		                                               MHWRender::MUIDrawManager& drawManager,
 		                                               const MHWRender::MFrameContext& frameContext,
 		                                               const MUserData* data);
-
-private:
-	static void                         OnModelEditorChanged(void *clientData);
-
-	DebugVector*                        fDebugVector;
-	MCallbackId                         fModelEditorChangedCbId;
 };

@@ -49,9 +49,6 @@ Todo:
 #include <maya/MString.h>
 #include <maya/MTypeId.h>
 
-#pragma warning(disable : 4996)
-static bool sUseLegacyDraw = (getenv("MAYA_ENABLE_VP2_PLUGIN_LOCATOR_LEGACY_DRAW") != NULL);
-
 
 #define REGISTER_NODE(NODE, PLUGIN)         \
     status = PLUGIN.registerNode(           \
@@ -80,25 +77,21 @@ static bool sUseLegacyDraw = (getenv("MAYA_ENABLE_VP2_PLUGIN_LOCATOR_LEGACY_DRAW
         &NODE::kNodeClassify                                                \
     );                                                                      \
     CHECK_MSTATUS(status);                                                  \
-    if (!sUseLegacyDraw){                                                   \
-        status = MHWRender::MDrawRegistry::registerDrawOverrideCreator(     \
-            NODE::kNodeClassify,                                            \
-            NODE::kNodeRegistrantID,                                        \
-            DRAWOVERRIDE::creator                                           \
-        );                                                                  \
-        CHECK_MSTATUS(status);                                              \
-    };                                                                      \
+    status = MHWRender::MDrawRegistry::registerDrawOverrideCreator(         \
+        NODE::kNodeClassify,                                                \
+        NODE::kNodeRegistrantID,                                            \
+        DRAWOVERRIDE::creator                                               \
+    );                                                                      \
+    CHECK_MSTATUS(status);                                                  \
 
 #define DEREGISTER_LOCATOR_NODE(NODE, PLUGIN)                               \
-    if (!sUseLegacyDraw){                                                   \
-        status = MHWRender::MDrawRegistry::deregisterDrawOverrideCreator(   \
-            NODE::kNodeClassify,                                            \
-            NODE::kNodeRegistrantID                                         \
-        );                                                                  \
-        CHECK_MSTATUS(status);                                              \
-    }                                                                       \
     status = PLUGIN.deregisterNode(                                         \
         NODE::kNodeID                                                       \
+    );                                                                      \
+    CHECK_MSTATUS(status);                                                  \
+    status = MHWRender::MDrawRegistry::deregisterDrawOverrideCreator(       \
+        NODE::kNodeClassify,                                                \
+        NODE::kNodeRegistrantID                                             \
     );                                                                      \
     CHECK_MSTATUS(status);                                                  \
 

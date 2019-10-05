@@ -372,34 +372,9 @@ MBoundingBox DebugVector::boundingBox() const
 //---------------------------------------------------------------------------------
 //---------------------------------------------------------------------------------
 DebugVectorDrawOverride::DebugVectorDrawOverride(const MObject& obj)
-						: MHWRender::MPxDrawOverride(obj, NULL, false){
-	fModelEditorChangedCbId = MEventMessage::addEventCallback(
-		"modelEditorChanged", OnModelEditorChanged, this);
+			: MHWRender::MPxDrawOverride(obj, DebugVectorDrawOverride::draw, false){}
 
-	MStatus status;
-	MFnDependencyNode node(obj, &status);
-	fDebugVector = status ? dynamic_cast<DebugVector*>(node.userNode()) : NULL;
-}
-
-DebugVectorDrawOverride::~DebugVectorDrawOverride(){
-	fDebugVector = NULL;
-
-	if (fModelEditorChangedCbId != 0)
-	{
-		MMessage::removeCallback(fModelEditorChangedCbId);
-		fModelEditorChangedCbId = 0;
-	}
-}
-
-void DebugVectorDrawOverride::OnModelEditorChanged(void *clientData){
-	// Mark the node as being dirty so that it can update on display appearance
-	// switch among wireframe and shaded.
-	DebugVectorDrawOverride *ovr = static_cast<DebugVectorDrawOverride*>(clientData);
-	if (ovr && ovr->fDebugVector)
-	{
-		MHWRender::MRenderer::setGeometryDrawDirty(ovr->fDebugVector->thisMObject());
-	}
-}
+DebugVectorDrawOverride::~DebugVectorDrawOverride() {}
 
 MHWRender::MPxDrawOverride* DebugVectorDrawOverride::creator(const MObject& obj){
     // MPxDrawOverride creator function.

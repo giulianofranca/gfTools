@@ -353,7 +353,7 @@ class DebugVectorDrawOverride(omr2.MPxDrawOverride):
 
         # We want to perform custom bounding box drawing so return True so that the
         # internal rendering code will not draw it for us.
-        self.mCurrentBoundingBox = om2.MBoundingBox()
+        # self.mCurrentBoundingBox = om2.MBoundingBox()
 
     def supportedDrawAPIs(self):
         """ Select which draw API works. """
@@ -403,15 +403,11 @@ class DebugVectorDrawOverride(omr2.MPxDrawOverride):
         corner1 = om2.MPoint(vStart.x, vStart.y, vStart.z)
         corner2 = om2.MPoint(vEnd.x, vEnd.y, vEnd.z)
 
-        self.mCurrentBoundingBox.clear()
-        self.mCurrentBoundingBox.expand(corner1)
-        self.mCurrentBoundingBox.expand(corner2)
+        return om2.MBoundingBox(corner1, corner2)
 
-        return self.mCurrentBoundingBox
-
-    def disableInternalBoundingBoxDraw(self):
-        """ Disable internal bounding box draw. """
-        return True
+    # def disableInternalBoundingBoxDraw(self):
+    #     """ Disable internal bounding box draw. """
+    #     return True
 
     def prepareForDraw(self, objPath, cameraPath, frameContext, oldData):
         """
