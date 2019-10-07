@@ -1,11 +1,11 @@
 #pragma once
 
-#include <maya\MPxNode.h>
+#include <maya/MPxNode.h>
 
-#include <maya\MFnNumericAttribute.h>
-#include <maya\MFnMatrixAttribute.h>
-#include <maya\MFloatMatrix.h>
-#include <maya\MFloatVector.h>
+#include <maya/MFnNumericAttribute.h>
+#include <maya/MFnMatrixAttribute.h>
+#include <maya/MFloatMatrix.h>
+#include <maya/MFloatVector.h>
 
 class DecomposeRowMatrix : MPxNode{
 public:

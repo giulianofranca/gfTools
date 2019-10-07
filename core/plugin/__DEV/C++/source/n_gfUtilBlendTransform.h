@@ -4,16 +4,16 @@
 #include <algorithm>
 #include <cstdint>
 
-#include <maya\MPxNode.h>
+#include <maya/MPxNode.h>
 
-#include <maya\MFnNumericAttribute.h>
-#include <maya\MFnUnitAttribute.h>
-#include <maya\MFnCompoundAttribute.h>
-#include <maya\MFnEnumAttribute.h>
-#include <maya\MFloatVector.h>
-#include <maya\MVector.h>
-#include <maya\MEulerRotation.h>
-#include <maya\MQuaternion.h>
+#include <maya/MFnNumericAttribute.h>
+#include <maya/MFnUnitAttribute.h>
+#include <maya/MFnCompoundAttribute.h>
+#include <maya/MFnEnumAttribute.h>
+#include <maya/MFloatVector.h>
+#include <maya/MVector.h>
+#include <maya/MEulerRotation.h>
+#include <maya/MQuaternion.h>
 
 struct VisibilityData{
     bool visibility;

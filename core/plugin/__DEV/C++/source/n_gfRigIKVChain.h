@@ -8,17 +8,17 @@
 #include <algorithm>
 #include <cstdint>
 
-#include <maya\MPxNode.h>
+#include <maya/MPxNode.h>
 
-#include <maya\MFnMatrixAttribute.h>
-#include <maya\MFnNumericAttribute.h>
-#include <maya\MFnUnitAttribute.h>
-#include <maya\MFnEnumAttribute.h>
-#include <maya\MMatrix.h>
-#include <maya\MVector.h>
-#include <maya\MAngle.h>
-#include <maya\MEulerRotation.h>
-#include <maya\MTransformationMatrix.h>
+#include <maya/MFnMatrixAttribute.h>
+#include <maya/MFnNumericAttribute.h>
+#include <maya/MFnUnitAttribute.h>
+#include <maya/MFnEnumAttribute.h>
+#include <maya/MMatrix.h>
+#include <maya/MVector.h>
+#include <maya/MAngle.h>
+#include <maya/MEulerRotation.h>
+#include <maya/MTransformationMatrix.h>
 
 
 class IKVChainSolver : MPxNode{

@@ -1,10 +1,10 @@
 #pragma once
 
-#include <maya\MPxNode.h>
+#include <maya/MPxNode.h>
 
-#include <maya\MFnUnitAttribute.h>
-#include <maya\MFnNumericAttribute.h>
-#include <maya\MAngle.h>
+#include <maya/MFnUnitAttribute.h>
+#include <maya/MFnNumericAttribute.h>
+#include <maya/MAngle.h>
 
 
 class DoubleToAngle : MPxNode{

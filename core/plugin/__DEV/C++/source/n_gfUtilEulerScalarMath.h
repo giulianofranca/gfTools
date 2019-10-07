@@ -1,14 +1,14 @@
 #pragma once
 
-#include <maya\MPxNode.h>
+#include <maya/MPxNode.h>
 
-#include <maya\MFnEnumAttribute.h>
-#include <maya\MFnUnitAttribute.h>
-#include <maya\MFnNumericAttribute.h>
+#include <maya/MFnEnumAttribute.h>
+#include <maya/MFnUnitAttribute.h>
+#include <maya/MFnNumericAttribute.h>
 
-#include <maya\MVector.h>
-#include <maya\MEulerRotation.h>
-#include <maya\MAngle.h>
+#include <maya/MVector.h>
+#include <maya/MEulerRotation.h>
+#include <maya/MAngle.h>
 
 
 class EulerScalarMath : MPxNode{

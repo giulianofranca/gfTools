@@ -9,15 +9,15 @@
 #include <vector>
 #include <cstdint>
 
-#include <maya\MPxNode.h>
+#include <maya/MPxNode.h>
 
-#include <maya\MFnMatrixAttribute.h>
-#include <maya\MFnNumericAttribute.h>
-#include <maya\MRampAttribute.h>
-#include <maya\MFloatArray.h>
-#include <maya\MIntArray.h>
-#include <maya\MFloatMatrix.h>
-#include <maya\MFloatVector.h>
+#include <maya/MFnMatrixAttribute.h>
+#include <maya/MFnNumericAttribute.h>
+#include <maya/MRampAttribute.h>
+#include <maya/MFloatArray.h>
+#include <maya/MIntArray.h>
+#include <maya/MFloatMatrix.h>
+#include <maya/MFloatVector.h>
 
 
 class VectorAnglePSD : MPxNode{

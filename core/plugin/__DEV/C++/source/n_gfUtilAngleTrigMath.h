@@ -2,11 +2,11 @@
 
 #include <cmath>
 
-#include <maya\MPxNode.h>
+#include <maya/MPxNode.h>
 
-#include <maya\MFnUnitAttribute.h>
-#include <maya\MFnEnumAttribute.h>
-#include <maya\MAngle.h>
+#include <maya/MFnUnitAttribute.h>
+#include <maya/MFnEnumAttribute.h>
+#include <maya/MAngle.h>
 
 
 class AngularTrigMath : MPxNode{

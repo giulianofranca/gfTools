@@ -4,11 +4,11 @@
 #include <algorithm>
 #include <cstdint>
 
-#include <maya\MPxNode.h>
+#include <maya/MPxNode.h>
 
-#include <maya\MFnMatrixAttribute.h>
-#include <maya\MFnNumericAttribute.h>
-#include <maya\MMatrix.h>
+#include <maya/MFnMatrixAttribute.h>
+#include <maya/MFnNumericAttribute.h>
+#include <maya/MMatrix.h>
 
 
 class ParentConstraint : MPxNode{
