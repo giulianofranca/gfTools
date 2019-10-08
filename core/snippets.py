@@ -133,16 +133,47 @@ def createChar(name):
     dataHandle.set3Float(kCharOutlinerColor.r, kCharOutlinerColor.g, kCharOutlinerColor.b)
     plug.setMDataHandle(dataHandle)
     lockAndHideAttributes([charObj, deformObj, geometryObj, geoIOObj],
-                          ["translate", "rotate", "scale"])
+                          ["translate", "rotate", "scale", "shear"])
     lockAndHideAttributes([deformObj, geometryObj, geoIOObj], ["visibility"])
-    selList = om2.MSelectionList().add(charObj)
-    om2.MGlobal.setActiveSelectionList(selList)
-    createMessageAttribute("components", "components")
-    createMessageAttribute("APICharacter", "APICharacter")
+    createTypedAttribute("APIType", "APIType", AttributeTypes.kString, selList=[nodeFn.name()])
+    apiTypePlug = nodeFn.findPlug("APIType", False)
+    apiTypePlug.setString("char")
+    apiTypePlug.isLocked = True
+    createMessageAttribute("deformHrc", "deformHrc", selList=[nodeFn.name()])
+    charDeformPlug = nodeFn.findPlug("deformHrc", False)
+    createMessageAttribute("geometryHrc", "geometryHrc", selList=[nodeFn.name()])
+    charGeoPlug = nodeFn.findPlug("geometryHrc", False)
+    nodeFn.setObject(deformObj)
+    createTypedAttribute("APIType", "APIType", AttributeTypes.kString, selList=[nodeFn.name()])
+    apiTypePlug = nodeFn.findPlug("APIType", False)
+    apiTypePlug.setString("hierarchy")
+    apiTypePlug.isLocked = True
+    createMessageAttribute("character", "character", selList=[nodeFn.name()])
+    deformCharPlug = nodeFn.findPlug("character", False)
+    createMessageAttribute("components", "components", selList=[nodeFn.name()])
+    nodeFn.setObject(geometryObj)
+    createTypedAttribute("APIType", "APIType", AttributeTypes.kString, selList=[nodeFn.name()])
+    apiTypePlug = nodeFn.findPlug("APIType", False)
+    apiTypePlug.setString("hierarchy")
+    apiTypePlug.isLocked = True
+    createMessageAttribute("character", "character", selList=[nodeFn.name()])
+    geoCharPlug = nodeFn.findPlug("character", False)
+    createMessageAttribute("ioConn", "ioConn", selList=[nodeFn.name()])
+    geoIOConnPlug = nodeFn.findPlug("ioConn", False)
+    createMessageAttribute("bindLayer1", "bindLayer1", selList=[nodeFn.name()])
     nodeFn.setObject(geoIOObj)
-    selList = om2.MSelectionList().add(geoIOObj)
-    om2.MGlobal.setActiveSelectionList(selList)
-    createEnumAttribute("displayGeo", "displayGeo", {"Hide": 0, "Show": 1, "Reference":2})
+    createTypedAttribute("APIType", "APIType", AttributeTypes.kString, selList=[nodeFn.name()])
+    apiTypePlug = nodeFn.findPlug("APIType", False)
+    apiTypePlug.setString("io")
+    apiTypePlug.isLocked = True
+    createMessageAttribute("geometryHrc", "geometryHrc", selList=[nodeFn.name()])
+    geoPlug = nodeFn.findPlug("geometryHrc", False)
+    createEnumAttribute("displayGeo", "displayGeo", {"Hide": 0, "Show": 1, "Reference":2}, selList=[nodeFn.name()])
+    displayGeoPlug = nodeFn.findPlug("displayGeo", False)
+    displayGeoPlug.setShort(1)
+    connectAttr(charDeformPlug, deformCharPlug)
+    connectAttr(charGeoPlug, geoCharPlug)
+    connectAttr(geoIOConnPlug, geoPlug)
     charPath = om2.MDagPath().getAPathTo(charObj)
     sel = om2.MSelectionList().add(charPath)
     om2.MGlobal.setActiveSelectionList(sel)
@@ -160,15 +191,24 @@ def createComponent(char, name):
 
     Raises:
         RuntimeError: If char don't exists.
+        RuntimeError: If don't find deform_hrc.
     """
     charName = char if "_char" in char else "".join([char, "_char"])
     charObj = om2.MSelectionList().add(charName).getDependNode(0)
     nodeFn = om2.MFnDependencyNode(charObj)
-    if not charObj.hasFn(om2.MFn.kDagNode) or not nodeFn.hasAttribute("APICharacter"):
+    if not charObj.hasFn(om2.MFn.kDagNode) or not nodeFn.hasAttribute("APIType"):
+        raise RuntimeError("The specified char name is not a char or don't exists.")
+    if nodeFn.findPlug("APIType", False).asString() != "char":
         raise RuntimeError("The specified char name is not a char or don't exists.")
     om2.MGlobal.setSelectionMode(om2.MGlobal.kSelectObjectMode)
     charPath = om2.MDagPath().getAPathTo(charObj)
-    deformObj = charPath.child(0)
+    deformObj = None
+    for i in range(charPath.childCount()):
+        if om2.MFnDependencyNode(charPath.child(i)).name() == "deform_hrc":
+            deformObj = charPath.child(i)
+            break
+    if deformObj is None:
+        raise RuntimeError("Can't find deform_hrc")
     cmpntObj = om2.MFnDagNode().create("unknownTransform", "%s_cmpnt" % name, deformObj)
     ioConnObj = om2.MFnDagNode().create("unknownTransform", "%s_settings_io" % name, cmpntObj)
     jntsObj = om2.MFnDagNode().create("unknownTransform", "%s_joints_hrc" % name, cmpntObj)
@@ -176,26 +216,31 @@ def createComponent(char, name):
     ikHdlesObj = om2.MFnDagNode().create("unknownTransform", "%s_ikHandles_hrc" % name, cmpntObj)
     miscObj = om2.MFnDagNode().create("unknownTransform", "%s_misc_hrc" % name, cmpntObj)
     lockAndHideAttributes([cmpntObj, ioConnObj, jntsObj, ctrlsObj, ikHdlesObj, miscObj],
-                          ["translate", "rotate", "scale"])
-    charComponentsPlug = om2.MPlug(charObj, nodeFn.attribute("components"))
-    selList = om2.MSelectionList().add(cmpntObj)
-    om2.MGlobal.setActiveSelectionList(selList)
-    createMessageAttribute("character", "character")
-    createMessageAttribute("bindLayer1", "bindLayer1")
-    createMessageAttribute("controls", "controls")
-    createMessageAttribute("ikHandles", "ikHandles")
-    createMessageAttribute("ioConn", "ioConn")
+                          ["translate", "rotate", "scale", "shear"])
+    nodeFn.setObject(deformObj)
+    deformComponentsPlug = om2.MPlug(deformObj, nodeFn.attribute("components"))
     nodeFn.setObject(cmpntObj)
-    cmpntCharacterPlug = om2.MPlug(cmpntObj, nodeFn.attribute("character"))
+    createTypedAttribute("APIType", "APIType", AttributeTypes.kString, selList=[nodeFn.name()])
+    apiTypePlug = nodeFn.findPlug("APIType", False)
+    apiTypePlug.setString("component")
+    apiTypePlug.isLocked = True
+    createMessageAttribute("deformHrc", "deformHrc", selList=[nodeFn.name()])
+    createMessageAttribute("bindLayer1", "bindLayer1", selList=[nodeFn.name()])
+    createMessageAttribute("controls", "controls", selList=[nodeFn.name()])
+    createMessageAttribute("ikHandles", "ikHandles", selList=[nodeFn.name()])
+    createMessageAttribute("ioConn", "ioConn", selList=[nodeFn.name()])
+    cmpntDeformPlug = om2.MPlug(cmpntObj, nodeFn.attribute("deformHrc"))
     cmpntIoPlug = om2.MPlug(cmpntObj, nodeFn.attribute("ioConn"))
-    selList = om2.MSelectionList().add(ioConnObj)
-    om2.MGlobal.setActiveSelectionList(selList)
-    createMessageAttribute("component", "component")
-    createNumericAttribute("displayJoints", "displayJoints", AttributeTypes.kBool, default=True)
-    createNumericAttribute("displayControls", "displayControls", AttributeTypes.kBool, default=True)
-    createNumericAttribute("displayIKHandles", "displayIKHandles", AttributeTypes.kBool, default=True)
-    createNumericAttribute("displayMisc", "displayMisc", AttributeTypes.kBool, default=True)
     nodeFn.setObject(ioConnObj)
+    createTypedAttribute("APIType", "APIType", AttributeTypes.kString, selList=[nodeFn.name()])
+    apiTypePlug = nodeFn.findPlug("APIType", False)
+    apiTypePlug.setString("io")
+    apiTypePlug.isLocked = True
+    createMessageAttribute("component", "component", selList=[nodeFn.name()])
+    createNumericAttribute("displayJoints", "displayJoints", AttributeTypes.kBool, default=True, selList=[nodeFn.name()])
+    createNumericAttribute("displayControls", "displayControls", AttributeTypes.kBool, default=True, selList=[nodeFn.name()])
+    createNumericAttribute("displayIKHandles", "displayIKHandles", AttributeTypes.kBool, default=True, selList=[nodeFn.name()])
+    createNumericAttribute("displayMisc", "displayMisc", AttributeTypes.kBool, default=True, selList=[nodeFn.name()])
     ioComponentPlug = om2.MPlug(ioConnObj, nodeFn.attribute("component"))
     ioDisplayJointsPlug = om2.MPlug(ioConnObj, nodeFn.attribute("displayJoints"))
     ioDisplayControlsPlug = om2.MPlug(ioConnObj, nodeFn.attribute("displayControls"))
@@ -205,7 +250,7 @@ def createComponent(char, name):
     ctrlsVisPlug = om2.MPlug(ctrlsObj, om2.MFnDependencyNode(ctrlsObj).attribute("visibility"))
     ikHdlesVisPlug = om2.MPlug(ikHdlesObj, om2.MFnDependencyNode(ikHdlesObj).attribute("visibility"))
     miscVisPlug = om2.MPlug(miscObj, om2.MFnDependencyNode(miscObj).attribute("visibility"))
-    connectAttr(charComponentsPlug, cmpntCharacterPlug)
+    connectAttr(deformComponentsPlug, cmpntDeformPlug)
     connectAttr(cmpntIoPlug, ioComponentPlug)
     connectAttr(ioDisplayJointsPlug, jntsVisPlug)
     connectAttr(ioDisplayControlsPlug, ctrlsVisPlug)
@@ -250,7 +295,7 @@ class AttributeTypes(object):
     kStringArray = 20
 
 def createNumericAttribute(longName, shortName, attrType, minVal=None, maxVal=None, default=0,
-                           writable=True, readable=True, keyable=True, storable=True, channelBox=False):
+                           writable=True, readable=True, keyable=True, storable=True, channelBox=False, selList=None):
     """Create a custom numeric attribute in selected objects.
 
     Args:
@@ -265,6 +310,7 @@ def createNumericAttribute(longName, shortName, attrType, minVal=None, maxVal=No
         keyable (bool: True [Optional]): Create as keyable attribute.
         storable (bool: True [Optional]): Create as storable attribute.
         channelBox (bool: False [Optional]): Create as channelBox attribute.
+        selList (list: None [Optional]): The selection list of the objects to be modified.
 
     Returns:
         list: The names of the attributes created.
@@ -272,7 +318,13 @@ def createNumericAttribute(longName, shortName, attrType, minVal=None, maxVal=No
     Raises:
         TypeError: If the attrType is not a numeric type.
     """
-    selList = om2.MGlobal.getActiveSelectionList()
+    if not isinstance(selList, list) or selList is None:
+        selList = om2.MGlobal.getActiveSelectionList()
+    else:
+        listObjs = selList
+        selList = om2.MSelectionList()
+        for obj in listObjs:
+            selList.add(obj)
     if selList.length() < 1:
         return None
     if attrType < 0 or attrType > 5:
@@ -309,7 +361,7 @@ def createNumericAttribute(longName, shortName, attrType, minVal=None, maxVal=No
     return objectNames
 
 def createUnitAttribute(longName, shortName, attrType, minVal=None, maxVal=None, default=0,
-                        writable=True, readable=True, keyable=True, storable=True, channelBox=False):
+                        writable=True, readable=True, keyable=True, storable=True, channelBox=False, selList=None):
     """Create custom unit attribute in selected objects.
 
     Args:
@@ -324,6 +376,7 @@ def createUnitAttribute(longName, shortName, attrType, minVal=None, maxVal=None,
         keyable (bool: True [Optional]): Create as keyable attribute.
         storable (bool: True [Optional]): Create as storable attribute.
         channelBox (bool: False [Optional]): Create as channelBox attribute.
+        selList (list: None [Optional]): The selection list of the objects to be modified.
 
     Returns:
         list: The names of the attributes created.
@@ -331,7 +384,13 @@ def createUnitAttribute(longName, shortName, attrType, minVal=None, maxVal=None,
     Raises:
         TypeError: If the attrType is not a unit type.
     """
-    selList = om2.MGlobal.getActiveSelectionList()
+    if not isinstance(selList, list) or selList is None:
+        selList = om2.MGlobal.getActiveSelectionList()
+    else:
+        listObjs = selList
+        selList = om2.MSelectionList()
+        for obj in listObjs:
+            selList.add(obj)
     if selList.length() < 1:
         return None
     if attrType < 6 or attrType > 8:
@@ -362,7 +421,7 @@ def createUnitAttribute(longName, shortName, attrType, minVal=None, maxVal=None,
     return objectNames
 
 def createMatrixAttribute(longName, shortName, attrType, writable=True, readable=True,
-                          keyable=True, storable=True, channelBox=False):
+                          keyable=True, storable=True, channelBox=False, selList=None):
     """Create custom matrix attribute in selected objects.
 
     Args:
@@ -374,6 +433,7 @@ def createMatrixAttribute(longName, shortName, attrType, writable=True, readable
         keyable (bool: True [Optional]): Create as keyable attribute.
         storable (bool: True [Optional]): Create as storable attribute.
         channelBox (bool: False [Optional]): Create as channelBox attribute.
+        selList (list: None [Optional]): The selection list of the objects to be modified.
 
     Returns:
         list: The names of the attributes created.
@@ -381,7 +441,13 @@ def createMatrixAttribute(longName, shortName, attrType, writable=True, readable
     Raises:
         TypeError: If the attrType is not a matrix type.
     """
-    selList = om2.MGlobal.getActiveSelectionList()
+    if not isinstance(selList, list) or selList is None:
+        selList = om2.MGlobal.getActiveSelectionList()
+    else:
+        listObjs = selList
+        selList = om2.MSelectionList()
+        for obj in listObjs:
+            selList.add(obj)
     if selList.length() < 1:
         return None
     if attrType < 9 or attrType > 10:
@@ -406,7 +472,7 @@ def createMatrixAttribute(longName, shortName, attrType, writable=True, readable
     return objectNames
 
 def createTypedAttribute(longName, shortName, attrType, writable=True, readable=True,
-                         keyable=True, storable=True, channelBox=False):
+                         keyable=True, storable=True, channelBox=False, selList=None):
     """Create custom typed  attribute in selected objects.
 
     Args:
@@ -418,6 +484,7 @@ def createTypedAttribute(longName, shortName, attrType, writable=True, readable=
         keyable (bool: True [Optional]): Create as keyable attribute.
         storable (bool: True [Optional]): Create as storable attribute.
         channelBox (bool: False [Optional]): Create as channelBox attribute.
+        selList (list: None [Optional]): The selection list of the objects to be modified.
 
     Returns:
         list: The names of the attributes created.
@@ -425,7 +492,13 @@ def createTypedAttribute(longName, shortName, attrType, writable=True, readable=
     Raises:
         TypeError: If the attrType is not a typed type.
     """
-    selList = om2.MGlobal.getActiveSelectionList()
+    if not isinstance(selList, list) or selList is None:
+        selList = om2.MGlobal.getActiveSelectionList()
+    else:
+        listObjs = selList
+        selList = om2.MSelectionList()
+        for obj in listObjs:
+            selList.add(obj)
     if selList.length() < 1:
         return None
     if attrType < 11 or attrType > 20:
@@ -466,7 +539,7 @@ def createTypedAttribute(longName, shortName, attrType, writable=True, readable=
     return objectNames
 
 def createEnumAttribute(longName, shortName, enum, writable=True, readable=True,
-                        keyable=True, storable=True, channelBox=False):
+                        keyable=True, storable=True, channelBox=False, selList=None):
     """Create custom enum attribute in selected objects.
 
     Args:
@@ -478,6 +551,7 @@ def createEnumAttribute(longName, shortName, enum, writable=True, readable=True,
         keyable (bool: True [Optional]): Create as keyable attribute.
         storable (bool: True [Optional]): Create as storable attribute.
         channelBox (bool: False [Optional]): Create as channelBox attribute.
+        selList (list: None [Optional]): The selection list of the objects to be modified.
 
     Returns:
         list: The names of the attributes created.
@@ -485,7 +559,13 @@ def createEnumAttribute(longName, shortName, enum, writable=True, readable=True,
     Raises:
         RuntimeError: If the enum argument is not a dict or its empty.
     """
-    selList = om2.MGlobal.getActiveSelectionList()
+    if not isinstance(selList, list) or selList is None:
+        selList = om2.MGlobal.getActiveSelectionList()
+    else:
+        listObjs = selList
+        selList = om2.MSelectionList()
+        for obj in listObjs:
+            selList.add(obj)
     if selList.length() < 1:
         return None
     if not isinstance(enum, dict) or not bool(enum):
@@ -510,7 +590,7 @@ def createEnumAttribute(longName, shortName, enum, writable=True, readable=True,
     return objectNames
 
 def createMessageAttribute(longName, shortName, writable=True, readable=True,
-                           keyable=True, storable=True, channelBox=False):
+                           keyable=True, storable=True, channelBox=False, selList=None):
     """Create custom message attribute in selected objects.
 
     Args:
@@ -521,11 +601,18 @@ def createMessageAttribute(longName, shortName, writable=True, readable=True,
         keyable (bool: True [Optional]): Create as keyable attribute.
         storable (bool: True [Optional]): Create as storable attribute.
         channelBox (bool: False [Optional]): Create as channelBox attribute.
+        selList (list: None [Optional]): The selection list of the objects to be modified.
 
     Returns:
         list: The names of the attributes created.
     """
-    selList = om2.MGlobal.getActiveSelectionList()
+    if not isinstance(selList, list) or selList is None:
+        selList = om2.MGlobal.getActiveSelectionList()
+    else:
+        listObjs = selList
+        selList = om2.MSelectionList()
+        for obj in listObjs:
+            selList.add(obj)
     if selList.length() < 1:
         return None
     objectNames = []
@@ -544,7 +631,7 @@ def createMessageAttribute(longName, shortName, writable=True, readable=True,
     return objectNames
 
 def createVectorAttribute(longName, shortName, attrType, length=3, writable=True,
-                          readable=True, keyable=True, storable=True, channelBox=False):
+                          readable=True, keyable=True, storable=True, channelBox=False, selList=None):
     """Create a custom vector attribute in selected objects.
 
     Args:
@@ -557,6 +644,7 @@ def createVectorAttribute(longName, shortName, attrType, length=3, writable=True
         keyable (bool: True [Optional]): Create as keyable attribute.
         storable (bool: True [Optional]): Create as storable attribute.
         channelBox (bool: False [Optional]): Create as channelBox attribute.
+        selList (list: None [Optional]): The selection list of the objects to be modified.
 
     Returns:
         list: The names of the attributes created.
@@ -565,7 +653,13 @@ def createVectorAttribute(longName, shortName, attrType, length=3, writable=True
         IndexError: If the length argument is different than 2 and 3.
         TypeError: If the attrType argument is not a numeric type.
     """
-    selList = om2.MGlobal.getActiveSelectionList()
+    if not isinstance(selList, list) or selList is None:
+        selList = om2.MGlobal.getActiveSelectionList()
+    else:
+        listObjs = selList
+        selList = om2.MSelectionList()
+        for obj in listObjs:
+            selList.add(obj)
     if selList.length() < 1:
         return None
     if length < 2 or length > 3:
@@ -613,7 +707,7 @@ def createVectorAttribute(longName, shortName, attrType, length=3, writable=True
     return objectNames
 
 def createColorAttribute(longName, shortName, writable=True, readable=True, keyable=True,
-                         storable=True, channelBox=False):
+                         storable=True, channelBox=False, selList=None):
     """Create a custom color attribute in selected objects.
 
     Args:
@@ -624,11 +718,18 @@ def createColorAttribute(longName, shortName, writable=True, readable=True, keya
         keyable (bool: True [Optional]): Create as keyable attribute.
         storable (bool: True [Optional]): Create as storable attribute.
         channelBox (bool: False [Optional]): Create as channelBox attribute.
+        selList (list: None [Optional]): The selection list of the objects to be modified.
 
     Returns:
         list: The names of the attributes created.
     """
-    selList = om2.MGlobal.getActiveSelectionList()
+    if not isinstance(selList, list) or selList is None:
+        selList = om2.MGlobal.getActiveSelectionList()
+    else:
+        listObjs = selList
+        selList = om2.MSelectionList()
+        for obj in listObjs:
+            selList.add(obj)
     if selList.length() < 1:
         return None
     objectNames = []

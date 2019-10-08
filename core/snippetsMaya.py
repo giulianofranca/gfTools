@@ -16,7 +16,35 @@ reload(snippets)
 
 
 # Create Mother rig
-snippets.createChar("Mother")
+snippets.createChar("mother")
+snippets.createMessageAttribute("bindGeometry", "bindGeometry", selList=["mother_C_body_geo"])
+snippets.connectAttr("geometry_hrc.bindLayer1", "mother_C_body_geo.bindGeometry")
+snippets.createComponent("mother", "leg_L")
+bndList = ["leg_L_thigh_bnd", "leg_L_shin_bnd", "leg_L_ankle_bnd", "leg_L_calcaneus_bnd"]
+snippets.createMessageAttribute("bindJoint", "bindJoint", selList=bndList)
+snippets.getPoleVectorPosition()
+cmds.move(5.0, 0.0, 0.0, r=True, os=True, wd=True)          # Move pole vector
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#=====================================================================================================================
 snippets.createComponent("Mother", "leg_L")
 snippets.createComponent("Mother", "leg_R")
 snippets.createComponent("Mother", "spine_C")
