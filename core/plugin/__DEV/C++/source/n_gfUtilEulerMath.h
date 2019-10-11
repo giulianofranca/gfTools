@@ -22,9 +22,7 @@ public:
     virtual MStatus                     compute(const MPlug& plug, MDataBlock& dataBlock);
     static MStatus                      initialize();
     static void*                        creator();
-
-    static MEulerRotation               createMEulerRotation(MVector& value, short rotOrder);
-    static void                         reorderMEulerRotation(MEulerRotation& euler, short rotOrder);
+    
 public:
     const static MString                kNodeName;
     const static MString                kNodeClassify;

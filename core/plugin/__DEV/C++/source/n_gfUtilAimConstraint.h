@@ -13,9 +13,10 @@
 #include <maya/MVector.h>
 #include <maya/MQuaternion.h>
 #include <maya/MEulerRotation.h>
+#include <maya/MGlobal.h>
 
 
-class AimConstraint : MPxNode{
+class AimConstraint : public MPxNode{
 public:
     AimConstraint();
     virtual ~AimConstraint();
@@ -34,11 +35,14 @@ public:
     const static MTypeId                kNodeID;
 
     static MObject                      inUpVecType;
-    static MObject                      inTarget;
-    static MObject                      inWorldUp;
-    static MObject                      inUpObj;
-    static MObject                      inPivot;
+    static MObject                      inOffset;
+    static MObject                      inWorldUpVector;
+    static MObject                      inWorldUpMtx;
+    static MObject                      inTargetWMtx;
+    static MObject                      inTargetWeight;
+    static MObject                      inConstWMtx;
     static MObject                      inConstParInvMtx;
     static MObject                      inConstJntOri;
+    static MObject                      inConstRotOrder;
     static MObject                      outConstraint;
 };

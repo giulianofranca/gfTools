@@ -131,8 +131,8 @@ MStatus EulerMath::compute(const MPlug& plug, MDataBlock& dataBlock){
     short euler2RotOrder = dataBlock.inputValue(inEuler2RotOrder).asShort();
     short outRotOrder = dataBlock.inputValue(inResRotOrder).asShort();
 
-    MEulerRotation eEuler1 = EulerMath::createMEulerRotation(vEuler1, euler1RotOrder);
-    MEulerRotation eEuler2 = EulerMath::createMEulerRotation(vEuler2, euler2RotOrder);
+    MEulerRotation eEuler1 = MEulerRotation(vEuler1, (MEulerRotation::RotationOrder)euler1RotOrder);
+    MEulerRotation eEuler2 = MEulerRotation(vEuler2, (MEulerRotation::RotationOrder)euler2RotOrder);
 
     MDataHandle outEulerHandle = dataBlock.outputValue(outEuler);
     MVector vResult;
@@ -141,27 +141,27 @@ MStatus EulerMath::compute(const MPlug& plug, MDataBlock& dataBlock){
     switch (operation)
     {
     case 0:
-        EulerMath::reorderMEulerRotation(eEuler1, outRotOrder);
+        eEuler1.reorderIt((MEulerRotation::RotationOrder)outRotOrder);
         vResult = eEuler1.asVector();
         outEulerHandle.setMVector(vResult);
         break;
     case 1:
-        EulerMath::reorderMEulerRotation(eEuler1, outRotOrder);
-        EulerMath::reorderMEulerRotation(eEuler2, outRotOrder);
+        eEuler1.reorderIt((MEulerRotation::RotationOrder)outRotOrder);
+        eEuler2.reorderIt((MEulerRotation::RotationOrder)outRotOrder);
         eOutEuler = eEuler1 + eEuler2;
         vResult = eOutEuler.asVector();
         outEulerHandle.setMVector(vResult);
         break;
     case 2:
-        EulerMath::reorderMEulerRotation(eEuler1, outRotOrder);
-        EulerMath::reorderMEulerRotation(eEuler2, outRotOrder);
+        eEuler1.reorderIt((MEulerRotation::RotationOrder)outRotOrder);
+        eEuler2.reorderIt((MEulerRotation::RotationOrder)outRotOrder);
         eOutEuler = eEuler1 - eEuler2;
         vResult = eOutEuler.asVector();
         outEulerHandle.setMVector(vResult);
         break;
     case 3:
-        EulerMath::reorderMEulerRotation(eEuler1, outRotOrder);
-        EulerMath::reorderMEulerRotation(eEuler2, outRotOrder);
+        eEuler1.reorderIt((MEulerRotation::RotationOrder)outRotOrder);
+        eEuler2.reorderIt((MEulerRotation::RotationOrder)outRotOrder);
         eOutEuler = eEuler1 * eEuler2;
         vResult = eOutEuler.asVector();
         outEulerHandle.setMVector(vResult);
@@ -171,61 +171,4 @@ MStatus EulerMath::compute(const MPlug& plug, MDataBlock& dataBlock){
     outEulerHandle.setClean();
 
     return MStatus::kSuccess;
-}
-
-MEulerRotation EulerMath::createMEulerRotation(MVector& value, short rotOrder){
-    /*
-    Create an MEulerRotation instance based on a double3 typed values and short typed
-    rotation order.
-    */
-    MEulerRotation::RotationOrder order = MEulerRotation::kXYZ;
-    switch (rotOrder)
-    {
-    case 0:
-        order = MEulerRotation::kXYZ;
-        break;
-    case 1:
-        order = MEulerRotation::kYZX;
-        break;
-    case 2:
-        order = MEulerRotation::kZXY;
-        break;
-    case 3:
-        order = MEulerRotation::kXZY;
-        break;
-    case 4:
-        order = MEulerRotation::kYXZ;
-        break;
-    case 5:
-        order = MEulerRotation::kZYX;
-        break;
-    }
-    MEulerRotation eResult = MEulerRotation(value, order);
-    return eResult;
-}
-
-void EulerMath::reorderMEulerRotation(MEulerRotation& euler, short rotOrder){
-    MEulerRotation::RotationOrder order;
-    switch (rotOrder)
-    {
-    case 0:
-        order = MEulerRotation::kXYZ;
-        break;
-    case 1:
-        order = MEulerRotation::kYZX;
-        break;
-    case 2:
-        order = MEulerRotation::kZXY;
-        break;
-    case 3:
-        order = MEulerRotation::kXZY;
-        break;
-    case 4:
-        order = MEulerRotation::kYXZ;
-        break;
-    case 5:
-        order = MEulerRotation::kZYX;
-        break;
-    }
-    euler.reorderIt(order);
 }

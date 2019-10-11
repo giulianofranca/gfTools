@@ -267,10 +267,10 @@ class BlendTransform(om2.MPxNode):
                 outRotOrder = BlendTransform.checkRotateOrderArrayHandle(outRotOrderHandle, i)
                 rot1 = rot1Handle.inputValue().asVector()
                 rot2 = rot2Handle.inputValue().asVector()
-                eRot1 = BlendTransform.createMEulerRotation(rot1, rotOrder1)
-                eRot2 = BlendTransform.createMEulerRotation(rot2, rotOrder2)
-                BlendTransform.reorderMEulerRotation(eRot1, outRotOrder)
-                BlendTransform.reorderMEulerRotation(eRot2, outRotOrder)
+                eRot1 = om2.MEulerRotation(rot1, rotOrder1)
+                eRot2 = om2.MEulerRotation(rot2, rotOrder2)
+                eRot1.reorderIt(outRotOrder)
+                eRot2.reorderIt(outRotOrder)
                 if rotInterp == 0:
                     vRot1 = eRot1.asVector()
                     vRot2 = eRot2.asVector()
@@ -279,7 +279,7 @@ class BlendTransform(om2.MPxNode):
                     qRot1 = eRot1.asQuaternion()
                     qRot2 = eRot2.asQuaternion()
                     eSlerp = om2.MQuaternion.slerp(qRot1, qRot2, blender).asEulerRotation()
-                    BlendTransform.reorderMEulerRotation(eSlerp, outRotOrder)
+                    eSlerp.reorderIt(outRotOrder)
                     vOut = eSlerp.asVector()
                 outList.append(vOut)
             for i in range(len(outRotHandle)):
@@ -355,43 +355,3 @@ class BlendTransform(om2.MPxNode):
         else:
             value = 0
         return value
-
-    @staticmethod
-    def createMEulerRotation(value, rotOrder):
-        """
-        Create an MEulerRotation instance based on a double3 typed values and short typed
-        rotation order.
-        """
-        if rotOrder == 0:
-            order = om2.MEulerRotation.kXYZ
-        elif rotOrder == 1:
-            order = om2.MEulerRotation.kYZX
-        elif rotOrder == 2:
-            order = om2.MEulerRotation.kZXY
-        elif rotOrder == 3:
-            order = om2.MEulerRotation.kXZY
-        elif rotOrder == 4:
-            order = om2.MEulerRotation.kYXZ
-        elif rotOrder == 5:
-            order = om2.MEulerRotation.kZYX
-        eResult = om2.MEulerRotation(value, order)
-        return eResult
-
-    @staticmethod
-    def reorderMEulerRotation(euler, rotOrder):
-        """
-        Reorder an MEulerRotation instance based on a short typed rotation order.
-        """
-        if rotOrder == 0:
-            order = om2.MEulerRotation.kXYZ
-        elif rotOrder == 1:
-            order = om2.MEulerRotation.kYZX
-        elif rotOrder == 2:
-            order = om2.MEulerRotation.kZXY
-        elif rotOrder == 3:
-            order = om2.MEulerRotation.kXZY
-        elif rotOrder == 4:
-            order = om2.MEulerRotation.kYXZ
-        elif rotOrder == 5:
-            order = om2.MEulerRotation.kZYX
-        euler.reorderIt(order)

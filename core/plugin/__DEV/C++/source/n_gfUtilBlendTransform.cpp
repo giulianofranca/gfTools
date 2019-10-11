@@ -239,10 +239,10 @@ MStatus BlendTransform::compute(const MPlug& plug, MDataBlock& dataBlock){
             short outRotOrder = BlendTransform::checkRotateOrderArrayHandle(outRotOrderHandle, i);
             MVector rot1 = rot1Handle.inputValue().asVector();
             MVector rot2 = rot2Handle.inputValue().asVector();
-            MEulerRotation eRot1 = BlendTransform::createMEulerRotation(rot1, rotOrder1);
-            MEulerRotation eRot2 = BlendTransform::createMEulerRotation(rot2, rotOrder2);
-            BlendTransform::reorderMEulerRotation(eRot1, outRotOrder);
-            BlendTransform::reorderMEulerRotation(eRot2, outRotOrder);
+            MEulerRotation eRot1 = MEulerRotation(rot1, (MEulerRotation::RotationOrder)rotOrder1);
+            MEulerRotation eRot2 = MEulerRotation(rot2, (MEulerRotation::RotationOrder)rotOrder2);
+            eRot1.reorderIt((MEulerRotation::RotationOrder)outRotOrder);
+            eRot2.reorderIt((MEulerRotation::RotationOrder)outRotOrder);
             MVector vOut;
             if (rotInterp == 0){
                 MVector vRot1 = eRot1.asVector();
@@ -253,7 +253,7 @@ MStatus BlendTransform::compute(const MPlug& plug, MDataBlock& dataBlock){
                 MQuaternion qRot1 = eRot1.asQuaternion();
                 MQuaternion qRot2 = eRot2.asQuaternion();
                 MEulerRotation eSlerp = slerp(qRot1, qRot2, blenderD).asEulerRotation();
-                BlendTransform::reorderMEulerRotation(eSlerp, outRotOrder);
+                eSlerp.reorderIt((MEulerRotation::RotationOrder)outRotOrder);
                 vOut = eSlerp.asVector();
             }
             outList.push_back(vOut);
@@ -348,61 +348,4 @@ short BlendTransform::checkRotateOrderArrayHandle(MArrayDataHandle& arrayHandle,
     else
         value = 0;
     return value;
-}
-
-MEulerRotation BlendTransform::createMEulerRotation(MVector& value, short rotOrder){
-    /*
-    Create an MEulerRotation instance based on a double3 typed values and short typed
-    rotation order.
-    */
-    MEulerRotation::RotationOrder order = MEulerRotation::kXYZ;
-    switch (rotOrder)
-    {
-    case 0:
-        order = MEulerRotation::kXYZ;
-        break;
-    case 1:
-        order = MEulerRotation::kYZX;
-        break;
-    case 2:
-        order = MEulerRotation::kZXY;
-        break;
-    case 3:
-        order = MEulerRotation::kXZY;
-        break;
-    case 4:
-        order = MEulerRotation::kYXZ;
-        break;
-    case 5:
-        order = MEulerRotation::kZYX;
-        break;
-    }
-    MEulerRotation eResult = MEulerRotation(value, order);
-    return eResult;
-}
-
-void BlendTransform::reorderMEulerRotation(MEulerRotation& euler, short rotOrder){
-    MEulerRotation::RotationOrder order;
-    switch (rotOrder)
-    {
-    case 0:
-        order = MEulerRotation::kXYZ;
-        break;
-    case 1:
-        order = MEulerRotation::kYZX;
-        break;
-    case 2:
-        order = MEulerRotation::kZXY;
-        break;
-    case 3:
-        order = MEulerRotation::kXZY;
-        break;
-    case 4:
-        order = MEulerRotation::kYXZ;
-        break;
-    case 5:
-        order = MEulerRotation::kZYX;
-        break;
-    }
-    euler.reorderIt(order);
 }

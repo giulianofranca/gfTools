@@ -21,12 +21,15 @@ AimConstraint::AimConstraint(){}
 AimConstraint::~AimConstraint(){}
 
 MObject AimConstraint::inUpVecType;
-MObject AimConstraint::inTarget;
-MObject AimConstraint::inWorldUp;
-MObject AimConstraint::inUpObj;
-MObject AimConstraint::inPivot;
+MObject AimConstraint::inOffset;
+MObject AimConstraint::inWorldUpVector;
+MObject AimConstraint::inWorldUpMtx;
+MObject AimConstraint::inTargetWMtx;
+MObject AimConstraint::inTargetWeight;
+MObject AimConstraint::inConstWMtx;
 MObject AimConstraint::inConstParInvMtx;
 MObject AimConstraint::inConstJntOri;
+MObject AimConstraint::inConstRotOrder;
 MObject AimConstraint::outConstraint;
 
 void* AimConstraint::creator(){
@@ -51,17 +54,26 @@ MStatus AimConstraint::initialize(){
     eAttr.addField("Object Up", 1);
     INPUT_ATTR(eAttr);
 
-    inTarget = mAttr.create("target", "target", MFnMatrixAttribute::kFloat, &status);
-    INPUT_ATTR(mAttr);
+    MObject offsetX = uAttr.create("offsetX", "offsetX", MFnUnitAttribute::kAngle, 0.0, &status);
+    MObject offsetY = uAttr.create("offsetY", "offsetY", MFnUnitAttribute::kAngle, 0.0, &status);
+    MObject offsetZ = uAttr.create("offsetZ", "offsetZ", MFnUnitAttribute::kAngle, 0.0, &status);
+    inOffset = nAttr.create("offset", "offset", offsetX, offsetY, offsetZ, &status);
+    INPUT_ATTR(nAttr);
 
-    inUpObj = mAttr.create("up", "up", MFnMatrixAttribute::kFloat, &status);
-    INPUT_ATTR(mAttr);
-
-    inWorldUp = nAttr.createPoint("worldUp", "wu", &status);
+    inWorldUpVector = nAttr.createPoint("worldUpVector", "wuv", &status);
     nAttr.setDefault(0.0f, 1.0f, 0.0f);
     INPUT_ATTR(nAttr);
 
-    inPivot = mAttr.create("pivot", "pivot", MFnMatrixAttribute::kFloat, &status);
+    inWorldUpMtx = mAttr.create("worldUpMatrix", "wum", MFnMatrixAttribute::kFloat, &status);
+    INPUT_ATTR(mAttr);
+
+    inTargetWMtx = mAttr.create("targetWorldMatrix", "twmtx", MFnMatrixAttribute::kFloat, &status);
+    INPUT_ATTR(mAttr);
+
+    inTargetWeight = nAttr.create("targetWeight", "tw", MFnNumericData::kDouble, 1.0, &status);
+    INPUT_ATTR(nAttr);
+
+    inConstWMtx = mAttr.create("constraintWorldMatrix", "cwmtx", MFnMatrixAttribute::kFloat, &status);
     INPUT_ATTR(mAttr);
 
     inConstParInvMtx = mAttr.create("constraintParentInverseMatrix", "cpim", MFnMatrixAttribute::kDouble, &status);
@@ -73,6 +85,15 @@ MStatus AimConstraint::initialize(){
     inConstJntOri = nAttr.create("constraintJointOrient", "cjor", jntOriX, jntOriY, jntOriZ, &status);
     INPUT_ATTR(nAttr);
 
+    inConstRotOrder = eAttr.create("contraintRotateOrder", "cro", 0, &status);
+    eAttr.addField("xyz", 0);
+    eAttr.addField("yzx", 1);
+    eAttr.addField("zxy", 2);
+    eAttr.addField("xzy", 3);
+    eAttr.addField("yxz", 4);
+    eAttr.addField("zyx", 5);
+    INPUT_ATTR(eAttr);
+
     MObject outConstraintX = uAttr.create("contraintX", "cx", MFnUnitAttribute::kAngle, 0.0, &status);
     MObject outConstraintY = uAttr.create("contraintY", "cy", MFnUnitAttribute::kAngle, 0.0, &status);
     MObject outConstraintZ = uAttr.create("contraintZ", "cz", MFnUnitAttribute::kAngle, 0.0, &status);
@@ -80,20 +101,26 @@ MStatus AimConstraint::initialize(){
     OUTPUT_ATTR(nAttr);
 
     addAttribute(inUpVecType);
-    addAttribute(inTarget);
-    addAttribute(inUpObj);
-    addAttribute(inWorldUp);
-    addAttribute(inPivot);
+    addAttribute(inOffset);
+    addAttribute(inWorldUpVector);
+    addAttribute(inWorldUpMtx);
+    addAttribute(inTargetWMtx);
+    addAttribute(inTargetWeight);
+    addAttribute(inConstWMtx);
     addAttribute(inConstParInvMtx);
     addAttribute(inConstJntOri);
+    addAttribute(inConstRotOrder);
     addAttribute(outConstraint);
     attributeAffects(inUpVecType, outConstraint);
-    attributeAffects(inTarget, outConstraint);
-    attributeAffects(inUpObj, outConstraint);
-    attributeAffects(inWorldUp, outConstraint);
-    attributeAffects(inPivot, outConstraint);
+    attributeAffects(inOffset, outConstraint);
+    attributeAffects(inWorldUpVector, outConstraint);
+    attributeAffects(inWorldUpMtx, outConstraint);
+    attributeAffects(inTargetWMtx, outConstraint);
+    attributeAffects(inTargetWeight, outConstraint);
+    attributeAffects(inConstWMtx, outConstraint);
     attributeAffects(inConstParInvMtx, outConstraint);
     attributeAffects(inConstJntOri, outConstraint);
+    attributeAffects(inConstRotOrder, outConstraint);
 
     return status;
 }
@@ -107,32 +134,35 @@ MStatus AimConstraint::compute(const MPlug& plug, MDataBlock& dataBlock){
     if (plug != outConstraint)
         return MStatus::kUnknownParameter;
 
-    short upType = dataBlock.inputValue(inUpVecType).asShort();
-    MFloatMatrix mTarget = dataBlock.inputValue(inTarget).asFloatMatrix();
-    MFloatMatrix mPivot = dataBlock.inputValue(inPivot).asFloatMatrix();
+    short upVecType = dataBlock.inputValue(inUpVecType).asShort();
+    MEulerRotation eOffset = MEulerRotation(dataBlock.inputValue(inOffset).asDouble3());
+    MFloatMatrix mTargetWorld = dataBlock.inputValue(inTargetWMtx).asFloatMatrix();
+    double targetWeight = dataBlock.inputValue(inTargetWeight).asDouble();
+    MFloatMatrix mConstWorld = dataBlock.inputValue(inConstWMtx).asFloatMatrix();
     MMatrix mConstParInv = dataBlock.inputValue(inConstParInvMtx).asMatrix();
     MEulerRotation eConstJntOri = MEulerRotation(dataBlock.inputValue(inConstJntOri).asDouble3());
-    MTransformationMatrix mtxFn = MTransformationMatrix();
-    mtxFn.rotateBy(eConstJntOri, MSpace::kTransform);
-    MMatrix mConstJntOri = mtxFn.asMatrix();
-    MFloatVector vTarget = MFloatVector(mTarget[3][0], mTarget[3][1], mTarget[3][2]);
-    MFloatVector vPivot = MFloatVector(mPivot[3][0], mPivot[3][1], mPivot[3][2]);
-    MFloatVector vAim = vTarget - vPivot;
-    MFloatVector nAim = vAim.normal();
-    MFloatVector nNormal;
-    MFloatVector nBinormal;
-    if (upType == 0){
-        MFloatVector vWorldUp = dataBlock.inputValue(inWorldUp).asFloatVector();
-        MFloatVector nWorldUp = vWorldUp.normal();
-        nBinormal = nAim ^ -nWorldUp;
+    short constRotOrder = dataBlock.inputValue(inConstRotOrder).asShort();
+
+    MFloatVector vTargetPos = MFloatVector(mTargetWorld[3][0], mTargetWorld[3][1], mTargetWorld[3][2]);
+    MFloatVector vConstPos = MFloatVector(mConstWorld[3][0], mConstWorld[3][1], mConstWorld[3][2]);
+    MFloatVector nAim = vTargetPos - vConstPos;
+    nAim.normalize();
+    MFloatVector nNormal, nBinormal;
+    if (upVecType == 0){
+        MFloatVector nWorldUp = dataBlock.inputValue(inWorldUpVector).asFloatVector();
+        nWorldUp.normalize();
+        nBinormal = nWorldUp ^ nAim;
+        nBinormal.normalize();
         nNormal = nAim ^ nBinormal;
+        nNormal.normalize();
     }
-    else if (upType == 1){
-        MFloatMatrix mUpObj = dataBlock.inputValue(inUpObj).asFloatMatrix();
-        MFloatVector vUpObj = MFloatVector(mUpObj[3][0], mUpObj[3][1], mUpObj[3][2]);
-        MFloatVector vNormal = vUpObj - vPivot;
-        nNormal = vNormal.normal();
+    else if (upVecType == 1){
+        MFloatMatrix mWorldUp = dataBlock.inputValue(inWorldUpMtx).asFloatMatrix();
+        MFloatVector vWorldUp = MFloatVector(mWorldUp[3][0], mWorldUp[3][1], mWorldUp[3][2]);
+        nNormal = vWorldUp - vConstPos;
+        nNormal.normalize();
         nBinormal = nAim ^ nNormal;
+        nBinormal.normalize();
     }
     float aim[4][4] = {
         {nAim.x, nAim.y, nAim.z, 0.0f},
@@ -141,9 +171,19 @@ MStatus AimConstraint::compute(const MPlug& plug, MDataBlock& dataBlock){
         {0.0f, 0.0f, 0.0f, 1.0f}
     };
     MMatrix mAim = MMatrix(aim);
-    MMatrix mResult = mAim * mConstParInv * mConstJntOri.inverse();
-    mtxFn = MTransformationMatrix(mResult);
-    MEulerRotation eConstraint = mtxFn.rotation().asEulerRotation();
+    MTransformationMatrix mtxFn = MTransformationMatrix();
+    mtxFn.rotateBy(eConstJntOri, MSpace::kTransform);
+    MMatrix mConstJntOri = mtxFn.asMatrix();
+    mtxFn = MTransformationMatrix();
+    mtxFn.rotateBy(eOffset.invertIt(), MSpace::kTransform);
+    MMatrix mOffset = mtxFn.asMatrix();
+    MMatrix mResult = mOffset * mAim * mConstParInv * mConstJntOri.inverse();
+    MEulerRotation eConstraint = MEulerRotation::decompose(
+        mResult,
+        MEulerRotation::RotationOrder::kXYZ
+    );
+    eConstraint.reorderIt((MEulerRotation::RotationOrder)constRotOrder);
+    eConstraint *= targetWeight;
     MVector vConstraint = eConstraint.asVector();
     MDataHandle outConstraintHandle = dataBlock.outputValue(outConstraint);
     outConstraintHandle.setMVector(vConstraint);

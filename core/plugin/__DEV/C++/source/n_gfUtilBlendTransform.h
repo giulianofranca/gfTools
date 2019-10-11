@@ -35,8 +35,6 @@ public:
 
     static VisibilityData               visibilityCalculation(float blender);
     static short                        checkRotateOrderArrayHandle(MArrayDataHandle& arrayHandle, uint32_t iterValue);
-    static MEulerRotation               createMEulerRotation(MVector& value, short rotOrder);
-    static void                         reorderMEulerRotation(MEulerRotation& euler, short rotOrder);
 
 public:
     const static MString                kNodeName;

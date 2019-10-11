@@ -115,7 +115,7 @@ MStatus EulerScalarMath::compute(const MPlug& plug, MDataBlock& dataBlock){
     short eulerRotOrder = dataBlock.inputValue(inEulerRotOrder).asShort();
     short outRotOrder = dataBlock.inputValue(inResRotOrder).asShort();
 
-    MEulerRotation eEuler = EulerScalarMath::createMEulerRotation(vEuler, eulerRotOrder);
+    MEulerRotation eEuler = MEulerRotation(vEuler, (MEulerRotation::RotationOrder)eulerRotOrder);
 
     MDataHandle outEulerHandle = dataBlock.outputValue(outEuler);
     MVector vResult, vScalar;
@@ -124,12 +124,12 @@ MStatus EulerScalarMath::compute(const MPlug& plug, MDataBlock& dataBlock){
     switch (operation)
     {
     case 0:
-        EulerScalarMath::reorderMEulerRotation(eEuler, outRotOrder);
+        eEuler.reorderIt((MEulerRotation::RotationOrder)outRotOrder);
         vResult = eEuler.asVector();
         outEulerHandle.setMVector(vResult);
         break;
     case 1:
-        EulerScalarMath::reorderMEulerRotation(eEuler, outRotOrder);
+        eEuler.reorderIt((MEulerRotation::RotationOrder)outRotOrder);
         vScalar = MVector(
             MAngle(scalar, MAngle::kDegrees).asRadians(),
             MAngle(scalar, MAngle::kDegrees).asRadians(),
@@ -139,7 +139,7 @@ MStatus EulerScalarMath::compute(const MPlug& plug, MDataBlock& dataBlock){
         outEulerHandle.setMVector(vResult);
         break;
     case 2:
-        EulerScalarMath::reorderMEulerRotation(eEuler, outRotOrder);
+        eEuler.reorderIt((MEulerRotation::RotationOrder)outRotOrder);
         vScalar = MVector(
             MAngle(scalar, MAngle::kDegrees).asRadians(),
             MAngle(scalar, MAngle::kDegrees).asRadians(),
@@ -149,7 +149,7 @@ MStatus EulerScalarMath::compute(const MPlug& plug, MDataBlock& dataBlock){
         outEulerHandle.setMVector(vResult);
         break;
     case 3:
-        EulerScalarMath::reorderMEulerRotation(eEuler, outRotOrder);
+        eEuler.reorderIt((MEulerRotation::RotationOrder)outRotOrder);
         eOutEuler = eEuler * scalar;
         vResult = eOutEuler.asVector();
         outEulerHandle.setMVector(vResult);
@@ -159,61 +159,4 @@ MStatus EulerScalarMath::compute(const MPlug& plug, MDataBlock& dataBlock){
     outEulerHandle.setClean();
 
     return MStatus::kSuccess;
-}
-
-MEulerRotation EulerScalarMath::createMEulerRotation(MVector& value, short rotOrder){
-    /*
-    Create an MEulerRotation instance based on a double3 typed values and short typed
-    rotation order.
-    */
-    MEulerRotation::RotationOrder order = MEulerRotation::kXYZ;
-    switch (rotOrder)
-    {
-    case 0:
-        order = MEulerRotation::kXYZ;
-        break;
-    case 1:
-        order = MEulerRotation::kYZX;
-        break;
-    case 2:
-        order = MEulerRotation::kZXY;
-        break;
-    case 3:
-        order = MEulerRotation::kXZY;
-        break;
-    case 4:
-        order = MEulerRotation::kYXZ;
-        break;
-    case 5:
-        order = MEulerRotation::kZYX;
-        break;
-    }
-    MEulerRotation eResult = MEulerRotation(value, order);
-    return eResult;
-}
-
-void EulerScalarMath::reorderMEulerRotation(MEulerRotation& euler, short rotOrder){
-    MEulerRotation::RotationOrder order;
-    switch (rotOrder)
-    {
-    case 0:
-        order = MEulerRotation::kXYZ;
-        break;
-    case 1:
-        order = MEulerRotation::kYZX;
-        break;
-    case 2:
-        order = MEulerRotation::kZXY;
-        break;
-    case 3:
-        order = MEulerRotation::kXZY;
-        break;
-    case 4:
-        order = MEulerRotation::kYXZ;
-        break;
-    case 5:
-        order = MEulerRotation::kZYX;
-        break;
-    }
-    euler.reorderIt(order);
 }
