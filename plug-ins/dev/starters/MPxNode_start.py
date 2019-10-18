@@ -126,7 +126,7 @@ class TestNode(om2.MPxNode):
         inAttrValue = dataBlock.inputValue(TestNode.inAttr).asVector()
 
         outAttrHandle = dataBlock.outputValue(TestNode.outAttr)
-        outAttrHandle.set3Float(inAttrValue[0], inAttrValue[1], inAttrValue[2])
+        outAttrHandle.set3Float(inAttrValue.x, inAttrValue.y, inAttrValue.z)
         outAttrHandle.setClean()
 
 

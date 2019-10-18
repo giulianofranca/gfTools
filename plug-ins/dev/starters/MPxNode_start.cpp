@@ -24,13 +24,6 @@ SOFTWARE.
 ====================================================================================================
 
 How to use:
-    * Copy the parent folder to the MAYA_SCRIPT_PATH.
-    * To find MAYA_SCRIPT_PATH paste this command in a Python tab:
-        import os; os.environ["MAYA_SCRIPT_PATH"].split(";")
-    * In Maya, go to Windows > Settings/Preferences > Plug-in Manager.
-    * Browse for "gfTools > plug-ins > release".
-    * Find gfTools plugin (Windows: gfTools.mll, OSX: gfTools.bundle, Linux: gfTools.so) and import it.
-
     * Copy and paste this file in the MAYA_PLUG_IN_PATH.
     * To find MAYA_PLUG_IN_PATH paste this command in a Python tab on script editor:
         import os; os.environ["MAYA_PLUG_IN_PATH"].split(";")

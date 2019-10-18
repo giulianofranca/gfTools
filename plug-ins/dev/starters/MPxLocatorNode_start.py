@@ -30,12 +30,11 @@ Disclaimer:
     "gfTools > plug-ins > release
 
 How to use:
-    * Copy the parent folder to the MAYA_SCRIPT_PATH.
-    * To find MAYA_SCRIPT_PATH paste this command in a Python tab:
-        import os; os.environ["MAYA_SCRIPT_PATH"].split(";")
+    * Copy and paste this file in the MAYA_PLUG_IN_PATH.
+    * To find MAYA_PLUG_IN_PATH paste this command in a Python tab on script editor:
+        import os; os.environ["MAYA_PLUG_IN_PATH"].split(";")
     * In Maya, go to Windows > Settings/Preferences > Plug-in Manager.
-    * Browse for "gfTools > plug-ins > dev > python"
-    * Find gfTools_P.py and import it.
+    * Find this file and import it.
 
 Requirements:
     * Maya 2017 or above.
@@ -50,7 +49,7 @@ This code supports Pylint. Rc file in project.
 """
 # pylint: disable=no-name-in-module
 
-import math
+import sys
 import maya.api._OpenMaya_py2 as om2
 import maya.api._OpenMayaUI_py2 as omui2
 import maya.api._OpenMayaRender_py2 as omr2
@@ -81,25 +80,17 @@ def OUTPUT_ATTR(FNATTR):
     FNATTR.keyable = False
 
 
-class DebugVector(omui2.MPxLocatorNode):
-    """ Main class of gfDebugVector node. """
+class TestLocator(omui2.MPxLocatorNode):
+    """ Main class of gfTestLocator node. """
 
     kNodeName = ""
     kNodeClassify = ""
     kNodeRegistrantID = ""
     kNodeID = ""
 
-    inLineWidth = om2.MObject()
-    inColor = om2.MObject()
-    inRadius = om2.MObject()
-    inTipSize = om2.MObject()
-    inSubdivisions = om2.MObject()
-    inXRay = om2.MObject()
-    inOperation = om2.MObject()
-    inVec1 = om2.MObject()
-    inVec2 = om2.MObject()
-    inNormalize = om2.MObject()
-    outVector = om2.MObject()
+    inSize = om2.MObject()
+    inAttr = om2.MObject()
+    outAttr = om2.MObject()
 
     def __init__(self):
         """ Constructor. """
@@ -108,147 +99,35 @@ class DebugVector(omui2.MPxLocatorNode):
     def postConstructor(self):
         """ Post Constructor. """
         thisMob = self.thisMObject()
-        om2.MFnDependencyNode(thisMob).setName("gfDebugVector_PShape#")
+        om2.MFnDependencyNode(thisMob).setName("%sShape#" % TestLocator.kNodeName)
 
     @staticmethod
     def creator():
         """ Maya creator function. """
-        return DebugVector()
+        return TestLocator()
 
     @staticmethod
     def initialize():
         """
         Defines the set of attributes for this node. The attributes declared in this function are assigned
-        as static members to DebugVector class. Instances of DebugVector will use these attributes to create plugs
+        as static members to TestLocator class. Instances of TestLocator will use these attributes to create plugs
         for use in the compute() method.
         """
-        eAttr = om2.MFnEnumAttribute()
         nAttr = om2.MFnNumericAttribute()
 
-        DebugVector.inLineWidth = nAttr.create("lineWidth", "lw", om2.MFnNumericData.kFloat, 3.0)
-        nAttr.setMin(1.0)
-        nAttr.setSoftMax(5.0)
+        TestLocator.inSize = nAttr.create("size", "size", om2.MFnNumericData.kDouble, 1.0)
         INPUT_ATTR(nAttr)
 
-        DebugVector.inColor = nAttr.createColor("color", "color")
-        nAttr.default = (1.0, 1.0, 0.0)
+        TestLocator.inAttr = nAttr.createPoint("inAttr", "inAttr")
         INPUT_ATTR(nAttr)
 
-        DebugVector.inTipSize = nAttr.create("tipSize", "tipSize", om2.MFnNumericData.kFloat, 0.1)
-        nAttr.setMin(0.1)
-        nAttr.setMax(1.0)
-        INPUT_ATTR(nAttr)
-
-        DebugVector.inSubdivisions = nAttr.create("subdivisions", "subd", om2.MFnNumericData.kInt, 4)
-        nAttr.setMin(2)
-        nAttr.setMax(12)
-        INPUT_ATTR(nAttr)
-
-        DebugVector.inRadius = nAttr.create("radius", "radius", om2.MFnNumericData.kFloat, 1.0)
-        nAttr.setMin(0.0)
-        nAttr.setSoftMax(5.0)
-        INPUT_ATTR(nAttr)
-
-        DebugVector.inXRay = nAttr.create("XRay", "xray", om2.MFnNumericData.kBoolean, False)
-        INPUT_ATTR(nAttr)
-
-        DebugVector.inOperation = eAttr.create("operation", "op", 0)
-        eAttr.addField("No Operation", 0)
-        eAttr.addField("Add", 1)
-        eAttr.addField("Subtract", 2)
-        eAttr.addField("Cross Product", 3)
-        INPUT_ATTR(eAttr)
-
-        DebugVector.inVec1 = nAttr.createPoint("vector1", "v1")
-        INPUT_ATTR(nAttr)
-
-        DebugVector.inVec2 = nAttr.createPoint("vector2", "v2")
-        INPUT_ATTR(nAttr)
-
-        DebugVector.inNormalize = nAttr.create("normalizeOutput", "no", om2.MFnNumericData.kBoolean, False)
-        INPUT_ATTR(nAttr)
-
-        DebugVector.outVector = nAttr.createPoint("outVector", "ov")
+        TestLocator.outAttr = nAttr.createPoint("outAttr", "outAttr")
         OUTPUT_ATTR(nAttr)
 
-        DebugVector.addAttribute(DebugVector.inLineWidth)
-        DebugVector.addAttribute(DebugVector.inColor)
-        DebugVector.addAttribute(DebugVector.inTipSize)
-        DebugVector.addAttribute(DebugVector.inSubdivisions)
-        DebugVector.addAttribute(DebugVector.inRadius)
-        DebugVector.addAttribute(DebugVector.inXRay)
-        DebugVector.addAttribute(DebugVector.inOperation)
-        DebugVector.addAttribute(DebugVector.inVec1)
-        DebugVector.addAttribute(DebugVector.inVec2)
-        DebugVector.addAttribute(DebugVector.inNormalize)
-        DebugVector.addAttribute(DebugVector.outVector)
-        DebugVector.attributeAffects(DebugVector.inOperation, DebugVector.outVector)
-        DebugVector.attributeAffects(DebugVector.inVec1, DebugVector.outVector)
-        DebugVector.attributeAffects(DebugVector.inVec2, DebugVector.outVector)
-        DebugVector.attributeAffects(DebugVector.inNormalize, DebugVector.outVector)
-
-    @staticmethod
-    def drawArrow(startPnt, endPnt, size, radius, subd, lineW, vp2=False,
-                  glFT=None, lineList=None):
-        """Draw an aim arrow
-
-        Args:
-            startPnt (MFloatVector): The base of the vector.
-            endPnt (MFloatVector): The end of the vector.
-            size (float): The size of the arrow.
-            radius (float): The radius of the arrow.
-            subd (int): The number of subdivisions of the arrow.
-            lineW (float): The width of the lines.
-            vp2 (bool: False [Optional]): Draw inside of drawing override for viewport 2.0.
-            glFT (instance: None [Optional]): The GL Function Table to draw in viewport 1.0.
-            lineList (MPointArray: None [Optional]): The line list to append for drawing override.
-        """
-        tipSize = 1.0 - size
-        step = 2.0 * math.pi / subd
-        vAim = endPnt - startPnt
-        vBaseOrigin = vAim * tipSize
-        nAim = vAim.normal()
-        nWorld = om2.MFloatVector(0.0, 1.0, 0.0)
-        nBinormal = nWorld ^ nAim
-        nBinormal.normalize()
-        nNormal = nAim ^ nBinormal
-        nNormal.normalize()
-        aim = [nAim.x, nAim.y, nAim.z, 0.0,
-               nNormal.x, nNormal.y, nNormal.z, 0.0,
-               nBinormal.x, nBinormal.y, nBinormal.z, 0.0,
-               startPnt.x, startPnt.y, startPnt.z, 1.0]
-        mBase = om2.MMatrix(aim)
-        mOrigin = om2.MMatrix()
-        mOrigin[12] = vBaseOrigin.length()
-        mBaseOrigin = mOrigin * mBase
-        if vp2:
-            lineList.append(om2.MPoint(startPnt))
-            lineList.append(om2.MPoint(endPnt))
-        else:
-            glFT.glLineWidth(lineW)
-            glFT.glBegin(omr1.MGL_LINES)
-            glFT.glVertex3f(startPnt.x, startPnt.y, startPnt.z)
-            glFT.glVertex3f(endPnt.x, endPnt.y, endPnt.z)
-            glFT.glEnd()
-        for i in range(subd):
-            theta = step * i
-            mPoint = om2.MMatrix()
-            mPoint[13] = math.cos(theta) * radius
-            mPoint[14] = math.sin(theta) * radius
-            mArrow = mPoint * mBaseOrigin
-            if vp2:
-                lineList.append(om2.MPoint(mBaseOrigin[12], mBaseOrigin[13], mBaseOrigin[14]))
-                lineList.append(om2.MPoint(mArrow[12], mArrow[13], mArrow[14]))
-                lineList.append(om2.MPoint(mArrow[12], mArrow[13], mArrow[14]))
-                lineList.append(om2.MPoint(endPnt))
-            else:
-                glFT.glBegin(omr1.MGL_LINES)
-                glFT.glVertex3f(mBaseOrigin[12], mBaseOrigin[13], mBaseOrigin[14])
-                glFT.glVertex3f(mArrow[12], mArrow[13], mArrow[14])
-                glFT.glVertex3f(mArrow[12], mArrow[13], mArrow[14])
-                glFT.glVertex3f(endPnt.x, endPnt.y, endPnt.z)
-                glFT.glEnd()
-        return None
+        TestLocator.addAttribute(TestLocator.inSize)
+        TestLocator.addAttribute(TestLocator.inAttr)
+        TestLocator.addAttribute(TestLocator.outAttr)
+        TestLocator.attributeAffects(TestLocator.inAttr, TestLocator.outAttr)
 
     def compute(self, plug, dataBlock):
         """
@@ -256,30 +135,12 @@ class DebugVector(omui2.MPxLocatorNode):
             * plug is a connection point related to one of our node attributes (either an input or an output).
             * dataBlock contains the data on which we will base our computations.
         """
-        if plug == DebugVector.outVector:
-            operation = dataBlock.inputValue(DebugVector.inOperation).asShort()
-            vVector1 = dataBlock.inputValue(DebugVector.inVec1).asFloatVector()
-            vVector2 = dataBlock.inputValue(DebugVector.inVec2).asFloatVector()
-            normalize = dataBlock.inputValue(DebugVector.inNormalize).asBool()
+        if plug == TestLocator.outAttr:
+            inAttrValue = dataBlock.inputValue(TestLocator.inAttr).asVector()
 
-            if operation == 0:
-                vEnd = vVector1
-            elif operation == 1:
-                vFinal = vVector1 + vVector2
-                vEnd = vFinal
-            elif operation == 2:
-                vFinal = vVector1 - vVector2
-                vEnd = vFinal
-            elif operation == 3:
-                vFinal = vVector1 ^ vVector2
-                vEnd = vFinal
-
-            if normalize:
-                vEnd.normalize()
-
-            outVectorHandle = dataBlock.outputValue(DebugVector.outVector)
-            outVectorHandle.setMFloatVector(vEnd)
-            outVectorHandle.setClean()
+            outAttrHandle = dataBlock.outputValue(TestLocator.outAttr)
+            outAttrHandle.set3Float(inAttrValue.x, inAttrValue.y, inAttrValue.z)
+            outAttrHandle.setClean()
 
     def draw(self, view, path, style, status):
         """
@@ -295,33 +156,7 @@ class DebugVector(omui2.MPxLocatorNode):
         # pylint: disable=unused-argument
 
         thisMob = self.thisMObject()
-        lineW = om2.MPlug(thisMob, DebugVector.inLineWidth).asFloat()
-        color = om2.MPlug(thisMob, DebugVector.inColor).asMDataHandle().asFloatVector()
-        tipSize = om2.MPlug(thisMob, DebugVector.inTipSize).asFloat()
-        subd = om2.MPlug(thisMob, DebugVector.inSubdivisions).asInt()
-        radius = om2.MPlug(thisMob, DebugVector.inRadius).asFloat()
-        xray = om2.MPlug(thisMob, DebugVector.inXRay).asBool()
-
-        operation = om2.MPlug(thisMob, DebugVector.inOperation).asShort()
-        vVector1 = om2.MPlug(thisMob, DebugVector.inVec1).asMDataHandle().asFloatVector()
-        vVector2 = om2.MPlug(thisMob, DebugVector.inVec2).asMDataHandle().asFloatVector()
-        normalize = om2.MPlug(thisMob, DebugVector.inNormalize).asBool()
-
-        if operation == 0:
-            vEnd = vVector1
-        elif operation == 1:
-            vFinal = vVector1 + vVector2
-            vEnd = vFinal
-        elif operation == 2:
-            vFinal = vVector1 - vVector2
-            vEnd = vFinal
-        elif operation == 3:
-            vFinal = vVector1 ^ vVector2
-            vEnd = vFinal
-
-        vStart = om2.MFloatVector()
-        if normalize:
-            vEnd.normalize()
+        size = om2.MPlug(thisMob, TestLocator.inSize).asDouble()
 
         view.beginGL()
 
@@ -330,28 +165,46 @@ class DebugVector(omui2.MPxLocatorNode):
 
         glFT.glPushAttrib(omr1.MGL_CURRENT_BIT)
         glFT.glDisable(omr1.MGL_CULL_FACE)
-        if xray:
-            glFT.glEnable(omr1.MGL_DEPTH_TEST)
-            glFT.glClear(omr1.MGL_DEPTH_BUFFER_BIT)
 
         if status == omui2.M3dView.kActive:
             glFT.glColor3f(0.3, 1.0, 1.0)
         elif status == omui2.M3dView.kLead:
             glFT.glColor3f(1.0, 1.0, 1.0)
         elif status == omui2.M3dView.kDormant:
-            glFT.glColor3f(color.x, color.y, color.z)
+            glFT.glColor3f(1.0, 1.0, 0.0)
 
-        DebugVector.drawArrow(vStart, vEnd, tipSize, radius, subd, lineW, glFT=glFT)
+        vPoint1 = om2.MVector(1.0, 0.0, -1.0) * size
+        vPoint2 = om2.MVector(-1.0, 0.0, -1.0) * size
+        vPoint3 = om2.MVector(-1.0, 0.0, 1.0) * size
+        vPoint4 = om2.MVector(1.0, 0.0, 1.0) * size
 
-        if xray:
-            glFT.glDisable(omr1.MGL_DEPTH_TEST)
+        glFT.glBegin(omr1.MGL_QUADS)
+        glFT.glVertex3f(vPoint1.x, vPoint1.y, vPoint1.z)
+        glFT.glVertex3f(vPoint2.x, vPoint2.y, vPoint2.z)
+        glFT.glVertex3f(vPoint3.x, vPoint3.y, vPoint3.z)
+        glFT.glVertex3f(vPoint4.x, vPoint4.y, vPoint4.z)
+        glFT.glEnd()
+
         glFT.glPopAttrib()
-        glFT.glLineWidth(1.0)
 
         view.endGL()
 
+    def isBounded(self):
+        """isBounded?"""
+        return True
 
-class DebugVectorData(om2.MUserData):
+    def boundingBox(self):
+        """Return the boundingBox"""
+        thisMob = self.thisMObject()
+        size = om2.MPlug(thisMob, TestLocator.inSize).asDouble()
+
+        corner1 = om2.MPoint(1.0, 0.0, -1.0) * size
+        corner2 = om2.MPoint(-1.0, 0.0, 1.0) * size
+
+        return om2.MBoundingBox(corner1, corner2)
+
+
+class TestLocatorData(om2.MUserData):
     """ Custom user data class. """
 
     def __init__(self):
@@ -361,25 +214,16 @@ class DebugVectorData(om2.MUserData):
         self.fDormantColor = om2.MColor()
         self.fActiveColor = om2.MColor()
         self.fLeadColor = om2.MColor()
-        self.fLineList = om2.MPointArray()
-        self.fLineWidth = 1.0
-        self.fTipSize = 0.1
-        self.fSubd = 4
-        self.fRadius = 1.0
-        self.fXRay = False
-        self.fOperation = 0
+        self.fQuadList = om2.MPointArray()
+        self.fSize = 1.0
 
 
-class DebugVectorDrawOverride(omr2.MPxDrawOverride):
+class TestLocatorDrawOverride(omr2.MPxDrawOverride):
     """ Drawing override to enable to draw in VP2.0. """
 
     def __init__(self, obj):
         """ Constructor. """
-        omr2.MPxDrawOverride.__init__(self, obj, DebugVectorDrawOverride.draw)
-
-        # We want to perform custom bounding box drawing so return True so that the
-        # internal rendering code will not draw it for us.
-        # self.mCurrentBoundingBox = om2.MBoundingBox()
+        omr2.MPxDrawOverride.__init__(self, obj, TestLocatorDrawOverride.draw)
 
     def supportedDrawAPIs(self):
         """ Select which draw API works. """
@@ -388,7 +232,7 @@ class DebugVectorDrawOverride(omr2.MPxDrawOverride):
     @staticmethod
     def creator(obj):
         """ Maya creator function. """
-        return DebugVectorDrawOverride(obj)
+        return TestLocatorDrawOverride(obj)
 
     @staticmethod
     def draw(context, data):
@@ -405,35 +249,12 @@ class DebugVectorDrawOverride(omr2.MPxDrawOverride):
         """ Return the boundingBox """
         # pylint: disable=unused-argument
         node = objPath.node()
-        operation = om2.MPlug(node, DebugVector.inOperation).asShort()
-        vVector1 = om2.MPlug(node, DebugVector.inVec1).asMDataHandle().asFloatVector()
-        vVector2 = om2.MPlug(node, DebugVector.inVec2).asMDataHandle().asFloatVector()
-        normalize = om2.MPlug(node, DebugVector.inNormalize).asBool()
+        size = om2.MPlug(node, TestLocator.inSize).asDouble()
 
-        if operation == 0:
-            vEnd = vVector1
-        elif operation == 1:
-            vFinal = vVector1 + vVector2
-            vEnd = vFinal
-        elif operation == 2:
-            vFinal = vVector1 - vVector2
-            vEnd = vFinal
-        elif operation == 3:
-            vFinal = vVector1 ^ vVector2
-            vEnd = vFinal
-
-        vStart = om2.MFloatVector()
-        if normalize:
-            vEnd.normalize()
-
-        corner1 = om2.MPoint(vStart.x, vStart.y, vStart.z)
-        corner2 = om2.MPoint(vEnd.x, vEnd.y, vEnd.z)
+        corner1 = om2.MPoint(1.0, 0.0, -1.0) * size
+        corner2 = om2.MPoint(-1.0, 0.0, 1.0) * size
 
         return om2.MBoundingBox(corner1, corner2)
-
-    # def disableInternalBoundingBoxDraw(self):
-    #     """ Disable internal bounding box draw. """
-    #     return True
 
     def prepareForDraw(self, objPath, cameraPath, frameContext, oldData):
         """
@@ -447,49 +268,29 @@ class DebugVectorDrawOverride(omr2.MPxDrawOverride):
         """
         # pylint: disable=unused-argument
         data = oldData
-        if not isinstance(data, DebugVectorData):
-            data = DebugVectorData()
+        if not isinstance(data, TestLocatorData):
+            data = TestLocatorData()
 
         node = objPath.node()
-        lineW = om2.MPlug(node, DebugVector.inLineWidth).asFloat()
-        color = om2.MPlug(node, DebugVector.inColor).asMDataHandle().asFloatVector()
-        tipSize = om2.MPlug(node, DebugVector.inTipSize).asFloat()
-        subd = om2.MPlug(node, DebugVector.inSubdivisions).asInt()
-        radius = om2.MPlug(node, DebugVector.inRadius).asFloat()
-        xray = om2.MPlug(node, DebugVector.inXRay).asBool()
-        operation = om2.MPlug(node, DebugVector.inOperation).asShort()
-        vVector1 = om2.MPlug(node, DebugVector.inVec1).asMDataHandle().asFloatVector()
-        vVector2 = om2.MPlug(node, DebugVector.inVec2).asMDataHandle().asFloatVector()
-        normalize = om2.MPlug(node, DebugVector.inNormalize).asBool()
+        size = om2.MPlug(node, TestLocator.inSize).asDouble()
 
-        data.fDormantColor = om2.MColor([color.x, color.y, color.z])
+        data.fDormantColor = om2.MColor([1.0, 1.0, 0.0])
         data.fActiveColor = om2.MColor([0.3, 1.0, 1.0])
         data.fLeadColor = om2.MColor([1.0, 1.0, 1.0])
-        data.fLineWidth = lineW
-        data.fTipSize = tipSize
-        data.fSubd = subd
-        data.fRadius = radius
-        data.fXRay = xray
-        data.fOperation = operation
 
-        if operation == 0:
-            vEnd = vVector1
-        elif operation == 1:
-            vFinal = vVector1 + vVector2
-            vEnd = vFinal
-        elif operation == 2:
-            vFinal = vVector1 - vVector2
-            vEnd = vFinal
-        elif operation == 3:
-            vFinal = vVector1 ^ vVector2
-            vEnd = vFinal
+        data.fSize = size
 
-        vStart = om2.MFloatVector()
-        if normalize:
-            vEnd.normalize()
+        vPoint1 = om2.MVector(1.0, 0.0, -1.0) * size
+        vPoint2 = om2.MVector(-1.0, 0.0, -1.0) * size
+        vPoint3 = om2.MVector(-1.0, 0.0, 1.0) * size
+        vPoint4 = om2.MVector(1.0, 0.0, 1.0) * size
 
-        data.fLineList.clear()
-        DebugVector.drawArrow(vStart, vEnd, tipSize, radius, subd, lineW, vp2=True, lineList=data.fLineList)
+        data.fQuadList.clear()
+        data.fQuadList.append(om2.MPoint(vPoint1))
+        data.fQuadList.append(om2.MPoint(vPoint2))
+        data.fQuadList.append(om2.MPoint(vPoint3))
+        data.fQuadList.append(om2.MPoint(vPoint4))
+        data.fQuadList.append(om2.MPoint(vPoint1))
 
         return data
 
@@ -510,15 +311,12 @@ class DebugVectorDrawOverride(omr2.MPxDrawOverride):
         """
         # pylint: disable=unused-argument
         locatorData = data
-        if not isinstance(locatorData, DebugVectorData):
+        if not isinstance(locatorData, TestLocatorData):
             return
 
-        # status = omui2.M3dView.displayStatus(objPath)
         status = omr2.MGeometryUtilities.displayStatus(objPath)
 
         drawManager.beginDrawable()
-        if locatorData.fXRay:
-            drawManager.beginDrawInXray()
 
         if status == omr2.MGeometryUtilities.kActive:
             drawManager.setColor(locatorData.fActiveColor)
@@ -528,10 +326,63 @@ class DebugVectorDrawOverride(omr2.MPxDrawOverride):
             drawManager.setColor(locatorData.fDormantColor)
 
         drawManager.setDepthPriority(5)
+        drawManager.mesh(omr2.MUIDrawManager.kTriStrip, locatorData.fQuadList)
 
-        drawManager.setLineWidth(locatorData.fLineWidth)
-        drawManager.mesh(omr2.MUIDrawManager.kLines, locatorData.fLineList)
-
-        if locatorData.fXRay:
-            drawManager.endDrawInXray()
         drawManager.endDrawable()
+
+
+def REGISTER_LOCATOR_NODE(NODE, PLUGIN, DRAWOVERRIDE):
+    """ Register a MPxLocatorNode. """
+    # pylint: disable=invalid-name
+    try:
+        PLUGIN.registerNode(NODE.kNodeName, NODE.kNodeID, NODE.creator,
+                            NODE.initialize, om2.MPxNode.kLocatorNode, NODE.kNodeClassify)
+    except BaseException:
+        sys.stderr.write("Failed to register node: %s" % NODE.kNodeName)
+        raise
+
+    try:
+        omr2.MDrawRegistry.registerDrawOverrideCreator(NODE.kNodeClassify, NODE.kNodeRegistrantID,
+                                                       DRAWOVERRIDE.creator)
+    except BaseException:
+        sys.stderr.write("Failed to register override: %s" % NODE.kNodeName)
+        raise
+
+def DEREGISTER_LOCATOR_NODE(NODE, PLUGIN):
+    """ Deregister a MPxLocatorNode. """
+    # pylint: disable=invalid-name
+    try:
+        PLUGIN.deregisterNode(NODE.kNodeID)
+    except BaseException:
+        sys.stderr.write("Failed to deregister node: %s" % NODE.kNodeName)
+        raise
+
+    try:
+        omr2.MDrawRegistry.deregisterDrawOverrideCreator(NODE.kNodeClassify, NODE.kNodeRegistrantID)
+    except BaseException:
+        sys.stderr.write("Failed to deregister override: %s" % NODE.kNodeName)
+        raise
+
+
+kAuthor = "Giuliano Franca"
+kVersion = "1.0"
+kRequiredAPIVersion = "Any"
+
+TestLocator.kNodeName = "gfTestLocator"
+TestLocator.kNodeClassify = "drawdb/geometry/locator"
+TestLocator.kNodeRegistrantID = "gfTestLocatorNodePlugin"
+TestLocator.kNodeID = om2.MTypeId(0x000fff)
+
+
+def initializePlugin(mobject):
+    """ Initializes the plug-in. """
+    mPlugin = om2.MFnPlugin(mobject, kAuthor, kVersion, kRequiredAPIVersion)
+
+    REGISTER_LOCATOR_NODE(TestLocator, mPlugin, TestLocatorDrawOverride)
+
+
+def uninitializePlugin(mobject):
+    """ Unitializes the plug-in. """
+    mPlugin = om2.MFnPlugin(mobject, kAuthor, kVersion, kRequiredAPIVersion)
+
+    DEREGISTER_LOCATOR_NODE(TestLocator, mPlugin)
