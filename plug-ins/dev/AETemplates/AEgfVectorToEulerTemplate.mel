@@ -1,0 +1,9 @@
+global proc AEgfVectorToEulerTemplate(string $nodeName){
+    editorTemplate -beginScrollLayout;
+        editorTemplate -beginLayout "gfVectorToEuler Attributes" -collapse 0;
+            editorTemplate -addControl "vector";
+        editorTemplate -endLayout;
+        AEdependNodeTemplate $nodeName;
+    editorTemplate -addExtraControls;
+    editorTemplate -endScrollLayout;
+}

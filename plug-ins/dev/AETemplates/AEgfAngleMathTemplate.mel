@@ -1,0 +1,11 @@
+global proc AEgfAngleMathTemplate(string $nodeName){
+    editorTemplate -beginScrollLayout;
+        editorTemplate -beginLayout "gfAngleMath Attributes" -collapse 0;
+            editorTemplate -addControl "operation";
+            editorTemplate -addControl "angle1";
+            editorTemplate -addControl "angle2";
+        editorTemplate -endLayout;
+        AEdependNodeTemplate $nodeName;
+    editorTemplate -addExtraControls;
+    editorTemplate -endScrollLayout;
+}

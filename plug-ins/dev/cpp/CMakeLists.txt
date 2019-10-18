@@ -1,0 +1,17 @@
+cmake_minimum_required(VERSION 3.1)
+project(gfTools)
+
+set(PROJECT_PATH ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT})
+set(CMAKE_INSTALL_PREFIX ${PROJECT_PATH})
+set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/modules)
+# set(MAYA_VERSION 2018)
+if(MAYA_VERSION EQUAL 2019)
+    set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/modules/2019)
+endif()
+
+
+add_subdirectory(source)
+
+# build/install
+# set(CMAKE_INSTALL_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/install)
+# set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/_modules)

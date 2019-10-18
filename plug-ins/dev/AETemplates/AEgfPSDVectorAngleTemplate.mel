@@ -1,0 +1,16 @@
+global proc AEgfPSDVectorAngleTemplate(string $nodeName){
+    editorTemplate -beginScrollLayout;
+        editorTemplate -beginLayout "gfPSDVectorAngle Attributes" -collapse 0;
+            editorTemplate -beginLayout "Source Matrices" -collapse 1;
+                editorTemplate -addControl "base";
+                editorTemplate -addControl "source";
+            editorTemplate -endLayout;
+            editorTemplate -addControl "target";
+            editorTemplate -addControl "targetEnvelope";
+            editorTemplate -addControl "targetFalloff";
+            AEaddRampControl( $nodeName + ".rampWeights" );
+        editorTemplate -endLayout;
+        AEdependNodeTemplate $nodeName;
+    editorTemplate -addExtraControls;
+    editorTemplate -endScrollLayout;
+}

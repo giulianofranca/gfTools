@@ -1,0 +1,28 @@
+global proc AEgfBlendTransformTemplate(string $nodeName){
+    editorTemplate -beginScrollLayout;
+        editorTemplate -beginLayout "gfBlendTransform Attributes" -collapse 0;
+            editorTemplate -beginLayout "Interpolation Settings" -collapse 0;
+                editorTemplate -addControl "blender";
+                editorTemplate -addSeparator;
+                editorTemplate -addControl "rotationInterpolation";
+                editorTemplate -addControl "outRotateOrder";
+            editorTemplate -endLayout;
+            editorTemplate -beginLayout "Transform 1 Settings" -collapse 1;
+                editorTemplate -addControl "translate1";
+                editorTemplate -addControl "rotate1";
+                editorTemplate -addControl "scale1";
+                editorTemplate -addControl "rotateOrder1";
+            editorTemplate -endLayout;
+            editorTemplate -beginLayout "Transform 2 Settings" -collapse 1;
+                editorTemplate -addControl "translate2";
+                editorTemplate -addControl "rotate2";
+                editorTemplate -addControl "scale2";
+                editorTemplate -addControl "rotateOrder2";
+            editorTemplate -endLayout;
+        editorTemplate -endLayout;
+        editorTemplate -suppress "transform1";
+        editorTemplate -suppress "transform2";
+        AEdependNodeTemplate $nodeName;
+    editorTemplate -addExtraControls;
+    editorTemplate -endScrollLayout;
+}

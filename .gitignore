@@ -1,0 +1,8 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+.vs/
+.vscode/
+plug-ins/dev/cpp/build
+
+# Extensions
+*.pyc

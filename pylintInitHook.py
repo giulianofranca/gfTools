@@ -17,7 +17,10 @@ if kPlatform == "win32":
 
 elif kPlatform == "darwin":
     # Append Maya modules to PYTHONPATH
-    sys.path.append("%s\\files\\Maya.app\\Contents\\Framework\\Python.framework\\Versions\\Current\\lib\\python2.7\\site-packages" % os.environ["MAYA_LOCATION"])
+    sys.path.append(
+        "%s\\files\\Maya.app\\Contents\\Framework\\Python.framework\\Versions\\Current\\lib\\python2.7\\site-packages"
+        % os.environ["MAYA_LOCATION"]
+    )
 
 elif kPlatform == "linux":
     # Append Maya modules to PYTHONPATH

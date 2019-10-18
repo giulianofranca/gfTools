@@ -16,6 +16,9 @@ reload(snippets)
 
 
 # Create Mother rig
+#======================================================================================================
+# Componet Left Leg
+#======================================================================================================
 snippets.createChar("mother")
 snippets.createMessageAttribute("bindGeometry", "bindGeometry", selList=["mother_C_body_geo"])
 snippets.connectAttr("geometry_hrc.bindLayer1", "mother_C_body_geo.bindGeometry")
@@ -24,6 +27,70 @@ bndList = ["leg_L_thigh_bnd", "leg_L_shin_bnd", "leg_L_ankle_bnd", "leg_L_calcan
 snippets.createMessageAttribute("bindJoint", "bindJoint", selList=bndList)
 snippets.getPoleVectorPosition()
 cmds.move(5.0, 0.0, 0.0, r=True, os=True, wd=True)          # Move pole vector
+cmds.select("leg_L_thighFK_srt", "leg_L_shinFK_srt", "leg_L_ankleFK_srt", "leg_L_toeFK_srt")
+snippets.createObjectOnTransform()
+fkControls = ["leg_L_thighFK_ctrl", "leg_L_shinFK_ctrl", "leg_L_ankleFK_ctrl", "leg_L_toeFK_ctrl"]
+pvControls = ["leg_L_legPv_ctrl", "leg_L_legSnapPv_ctrl"]
+settingsControl = ["leg_L_settings_ctrl"]
+snippets.lockAndHideAttributes(fkControls, ["translate", "scale", "shear"])
+snippets.lockAndHideAttributes(pvControls, ["rotate", "scale", "shear"])
+snippets.lockAndHideAttributes(settingsControl, ["translate", "rotate", "scale", "shear"])
+cmds.scale(0.95, 0.95, 0.95, r=True, p=(1.73, 13.6, 0.38))
+cmds.scale(1.05, 1.05, 1.05, r=True, p=(1.73, 13.6, 0.38))
+snippets.createMessageAttribute("component", "component")
+cmds.select("leg_L_legPvPointer_ctrlShape", "leg_L_legPv_ctrl")
+cmds.parent(r=True, s=True)
+# Create attributes
+snippets.createEnumAttribute("LEG", "LEG", {"__________":0}, selList=["leg_L_thighFK_ctrl"])
+cmds.setAttr("leg_L_thighFK_ctrl.LEG", 0, l=True)
+snippets.createEnumAttribute("THIGH", "THIGH", {"__________":0}, selList=["leg_L_thighFK_ctrl"])
+cmds.setAttr("leg_L_thighFK_ctrl.THIGH", 0, l=True)
+snippets.createEnumAttribute("SHIN", "SHIN", {"__________":0}, selList=["leg_L_shinFK_ctrl"])
+cmds.setAttr("leg_L_shinFK_ctrl.SHIN", 0, l=True)
+snippets.createEnumAttribute("FOOT", "FOOT", {"__________":0}, selList=["leg_L_ankleFK_ctrl"])
+cmds.setAttr("leg_L_ankleFK_ctrl.FOOT", 0, l=True)
+snippets.createEnumAttribute("ANKLE", "ANKLE", {"__________":0}, selList=["leg_L_ankleFK_ctrl"])
+cmds.setAttr("leg_L_ankleFK_ctrl.ANKLE", 0, l=True)
+snippets.createEnumAttribute("TOE", "TOE", {"__________":0}, selList=["leg_L_toeFK_ctrl"])
+cmds.setAttr("leg_L_toeFK_ctrl.TOE", 0, l=True)
+snippets.createEnumAttribute("SETTINGS", "SETTINGS", {"__________":0}, selList=["leg_L_settings_ctrl"])
+cmds.setAttr("leg_L_settings_ctrl.SETTINGS", 0, l=True)
+snippets.createEnumAttribute("PV", "PV", {"__________":0}, selList=["leg_L_legPv_ctrl"])
+cmds.setAttr("leg_L_legPv_ctrl.PV", 0, l=True)
+snippets.createEnumAttribute("LEG", "LEG", {"__________":0}, selList=["leg_L_legIK_ctrl"])
+cmds.setAttr("leg_L_legIK_ctrl.LEG", 0, l=True)
+rotOrder = {"xyz":0, "yzx":1, "zxy":2, "xzy":3, "yxz":4, "zyx":5}
+snippets.createEnumAttribute("rotateOrderFK", "rotateOrderFK", rotOrder, selList=["leg_L_thighFK_ctrl"])
+snippets.createEnumAttribute("rotateOrderIK", "rotateOrderIK", rotOrder, selList=["leg_L_legIK_ctrl"])
+snippets.createNumericAttribute("fkikBlend", "fkikBlend", snippets.AttributeTypes.kFloat, 0.0, 1.0, selList=["leg_L_settings_ctrl"])
+snippets.createEnumAttribute("spaceSwitch", "spaceSwitch", {"Pelvis":0, "Hip":1, "Root":2, "Global":3}, selList=["leg_L_thighFK_ctrl"])
+snippets.createEnumAttribute("spaceSwitch", "spaceSwitch", {"Pelvis":0, "Hip":1, "Root":2, "Global":3}, selList=["leg_L_legIK_ctrl"])
+snippets.createNumericAttribute("showGimbalCtrl", "showGimbalCtrl", snippets.AttributeTypes.kBool, selList=["leg_L_thighFK_ctrl"])
+snippets.createNumericAttribute("showGimbalCtrl", "showGimbalCtrl", snippets.AttributeTypes.kBool, selList=["leg_L_shinFK_ctrl"])
+snippets.createNumericAttribute("showGimbalCtrl", "showGimbalCtrl", snippets.AttributeTypes.kBool, selList=["leg_L_ankleFK_ctrl"])
+snippets.createNumericAttribute("showGimbalCtrl", "showGimbalCtrl", snippets.AttributeTypes.kBool, selList=["leg_L_toeFK_ctrl"])
+snippets.createNumericAttribute("showGimbalCtrl", "showGimbalCtrl", snippets.AttributeTypes.kBool, selList=["leg_L_legIK_ctrl"])
+snippets.createNumericAttribute("stretch", "stretch", snippets.AttributeTypes.kFloat, minVal=0.001, default=1.0, selList=["leg_L_thighFK_ctrl"])
+snippets.createNumericAttribute("squashFB", "squashFB", snippets.AttributeTypes.kFloat, minVal=0.001, default=1.0, selList=["leg_L_thighFK_ctrl"])
+snippets.createNumericAttribute("squashLR", "squashLR", snippets.AttributeTypes.kFloat, minVal=0.001, default=1.0, selList=["leg_L_thighFK_ctrl"])
+snippets.createNumericAttribute("stretch", "stretch", snippets.AttributeTypes.kFloat, minVal=0.001, default=1.0, selList=["leg_L_shinFK_ctrl"])
+snippets.createNumericAttribute("squashFB", "squashFB", snippets.AttributeTypes.kFloat, minVal=0.001, default=1.0, selList=["leg_L_shinFK_ctrl"])
+snippets.createNumericAttribute("squashLR", "squashLR", snippets.AttributeTypes.kFloat, minVal=0.001, default=1.0, selList=["leg_L_shinFK_ctrl"])
+snippets.createNumericAttribute("stretch", "stretch", snippets.AttributeTypes.kFloat, minVal=0.001, default=1.0, selList=["leg_L_ankleFK_ctrl"])
+snippets.createNumericAttribute("squashFB", "squashFB", snippets.AttributeTypes.kFloat, minVal=0.001, default=1.0, selList=["leg_L_ankleFK_ctrl"])
+snippets.createNumericAttribute("squashLR", "squashLR", snippets.AttributeTypes.kFloat, minVal=0.001, default=1.0, selList=["leg_L_ankleFK_ctrl"])
+snippets.createNumericAttribute("displayPointer", "displayPointer", snippets.AttributeTypes.kBool, selList=["leg_L_legPv_ctrl"])
+snippets.createNumericAttribute("showSnapCtrl", "showSnapCtrl", snippets.AttributeTypes.kBool, selList=["leg_L_legIK_ctrl"])
+snippets.createEnumAttribute("pvMode", "pvMode", {"Manual":0, "Auto":1}, selList=["leg_L_legIK_ctrl"])
+snippets.createUnitAttribute("twistKnee", "twistKnee", snippets.AttributeTypes.kAngle, selList=["leg_L_legIK_ctrl"])
+snippets.createNumericAttribute("snapPv", "snapPv", snippets.AttributeTypes.kFloat, minVal=0.0, maxVal=1.0, selList=["leg_L_legIK_ctrl"])
+snippets.createNumericAttribute("softIK", "softIK", snippets.AttributeTypes.kFloat, minVal=0.0, maxVal=0.4, selList=["leg_L_legIK_ctrl"])
+snippets.createNumericAttribute("stretch", "stretch", snippets.AttributeTypes.kFloat, minVal=0.0, maxVal=1.0, selList=["leg_L_legIK_ctrl"])
+snippets.createNumericAttribute("clampStretch", "clampStretch", snippets.AttributeTypes.kFloat, minVal=0.0, maxVal=1.0, selList=["leg_L_legIK_ctrl"])
+snippets.createNumericAttribute("clampValue", "clampValue", snippets.AttributeTypes.kFloat, minVal=1.0, default=1.5, selList=["leg_L_legIK_ctrl"])
+snippets.createNumericAttribute("stretchValue", "stretchValue", snippets.AttributeTypes.kFloat, channelBox=True, selList=["leg_L_legIK_ctrl"])
+snippets.createNumericAttribute("squash", "squash", snippets.AttributeTypes.kFloat, minVal=0.0, maxVal=1.0, selList=["leg_L_legIK_ctrl"])
+cmds.setAttr("leg_L_ankleIKUpWMtx_fNode.matrixIn[0]", cmds.getAttr("composeMatrix3.outputMatrix"), type="matrix")
 
 
 

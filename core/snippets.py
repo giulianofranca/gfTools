@@ -23,6 +23,52 @@ kTertiaryControlColor = om2.MColor([1.0, 1.0, 1.0])
 kQuaternaryControlColor = om2.MColor([1.0, 1.0, 1.0])
 kGlobalControlColor = om2.MColor([1.0, 1.0, 1.0])
 
+def findUpVectorPosition(const, parent=None, create=False):
+    """Find up vector local position based on a object matrix.
+
+    Args:
+        const (string, MObject or MDagPath): The name of the constraint object.
+        parent (string, MObject or MDagPath: None [Optional]): The parent object to parent the result.
+        create (bool: False [Optional]): If the function is allowed to create the object automatically.
+
+    Returns:
+        MVector: The local vector to apply in the final object.
+
+    Raises:
+        AttributeError: If the const argument is not a string.
+    """
+    if (not isinstance(const, str) and
+            not isinstance(const, om2.MObject) and
+            not isinstance(const, om2.MDagPath)):
+        raise AttributeError("Argument const must be a string.")
+    if (not isinstance(parent, str) and
+            not isinstance(parent, om2.MObject) and
+            not isinstance(parent, om2.MDagPath) and
+            parent is not None):
+        raise AttributeError("Argument parent must be a string.")
+    if isinstance(const, str):
+        constDag = om2.MSelectionList().add(const).getDagPath(0)
+    elif isinstance(const, om2.MObject):
+        constDag = om2.MDagPath.getAPathTo(const)
+    elif isinstance(const, om2.MDagPath):
+        constDag = const
+    mConstWorld = constDag.inclusiveMatrix()
+    mUpLocal = om2.MMatrix()
+    mUpLocal[13] = 1.0
+    mUpWorld = mUpLocal * mConstWorld
+    vConst = om2.MVector(mConstWorld[12], mConstWorld[13], mConstWorld[14])
+    vUp = om2.MVector(mUpWorld[12], mUpWorld[13], mUpWorld[14])
+    vResult = vUp - vConst
+    if create:
+        parentObj = om2.MSelectionList().add(parent).getDependNode(0)
+        upVecObj = om2.MFnDagNode().create("transform", "upVectorObject", parentObj)
+        upVecDag = om2.MDagPath.getAPathTo(upVecObj)
+        transFn = om2.MFnTransform(upVecDag)
+        transFn.translateBy(vResult, om2.MSpace.kTransform)
+        om2.MGlobal.setSelectionMode(om2.MGlobal.kSelectObjectMode)
+        om2.MGlobal.setActiveSelectionList(om2.MSelectionList().add(upVecDag))
+    return vResult
+
 
 def connectAttr(startAttr, endAttr):
     """Connect attributes from two nodes.

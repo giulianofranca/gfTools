@@ -1,0 +1,34 @@
+global proc AEgfIKVChainTemplate(string $nodeName){
+    editorTemplate -beginScrollLayout;
+        editorTemplate -beginLayout "gfIKVChain Attributes" -collapse 0;
+            editorTemplate -beginLayout "Input Informations" -collapse 1;
+                editorTemplate -addControl "root";
+                editorTemplate -addControl "handle";
+                editorTemplate -addControl "upVector";
+                editorTemplate -addControl "snapObject";
+                editorTemplate -addControl "parentInverseMatrix";
+                editorTemplate -addControl "jointOrient";
+            editorTemplate -endLayout;
+            editorTemplate -beginLayout "Inverse Kinematics Options" -collapse 0;
+                editorTemplate -addControl "hierarchyMode";
+                editorTemplate -addControl "restLength1";
+                editorTemplate -addControl "restLength2";
+                editorTemplate -addControl "compressionLimit";
+                editorTemplate -addControl "softness";
+                editorTemplate -addSeparator;
+                editorTemplate -addControl "pvMode";
+                editorTemplate -addControl "preferredAngle";
+                editorTemplate -addControl "twist";
+                editorTemplate -addControl "snapPoleVector";
+            editorTemplate -endLayout;
+            editorTemplate -beginLayout "Cartoon Options" -collapse 1;
+                editorTemplate -addControl "stretch";
+                editorTemplate -addControl "clampStretch";
+                editorTemplate -addControl "clampValue";
+                editorTemplate -addControl "squash";
+            editorTemplate -endLayout;
+        editorTemplate -endLayout;
+        AEdependNodeTemplate $nodeName;
+    editorTemplate -addExtraControls;
+    editorTemplate -endScrollLayout;
+}

@@ -1,0 +1,11 @@
+global proc AEgfParentConstraintTemplate(string $nodeName){
+    editorTemplate -beginScrollLayout;
+        editorTemplate -beginLayout "gfParentConstraint Attributes" -collapse 0;
+            editorTemplate -addControl "target";
+            editorTemplate -addControl "offset";
+            editorTemplate -addControl "weight";
+        editorTemplate -endLayout;
+        AEdependNodeTemplate $nodeName;
+    editorTemplate -addExtraControls;
+    editorTemplate -endScrollLayout;
+}
