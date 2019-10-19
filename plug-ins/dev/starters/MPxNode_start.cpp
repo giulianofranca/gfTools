@@ -51,12 +51,12 @@ Sources:
 #include <maya\MVector.h>
 
 
-class TestNode : MPxNode{
+class TestNode : public MPxNode{
 public:
     TestNode();
     virtual ~TestNode();
 
-    virtual MPxNode::SchedulingType schedulingType(){
+    virtual MPxNode::SchedulingType schedulingType() const{
         return MPxNode::SchedulingType::kParallel;
     }
 

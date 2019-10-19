@@ -62,12 +62,12 @@ Sources:
 #include <maya/MFloatMatrix.h>
 #include <maya/MFloatVector.h>
 
-class DecomposeRowMatrix : MPxNode{
+class DecomposeRowMatrix : public MPxNode{
 public:
     DecomposeRowMatrix();
     virtual ~DecomposeRowMatrix();
 
-    virtual MPxNode::SchedulingType schedulingType(){
+    virtual MPxNode::SchedulingType schedulingType() const{
         return MPxNode::SchedulingType::kParallel;
     }
 

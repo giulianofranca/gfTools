@@ -55,6 +55,7 @@ Sources:
 #pragma once
 
 #include <algorithm>
+#include <cmath>
 
 #include <maya/MPxNode.h>
 
@@ -64,12 +65,12 @@ Sources:
 #include <maya/MAngle.h>
 
 
-class AngularScalarMath : MPxNode{
+class AngularScalarMath : public MPxNode{
 public:
     AngularScalarMath();
     virtual ~AngularScalarMath();
 
-    virtual MPxNode::SchedulingType schedulingType(){
+    virtual MPxNode::SchedulingType schedulingType() const{
         return MPxNode::SchedulingType::kParallel;
     }
 

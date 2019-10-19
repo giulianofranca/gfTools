@@ -58,12 +58,12 @@ Sources:
 #include <maya/MAngle.h>
 
 
-class DoubleToAngle : MPxNode{
+class DoubleToAngle : public MPxNode{
 public:
     DoubleToAngle();
     virtual ~DoubleToAngle();
 
-    virtual MPxNode::SchedulingType schedulingType(){
+    virtual MPxNode::SchedulingType schedulingType() const{
         return MPxNode::SchedulingType::kParallel;
     }
 

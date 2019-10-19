@@ -67,12 +67,12 @@ Sources:
 #include <maya/MAngle.h>
 
 
-class EulerScalarMath : MPxNode{
+class EulerScalarMath : public MPxNode{
 public:
     EulerScalarMath();
     virtual ~EulerScalarMath();
 
-    virtual MPxNode::SchedulingType schedulingType(){
+    virtual MPxNode::SchedulingType schedulingType() const{
         return MPxNode::SchedulingType::kParallel;
     }
 

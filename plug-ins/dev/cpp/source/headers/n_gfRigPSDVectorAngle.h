@@ -76,12 +76,12 @@ Sources:
 #include <maya/MFloatVector.h>
 
 
-class VectorAnglePSD : MPxNode{
+class VectorAnglePSD : public MPxNode{
 public:
     VectorAnglePSD();
     virtual ~VectorAnglePSD();
 
-    virtual MPxNode::SchedulingType schedulingType(){
+    virtual MPxNode::SchedulingType schedulingType() const{
         return MPxNode::SchedulingType::kParallel;
     }
 

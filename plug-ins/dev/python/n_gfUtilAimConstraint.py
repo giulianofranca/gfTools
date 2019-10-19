@@ -240,6 +240,13 @@ class AimConstraint(om2.MPxNode):
             nNormal.normalize()
             nBinormal = nAim ^ nNormal
             nBinormal.normalize()
+            # mWorldUp = dataBlock.inputValue(AimConstraint.inWorldUpMtx).asFloatMatrix()
+            # vWorldUp = om2.MFloatVector(mWorldUp[12], mWorldUp[13], mWorldUp[14])
+            # vUpDirection = vWorldUp - vConstPos
+            # nNormal = vUpDirection - ((vUpDirection * nAim) * nAim)
+            # nNormal.normalize()
+            # nBinormal = nAim ^ nNormal
+            # nBinormal.normalize()
         aim = [
             nAim.x, nAim.y, nAim.z, 0.0,
             nNormal.x, nNormal.y, nNormal.z, 0.0,

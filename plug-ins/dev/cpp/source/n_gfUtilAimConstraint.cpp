@@ -163,6 +163,13 @@ MStatus AimConstraint::compute(const MPlug& plug, MDataBlock& dataBlock){
         nNormal.normalize();
         nBinormal = nAim ^ nNormal;
         nBinormal.normalize();
+        // MFloatMatrix mWorldUp = dataBlock.inputValue(inWorldUpMtx).asFloatMatrix();
+        // MFloatVector vWorldUp = MFloatVector(mWorldUp[3][0], mWorldUp[3][1], mWorldUp[3][2]);
+        // MFloatVector vUpDirection = vWorldUp - vConstPos;
+        // nNormal = vUpDirection - ((vUpDirection * nAim) * nAim);
+        // nNormal.normalize();
+        // nBinormal = nAim ^ nNormal;
+        // nBinormal.normalize();
     }
     float aim[4][4] = {
         {nAim.x, nAim.y, nAim.z, 0.0f},

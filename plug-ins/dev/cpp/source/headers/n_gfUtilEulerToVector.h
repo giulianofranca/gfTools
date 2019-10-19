@@ -61,12 +61,12 @@ Sources:
 #include <maya/MAngle.h>
 
 
-class EulerToVector : MPxNode{
+class EulerToVector : public MPxNode{
 public:
     EulerToVector();
     virtual ~EulerToVector();
 
-    virtual MPxNode::SchedulingType schedulingType(){
+    virtual MPxNode::SchedulingType schedulingType() const{
         return MPxNode::SchedulingType::kParallel;
     }
 

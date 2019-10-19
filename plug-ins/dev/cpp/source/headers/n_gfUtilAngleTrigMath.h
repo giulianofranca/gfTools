@@ -63,12 +63,12 @@ Sources:
 #include <maya/MAngle.h>
 
 
-class AngularTrigMath : MPxNode{
+class AngularTrigMath : public MPxNode{
 public:
     AngularTrigMath();
     virtual ~AngularTrigMath();
 
-    virtual MPxNode::SchedulingType schedulingType(){
+    virtual MPxNode::SchedulingType schedulingType() const{
         return MPxNode::SchedulingType::kParallel;
     }
 

@@ -61,12 +61,12 @@ Sources:
 #include <maya/MAngle.h>
 
 
-class VectorToEuler : MPxNode{
+class VectorToEuler : public MPxNode{
 public:
     VectorToEuler();
     virtual ~VectorToEuler();
 
-    virtual MPxNode::SchedulingType schedulingType(){
+    virtual MPxNode::SchedulingType schedulingType() const{
         return MPxNode::SchedulingType::kParallel;
     }
 

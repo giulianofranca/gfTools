@@ -67,12 +67,12 @@ Sources:
 #include <maya/MMatrix.h>
 
 
-class ParentConstraint : MPxNode{
+class ParentConstraint : public MPxNode{
 public:
     ParentConstraint();
     virtual ~ParentConstraint();
 
-    virtual MPxNode::SchedulingType schedulingType(){
+    virtual MPxNode::SchedulingType schedulingType() const{
         return MPxNode::SchedulingType::kParallel;
     }
 

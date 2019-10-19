@@ -81,7 +81,7 @@ public:
     AimConstraint();
     virtual ~AimConstraint();
 
-    virtual MPxNode::SchedulingType schedulingType(){
+    virtual MPxNode::SchedulingType schedulingType() const{
         return MPxNode::SchedulingType::kParallel;
     }
 

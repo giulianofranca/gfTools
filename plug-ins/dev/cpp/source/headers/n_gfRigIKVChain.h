@@ -93,12 +93,12 @@ Sources:
 #include <maya/MTransformationMatrix.h>
 
 
-class IKVChainSolver : MPxNode{
+class IKVChainSolver : public MPxNode{
 public:
     IKVChainSolver();
     virtual ~IKVChainSolver();
 
-    virtual MPxNode::SchedulingType schedulingType(){
+    virtual MPxNode::SchedulingType schedulingType() const{
         return MPxNode::SchedulingType::kParallel;
     }
 

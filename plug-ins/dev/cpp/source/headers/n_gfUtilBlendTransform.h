@@ -85,12 +85,12 @@ struct VisibilityData{
     bool reverseVisibility;
 };
 
-class BlendTransform : MPxNode {
+class BlendTransform : public MPxNode {
 public:
     BlendTransform();
     virtual ~BlendTransform();
 
-    virtual MPxNode::SchedulingType schedulingType(){
+    virtual MPxNode::SchedulingType schedulingType() const{
         return MPxNode::SchedulingType::kParallel;
     }
 

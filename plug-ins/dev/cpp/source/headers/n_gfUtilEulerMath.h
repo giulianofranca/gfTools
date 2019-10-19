@@ -67,12 +67,12 @@ Sources:
 #include <maya/MEulerRotation.h>
 
 
-class EulerMath : MPxNode{
+class EulerMath : public MPxNode{
 public:
     EulerMath();
     virtual ~EulerMath();
 
-    virtual MPxNode::SchedulingType schedulingType(){
+    virtual MPxNode::SchedulingType schedulingType() const{
         return MPxNode::SchedulingType::kParallel;
     }
 
