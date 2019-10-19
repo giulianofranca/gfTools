@@ -236,10 +236,10 @@ MStatus IKVChainSolver::compute(const MPlug& plug, MDataBlock& dataBlock){
         nYAxisSnap = nYAxis;
     MVector nZAxis = nXAxis ^ nYAxisSnap;
     double basis[4][4] = {
-        nXAxis.x, nXAxis.y, nXAxis.z, 0.0,
-        nYAxisSnap.x, nYAxisSnap.y, nYAxisSnap.z, 0.0,
-        nZAxis.x, nZAxis.y, nZAxis.z, 0.0,
-        vRoot.x, vRoot.y, vRoot.z, 1.0
+        {nXAxis.x, nXAxis.y, nXAxis.z, 0.0},
+        {nYAxisSnap.x, nYAxisSnap.y, nYAxisSnap.z, 0.0},
+        {nZAxis.x, nZAxis.y, nZAxis.z, 0.0},
+        {vRoot.x, vRoot.y, vRoot.z, 1.0}
     };
     MMatrix mBasis = MMatrix(basis);
 

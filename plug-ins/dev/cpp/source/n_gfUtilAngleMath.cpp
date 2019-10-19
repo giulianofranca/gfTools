@@ -106,7 +106,6 @@ MStatus AngularMath::compute(const MPlug& plug, MDataBlock& dataBlock){
         outAngleHandle.setMAngle(MAngle(resAngle, MAngle::kDegrees));
         break;
     case 4:
-        resAngle;
         if (angle2 != 0.0)
             resAngle = angle1 + angle2;
         else

@@ -193,10 +193,10 @@ void DebugVector::drawArrow(MFloatVector& startPnt, MFloatVector& endPnt, float 
     MFloatVector nNormal = nAim ^ nBinormal;
     nNormal.normalize();
     double aim[4][4] = {
-        nAim.x, nAim.y, nAim.z, 0.0,
-        nNormal.x, nNormal.y, nNormal.z, 0.0,
-        nBinormal.y, nBinormal.y, nBinormal.z, 0.0,
-        startPnt.x, startPnt.y, startPnt.z, 1.0
+        {nAim.x, nAim.y, nAim.z, 0.0},
+        {nNormal.x, nNormal.y, nNormal.z, 0.0},
+        {nBinormal.y, nBinormal.y, nBinormal.z, 0.0},
+        {startPnt.x, startPnt.y, startPnt.z, 1.0}
     };
     MMatrix mBase = MMatrix(aim);
     MMatrix mOrigin = MMatrix();
@@ -236,10 +236,10 @@ void DebugVector::drawArrow(MFloatVector& startPnt, MFloatVector& endPnt, float 
     MFloatVector nNormal = nAim ^ nBinormal;
     nNormal.normalize();
     double aim[4][4] = {
-        nAim.x, nAim.y, nAim.z, 0.0,
-        nNormal.x, nNormal.y, nNormal.z, 0.0,
-        nBinormal.y, nBinormal.y, nBinormal.z, 0.0,
-        startPnt.x, startPnt.y, startPnt.z, 1.0
+        {nAim.x, nAim.y, nAim.z, 0.0},
+        {nNormal.x, nNormal.y, nNormal.z, 0.0},
+        {nBinormal.y, nBinormal.y, nBinormal.z, 0.0},
+        {startPnt.x, startPnt.y, startPnt.z, 1.0}
     };
     MMatrix mBase = MMatrix(aim);
     MMatrix mOrigin = MMatrix();

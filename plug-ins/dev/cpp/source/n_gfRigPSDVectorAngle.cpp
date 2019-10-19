@@ -166,12 +166,12 @@ MStatus VectorAnglePSD::compute(const MPlug& plug, MDataBlock& dataBlock){
             (i < targetFalloffHandle.elementCount())){
                 float theta = std::acosf(targetList[i] * nCurPose);
                 float ratio = std::min(std::max(theta / degToRad(falloffList[i]), -1.0f), 1.0f);
-                float weight;
+                float weight = 0.0f;
                 if (ratio == 0.0f)
                     weight = envelopeList[i];
                 else if (ratio > 0.0f)
                     weight = envelopeList[i] * (1.0f - ratio);
-                else if (ratio < 0.0f)
+                else // ratio < 0.0f
                     weight = envelopeList[i] * (1.0f + ratio);
 
                 MObject thisMob = thisMObject();
