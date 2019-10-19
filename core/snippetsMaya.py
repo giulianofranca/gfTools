@@ -91,6 +91,7 @@ snippets.createNumericAttribute("clampValue", "clampValue", snippets.AttributeTy
 snippets.createNumericAttribute("stretchValue", "stretchValue", snippets.AttributeTypes.kFloat, channelBox=True, selList=["leg_L_legIK_ctrl"])
 snippets.createNumericAttribute("squash", "squash", snippets.AttributeTypes.kFloat, minVal=0.0, maxVal=1.0, selList=["leg_L_legIK_ctrl"])
 cmds.setAttr("leg_L_ankleIKUpWMtx_fNode.matrixIn[0]", cmds.getAttr("composeMatrix3.outputMatrix"), type="matrix")
+print(snippets.findUpVectorPosition("leg_L_toeIK_srt"))
 
 
 
