@@ -92,6 +92,7 @@ Sources:
 #include <maya/MEulerRotation.h>
 #include <maya/MTransformationMatrix.h>
 
+using namespace std;
 
 class IKVChainSolver : public MPxNode{
 public:

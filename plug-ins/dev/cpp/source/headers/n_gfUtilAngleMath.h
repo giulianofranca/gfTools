@@ -63,6 +63,8 @@ Sources:
 #include <maya/MFnUnitAttribute.h>
 #include <maya/MAngle.h>
 
+using namespace std;
+
 
 class AngularMath : public MPxNode{
 public:

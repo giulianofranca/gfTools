@@ -62,6 +62,7 @@ Sources:
 #include <maya/MFloatMatrix.h>
 #include <maya/MFloatVector.h>
 
+
 class DecomposeRowMatrix : public MPxNode{
 public:
     DecomposeRowMatrix();

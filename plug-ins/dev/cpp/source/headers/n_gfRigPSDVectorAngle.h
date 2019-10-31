@@ -75,6 +75,8 @@ Sources:
 #include <maya/MFloatMatrix.h>
 #include <maya/MFloatVector.h>
 
+using namespace std;
+
 
 class VectorAnglePSD : public MPxNode{
 public:

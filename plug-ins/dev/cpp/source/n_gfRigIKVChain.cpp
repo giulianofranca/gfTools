@@ -222,7 +222,7 @@ MStatus IKVChainSolver::compute(const MPlug& plug, MDataBlock& dataBlock){
         nYAxis = vYDirection.normal();
     }
     else{
-        MVector vAutoPosWorld = vRoot + MVector(std::cos(twist + prefAngle), 0.0, std::sin(twist + prefAngle));
+        MVector vAutoPosWorld = vRoot + MVector(cos(twist + prefAngle), 0.0, sin(twist + prefAngle));
         MVector vAutoPosLocal = vAutoPosWorld - vRoot;
         vYDirection = vAutoPosLocal - ((vAutoPosLocal * nXAxis) * nXAxis);
         nYAxis = vYDirection.normal();
@@ -255,7 +255,7 @@ MStatus IKVChainSolver::compute(const MPlug& plug, MDataBlock& dataBlock){
     double length1 = (1.0f - snap) * l1m + snap * l1Snap;
     double length2 = (1.0f - snap) * l2m + snap * l2Snap;
     double chainLength = (1.0f - snap) * (l1m + l2m) + snap * (l1Snap + l2Snap);
-    double l3rigid = std::max(std::min(xDist, chainLength), chainLength * compressionLimit);
+    double l3rigid = max(min(xDist, chainLength), chainLength * compressionLimit);
     double dc = chainLength;
     double da = (1.0f - softValue) * dc;
     double l3;
@@ -263,7 +263,7 @@ MStatus IKVChainSolver::compute(const MPlug& plug, MDataBlock& dataBlock){
     double l3SnapSoft = l3soft;
     if ((xDist > da) && (softValue > 0.0f)){
         double ds = dc - da;
-        l3soft = ds * (1.0 - std::pow(M_E, (da - xDist) / ds)) + da;
+        l3soft = ds * (1.0 - pow(M_E, (da - xDist) / ds)) + da;
         l3SnapSoft = (1.0f - snap) * l3soft + snap * l3rigid;
         l3 = l3SnapSoft;
     }
@@ -272,25 +272,25 @@ MStatus IKVChainSolver::compute(const MPlug& plug, MDataBlock& dataBlock){
 
     // Angle mesurement
     bool hierarchyMode = dataBlock.inputValue(inHierarchyMode).asBool();
-    double betaCos = (std::pow(length1, 2.0) + std::pow(l3, 2.0) - std::pow(length2, 2.0)) / (2.0 * length1 * l3);
+    double betaCos = (pow(length1, 2.0) + pow(l3, 2.0) - pow(length2, 2.0)) / (2.0 * length1 * l3);
     if (betaCos < -1.0)
         betaCos = -1.0;
-    double beta = std::acos(betaCos);
-    double betaSin = std::sin(beta);
-    double gammaCos = (std::pow(length1, 2.0) + std::pow(length2, 2.0) - std::pow(l3, 2.0)) / (2.0 * length1 * length2);
+    double beta = acos(betaCos);
+    double betaSin = sin(beta);
+    double gammaCos = (pow(length1, 2.0) + pow(length2, 2.0) - pow(l3, 2.0)) / (2.0 * length1 * length2);
     if (gammaCos > 1.0)
         gammaCos = 1.0;
-    double gamma = std::acos(gammaCos);
+    double gamma = acos(gammaCos);
     double gammaComplement;
     if (hierarchyMode == true)
         gammaComplement = gamma - M_PI;
     else
         gammaComplement = gamma + beta - M_PI;
-    double gammaComplementCos = std::cos(gammaComplement);
-    double gammaComplementSin = std::sin(gammaComplement);
+    double gammaComplementCos = cos(gammaComplement);
+    double gammaComplementSin = sin(gammaComplement);
     double alpha = M_PI - beta - gamma;
-    double alphaCos = std::cos(alpha);
-    double alphaSin = std::sin(alpha);
+    double alphaCos = cos(alpha);
+    double alphaSin = sin(alpha);
 
     // Cartoony features
     double stretch = dataBlock.inputValue(inStretch).asDouble();
@@ -306,12 +306,12 @@ MStatus IKVChainSolver::compute(const MPlug& plug, MDataBlock& dataBlock){
         else
             scaleFactor = xDist / chainLength;
         if (xDist >= da){
-            double clampFactor = (1.0 - clampStretch) * scaleFactor + clampStretch * std::min(scaleFactor, clampStretchValue);
+            double clampFactor = (1.0 - clampStretch) * scaleFactor + clampStretch * min(scaleFactor, clampStretchValue);
             stretchFactor = (1.0 - stretch) + stretch * clampFactor;
         }
         else
             stretchFactor = 1.0;
-        squashFactor = (1.0 - squash) + squash * (1.0 / std::sqrt(stretchFactor));
+        squashFactor = (1.0 - squash) + squash * (1.0 / sqrt(stretchFactor));
     }
     else{
         stretchFactor = 1.0;
@@ -320,8 +320,8 @@ MStatus IKVChainSolver::compute(const MPlug& plug, MDataBlock& dataBlock){
 
     // Output transforms
     MArrayDataHandle outChainHandle = dataBlock.outputArrayValue(outChain);
-    std::vector<MMatrix> srtList;
-    std::vector<MMatrix> jntOriList;
+    vector<MMatrix> srtList;
+    vector<MMatrix> jntOriList;
     MArrayDataHandle jntOriHandle = dataBlock.inputArrayValue(inJointOrient);
     for (uint32_t i = 0; i < jntOriHandle.elementCount(); i++){
         jntOriHandle.jumpToArrayElement(i);

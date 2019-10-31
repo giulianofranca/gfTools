@@ -93,15 +93,15 @@ MStatus AngularTrigMath::compute(const MPlug& plug, MDataBlock& dataBlock){
         outAngleHandle.setMAngle(angle1);
         break;
     case 1:
-        resAngle = std::cos(angle1.asRadians());
+        resAngle = cos(angle1.asRadians());
         outAngleHandle.setMAngle(MAngle(resAngle, MAngle::kDegrees));
         break;
     case 2:
-        resAngle = std::sin(angle1.asRadians());
+        resAngle = sin(angle1.asRadians());
         outAngleHandle.setMAngle(MAngle(resAngle, MAngle::kDegrees));
         break;
     case 3:
-        resAngle = std::tan(angle1.asRadians());
+        resAngle = tan(angle1.asRadians());
         outAngleHandle.setMAngle(MAngle(resAngle, MAngle::kDegrees));
         break;
     case 4:
@@ -109,7 +109,7 @@ MStatus AngularTrigMath::compute(const MPlug& plug, MDataBlock& dataBlock){
             rangeAngle = 1.0;
         else if (rangeAngle < -1.0)
             rangeAngle = -1.0;
-        resAngle = std::acos(rangeAngle);
+        resAngle = acos(rangeAngle);
         outAngleHandle.setMAngle(MAngle(resAngle));
         break;
     case 5:
@@ -117,16 +117,16 @@ MStatus AngularTrigMath::compute(const MPlug& plug, MDataBlock& dataBlock){
             rangeAngle = 1.0;
         else if (rangeAngle < -1.0)
             rangeAngle = -1.0;
-        resAngle = std::asin(rangeAngle);
+        resAngle = asin(rangeAngle);
         outAngleHandle.setMAngle(MAngle(resAngle));
         break;
     case 6:
-        resAngle = std::atan(angle1.asRadians());
+        resAngle = atan(angle1.asRadians());
         outAngleHandle.setMAngle(MAngle(resAngle));
         break;
     case 7:
         MAngle angle2 = dataBlock.inputValue(inAngle2).asAngle();
-        resAngle = std::atan2(angle1.asRadians(), angle2.asRadians());
+        resAngle = atan2(angle1.asRadians(), angle2.asRadians());
         outAngleHandle.setMAngle(MAngle(resAngle, MAngle::kRadians));
         break;
     }

@@ -200,8 +200,8 @@ MStatus BlendTransform::compute(const MPlug& plug, MDataBlock& dataBlock){
         MArrayDataHandle trans1Handle = dataBlock.inputArrayValue(inTrans1);
         MArrayDataHandle trans2Handle = dataBlock.inputArrayValue(inTrans2);
         MArrayDataHandle outTransHandle = dataBlock.outputArrayValue(outTrans);
-        std::vector<MFloatVector> outList;
-        uint32_t index = std::min(trans1Handle.elementCount(), trans2Handle.elementCount());
+        vector<MFloatVector> outList;
+        uint32_t index = min(trans1Handle.elementCount(), trans2Handle.elementCount());
         for (uint32_t i = 0; i < index; i++){
             trans1Handle.jumpToArrayElement(i);
             trans2Handle.jumpToArrayElement(i);
@@ -228,9 +228,9 @@ MStatus BlendTransform::compute(const MPlug& plug, MDataBlock& dataBlock){
         MArrayDataHandle rotOrder1Handle = dataBlock.inputArrayValue(inRot1Order);
         MArrayDataHandle rotOrder2Handle = dataBlock.inputArrayValue(inRot2Order);
         MArrayDataHandle outRotOrderHandle = dataBlock.inputArrayValue(inOutRotOrder);
-        std::vector<MVector> outList;
+        vector<MVector> outList;
         double blenderD = (double)blender;
-        uint32_t index = std::min(rot1Handle.elementCount(), rot2Handle.elementCount());
+        uint32_t index = min(rot1Handle.elementCount(), rot2Handle.elementCount());
         for (uint32_t i = 0; i < index; i++){
             rot1Handle.jumpToArrayElement(i);
             rot2Handle.jumpToArrayElement(i);
@@ -272,8 +272,8 @@ MStatus BlendTransform::compute(const MPlug& plug, MDataBlock& dataBlock){
         MArrayDataHandle sca1Handle = dataBlock.inputArrayValue(inSca1);
         MArrayDataHandle sca2Handle = dataBlock.inputArrayValue(inSca2);
         MArrayDataHandle outScaHandle = dataBlock.outputArrayValue(outSca);
-        std::vector<MFloatVector> outList;
-        uint32_t index = std::min(sca1Handle.elementCount(), sca2Handle.elementCount());
+        vector<MFloatVector> outList;
+        uint32_t index = min(sca1Handle.elementCount(), sca2Handle.elementCount());
         for (uint32_t i = 0; i < index; i++){
             sca1Handle.jumpToArrayElement(i);
             sca2Handle.jumpToArrayElement(i);

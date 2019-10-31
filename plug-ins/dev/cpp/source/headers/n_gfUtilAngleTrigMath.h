@@ -62,6 +62,8 @@ Sources:
 #include <maya/MFnEnumAttribute.h>
 #include <maya/MAngle.h>
 
+using namespace std;
+
 
 class AngularTrigMath : public MPxNode{
 public:

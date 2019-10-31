@@ -114,15 +114,15 @@ MStatus AngularScalarMath::compute(const MPlug& plug, MDataBlock& dataBlock){
         outAngleHandle.setMAngle(MAngle(resAngle, MAngle::kDegrees));
         break;
     case 5:
-        resAngle = std::pow(angle, scalar);
+        resAngle = pow(angle, scalar);
         outAngleHandle.setMAngle(MAngle(resAngle, MAngle::kDegrees));
         break;
     case 6:
-        resAngle = std::min(angle, scalar);
+        resAngle = min(angle, scalar);
         outAngleHandle.setMAngle(MAngle(resAngle, MAngle::kDegrees));
         break;
     case 7:
-        resAngle = std::max(angle, scalar);
+        resAngle = max(angle, scalar);
         outAngleHandle.setMAngle(MAngle(resAngle, MAngle::kDegrees));
         break;
     }

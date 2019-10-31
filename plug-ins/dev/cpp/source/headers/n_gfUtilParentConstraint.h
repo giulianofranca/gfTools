@@ -66,6 +66,8 @@ Sources:
 #include <maya/MFnNumericAttribute.h>
 #include <maya/MMatrix.h>
 
+using namespace std;
+
 
 class ParentConstraint : public MPxNode{
 public:

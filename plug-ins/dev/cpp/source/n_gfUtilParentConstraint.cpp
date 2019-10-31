@@ -82,13 +82,13 @@ MStatus ParentConstraint::compute(const MPlug& plug, MDataBlock& dataBlock){
     MArrayDataHandle offsetHandle = dataBlock.inputArrayValue(inOffset);
     MArrayDataHandle weightHandle = dataBlock.inputArrayValue(inWeight);
 
-    std::vector<MMatrix> targetList;
+    vector<MMatrix> targetList;
     uint32_t minList[] = {
         targetHandle.elementCount(),
         offsetHandle.elementCount(),
         weightHandle.elementCount()
     };
-    uint32_t index = *std::min_element(std::begin(minList), std::end(minList));
+    uint32_t index = *min_element(begin(minList), end(minList));
     for (uint32_t i = 0; i < index; i++){
         targetHandle.jumpToArrayElement(i);
         offsetHandle.jumpToArrayElement(i);

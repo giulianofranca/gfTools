@@ -64,6 +64,8 @@ Sources:
 #include <maya/MFnEnumAttribute.h>
 #include <maya/MAngle.h>
 
+using namespace std;
+
 
 class AngularScalarMath : public MPxNode{
 public:

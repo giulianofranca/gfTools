@@ -132,9 +132,9 @@ MStatus VectorAnglePSD::compute(const MPlug& plug, MDataBlock& dataBlock){
     MFloatVector vCurPose = vSource - vBase;
     MFloatVector nCurPose = vCurPose.normal();
 
-    std::vector<MFloatVector> targetList;
-    std::vector<float> envelopeList;
-    std::vector<float> falloffList;
+    vector<MFloatVector> targetList;
+    vector<float> envelopeList;
+    vector<float> falloffList;
     
     for (uint32_t i = 0; i < targetHandle.elementCount(); i++){
         targetHandle.jumpToArrayElement(i);
@@ -164,8 +164,8 @@ MStatus VectorAnglePSD::compute(const MPlug& plug, MDataBlock& dataBlock){
             (i < targetHandle.elementCount()) &&
             (i < targetEnvelopeHandle.elementCount()) &&
             (i < targetFalloffHandle.elementCount())){
-                float theta = std::acosf(targetList[i] * nCurPose);
-                float ratio = std::min(std::max(theta / degToRad(falloffList[i]), -1.0f), 1.0f);
+                float theta = acosf(targetList[i] * nCurPose);
+                float ratio = min(max(theta / degToRad(falloffList[i]), -1.0f), 1.0f);
                 float weight = 0.0f;
                 if (ratio == 0.0f)
                     weight = envelopeList[i];

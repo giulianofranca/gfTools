@@ -95,6 +95,8 @@ Sources:
 #include <maya/MPoint.h>
 #include <maya/MEventMessage.h>
 
+using namespace std;
+
 
 class DebugVector : public MPxLocatorNode{
 public:

@@ -80,6 +80,9 @@ Sources:
 #include <maya/MEulerRotation.h>
 #include <maya/MQuaternion.h>
 
+using namespace std;
+
+
 struct VisibilityData{
     bool visibility;
     bool reverseVisibility;

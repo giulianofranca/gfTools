@@ -210,8 +210,8 @@ void DebugVector::drawArrow(MFloatVector& startPnt, MFloatVector& endPnt, float 
     for (int i = 0; i < subd; i++){
         double theta = step * i;
         MMatrix mPoint = MMatrix();
-        mPoint[3][1] = std::cos(theta) * radius;
-        mPoint[3][2] = std::sin(theta) * radius;
+        mPoint[3][1] = cos(theta) * radius;
+        mPoint[3][2] = sin(theta) * radius;
         MMatrix mArrow = mPoint * mBaseOrigin;
         glBegin(GL_LINES);
         glVertex3d(mBaseOrigin[3][0], mBaseOrigin[3][1], mBaseOrigin[3][2]);
@@ -250,8 +250,8 @@ void DebugVector::drawArrow(MFloatVector& startPnt, MFloatVector& endPnt, float 
     for (int i = 0; i < subd; i++){
         double theta = step * i;
         MMatrix mPoint = MMatrix();
-        mPoint[3][1] = std::cos(theta) * radius;
-        mPoint[3][2] = std::sin(theta) * radius;
+        mPoint[3][1] = cos(theta) * radius;
+        mPoint[3][2] = sin(theta) * radius;
         MMatrix mArrow = mPoint * mBaseOrigin;
         lineList.append(MPoint(mBaseOrigin[3][0], mBaseOrigin[3][1], mBaseOrigin[3][2]));
         lineList.append(MPoint(mArrow[3][0], mArrow[3][1], mArrow[3][2]));
