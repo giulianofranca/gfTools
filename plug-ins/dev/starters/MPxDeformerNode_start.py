@@ -46,6 +46,7 @@ Todo:
 Sources:
     * http://www.chadvernon.com/blog/resources/maya-api-programming/deformers/
     * http://rodolphe-vaillant.fr/?e=99
+    * http://rodolphe-vaillant.fr/?e=71
     * https://vimeo.com/263594559
     * https://github.com/gbarlier/relax_node/blob/master/python/relax_node.py
 
@@ -92,6 +93,10 @@ class TestDeformer(ompx.MPxDeformerNode):
     def __init__(self):
         """ Constructor. """
         ompx.MPxDeformerNode.__init__(self)
+
+    def postConstructor(self):
+        """Post Constructor."""
+        self.setDeformationDetails(ompx.MPxDeformerNode.kDeformsColors)
 
     @staticmethod
     def creator():
@@ -148,6 +153,8 @@ class TestDeformer(ompx.MPxDeformerNode):
         inputArrayHandle.jumpToElement(multiIndex)
         inputElement = inputArrayHandle.outputValue()
         inMesh = inputElement.child(ompx.cvar.MPxGeometryFilter_inputGeom).asMesh()
+        outMeshArrayHandle = dataBlock.outputArrayValue(ompx.cvar.MPxGeometryFilter_outputGeom)
+        outMesh = outMeshArrayHandle.inputValue().asMesh()
         mMatrix = dataBlock.inputValue(TestDeformer.inMatrix).asMatrix()
 
         vTrans = om1.MVector(mMatrix(3, 0), mMatrix(3, 1), mMatrix(3, 2))
@@ -155,19 +162,25 @@ class TestDeformer(ompx.MPxDeformerNode):
         meshFn = om1.MFnMesh(inMesh)
         normalsArray = om1.MFloatVectorArray()
         meshFn.getVertexNormals(False, normalsArray, om1.MSpace.kObject)
-        verticesArray = om1.MPointArray()
+        posArray = om1.MPointArray()
+        colorsArray = om1.MColorArray()
+        vertexArray = om1.MIntArray()
 
         while not geoIter.isDone():
             index = geoIter.index()
+            vertexArray.append(index)
             pntPos = geoIter.position()
             weight = self.weightValue(dataBlock, multiIndex, index)
+            colorsArray.append(om1.MColor(1, 0, 0, 1))
             if weight != 0:
                 pntPos.x = pntPos.x + math.sin(index + displace - vTrans[0]) * amplitude * normalsArray[index].x * weight * envelope
                 pntPos.y = pntPos.y + math.sin(index + displace - vTrans[0]) * amplitude * normalsArray[index].y * weight * envelope
                 pntPos.z = pntPos.z + math.sin(index + displace - vTrans[0]) * amplitude * normalsArray[index].z * weight * envelope
-            verticesArray.append(pntPos)
+            posArray.append(pntPos)
             geoIter.next()
-        geoIter.setAllPositions(verticesArray)
+        meshFn.setObject(outMesh)
+        meshFn.setVertexColors(colorsArray, vertexArray)
+        geoIter.setAllPositions(posArray)
 
     def accessoryNodeSetup(self, dagMod):
         """This method is called by the "deformer -type" command when your node is specified.

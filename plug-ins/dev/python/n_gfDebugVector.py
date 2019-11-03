@@ -128,7 +128,7 @@ class DebugVector(omui2.MPxLocatorNode):
     def postConstructor(self):
         """ Post Constructor. """
         thisMob = self.thisMObject()
-        om2.MFnDependencyNode(thisMob).setName("gfDebugVector_PShape#")
+        om2.MFnDependencyNode(thisMob).setName("%sShape#" % DebugVector.kNodeName)
 
     @staticmethod
     def creator():

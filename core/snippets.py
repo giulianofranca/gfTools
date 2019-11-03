@@ -11,6 +11,7 @@ Source:
     * https://docs.python.org/2/extending/embedding.html
     * https://www.youtube.com/watch?v=P9edayG8rkg
 """
+# pylint: disable=too-many-lines
 import math
 import maya.cmds as cmds
 import maya.api._OpenMaya_py2 as om2
