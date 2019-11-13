@@ -108,6 +108,7 @@ class AimConstraint(om2.MPxNode):
     inConstParInvMtx = om2.MObject()
     inConstJntOri = om2.MObject()
     inConstRotOrder = om2.MObject()
+    inConstParSca = om2.MObject()
     outConstraint = om2.MObject()
 
     def __init__(self):
@@ -176,6 +177,10 @@ class AimConstraint(om2.MPxNode):
         eAttr.addField("zyx", 5)
         INPUT_ATTR(eAttr)
 
+        AimConstraint.inConstParSca = nAttr.createPoint("constraintParentScale", "cps")
+        nAttr.default = (1.0, 1.0, 1.0)
+        INPUT_ATTR(nAttr)
+
         outConstraintX = uAttr.create("constraintX", "cx", om2.MFnUnitAttribute.kAngle, 0.0)
         outConstraintY = uAttr.create("constraintY", "cy", om2.MFnUnitAttribute.kAngle, 0.0)
         outConstraintZ = uAttr.create("constraintZ", "cz", om2.MFnUnitAttribute.kAngle, 0.0)
@@ -192,6 +197,7 @@ class AimConstraint(om2.MPxNode):
         AimConstraint.addAttribute(AimConstraint.inConstParInvMtx)
         AimConstraint.addAttribute(AimConstraint.inConstJntOri)
         AimConstraint.addAttribute(AimConstraint.inConstRotOrder)
+        AimConstraint.addAttribute(AimConstraint.inConstParSca)
         AimConstraint.addAttribute(AimConstraint.outConstraint)
         AimConstraint.attributeAffects(AimConstraint.inUpVecType, AimConstraint.outConstraint)
         AimConstraint.attributeAffects(AimConstraint.inOffset, AimConstraint.outConstraint)
@@ -203,6 +209,7 @@ class AimConstraint(om2.MPxNode):
         AimConstraint.attributeAffects(AimConstraint.inConstParInvMtx, AimConstraint.outConstraint)
         AimConstraint.attributeAffects(AimConstraint.inConstJntOri, AimConstraint.outConstraint)
         AimConstraint.attributeAffects(AimConstraint.inConstRotOrder, AimConstraint.outConstraint)
+        AimConstraint.attributeAffects(AimConstraint.inConstParSca, AimConstraint.outConstraint)
 
     def compute(self, plug, dataBlock):
         """
@@ -221,6 +228,7 @@ class AimConstraint(om2.MPxNode):
         mConstParInv = dataBlock.inputValue(AimConstraint.inConstParInvMtx).asMatrix()
         eConstJntOri = om2.MEulerRotation(dataBlock.inputValue(AimConstraint.inConstJntOri).asDouble3())
         constRotOrder = dataBlock.inputValue(AimConstraint.inConstRotOrder).asShort()
+        constParSca = dataBlock.inputValue(AimConstraint.inConstParSca).asFloat3()
 
         vTargetPos = om2.MFloatVector(mTargetWorld[12], mTargetWorld[13], mTargetWorld[14])
         vConstPos = om2.MFloatVector(mConstWorld[12], mConstWorld[13], mConstWorld[14])
@@ -240,13 +248,6 @@ class AimConstraint(om2.MPxNode):
             nNormal.normalize()
             nBinormal = nAim ^ nNormal
             nBinormal.normalize()
-            # mWorldUp = dataBlock.inputValue(AimConstraint.inWorldUpMtx).asFloatMatrix()
-            # vWorldUp = om2.MFloatVector(mWorldUp[12], mWorldUp[13], mWorldUp[14])
-            # vUpDirection = vWorldUp - vConstPos
-            # nNormal = vUpDirection - ((vUpDirection * nAim) * nAim)
-            # nNormal.normalize()
-            # nBinormal = nAim ^ nNormal
-            # nBinormal.normalize()
         aim = [
             nAim.x, nAim.y, nAim.z, 0.0,
             nNormal.x, nNormal.y, nNormal.z, 0.0,
@@ -255,13 +256,16 @@ class AimConstraint(om2.MPxNode):
         ]
         mAim = om2.MMatrix(aim)
         mtxFn = om2.MTransformationMatrix()
+        mtxFn.scaleBy(constParSca, om2.MSpace.kTransform)
+        mInvSca = mtxFn.asMatrix()
+        mtxFn = om2.MTransformationMatrix()
         mtxFn.rotateBy(eConstJntOri, om2.MSpace.kTransform)
         mConstJntOri = mtxFn.asMatrix()
         mtxFn = om2.MTransformationMatrix()
         mtxFn.rotateBy(eOffset.invertIt(), om2.MSpace.kTransform)
         mOffset = mtxFn.asMatrix()
-        mResult = mOffset * mAim * mConstParInv * mConstJntOri.inverse()
-        eConstraint = om2.MEulerRotation.decompose(mResult, om2.MEulerRotation.kXYZ)
+        mResult = mOffset * mAim * mConstParInv * mInvSca * mConstJntOri.inverse()
+        eConstraint = om2.MTransformationMatrix(mResult).rotation(asQuaternion=False)
         eConstraint.reorderIt(constRotOrder)
         eConstraint *= targetWeight
         vConstraint = eConstraint.asVector()

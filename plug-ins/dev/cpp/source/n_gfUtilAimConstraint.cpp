@@ -30,6 +30,7 @@ MObject AimConstraint::inConstWMtx;
 MObject AimConstraint::inConstParInvMtx;
 MObject AimConstraint::inConstJntOri;
 MObject AimConstraint::inConstRotOrder;
+MObject AimConstraint::inConstParSca;
 MObject AimConstraint::outConstraint;
 
 void* AimConstraint::creator(){
@@ -94,6 +95,10 @@ MStatus AimConstraint::initialize(){
     eAttr.addField("zyx", 5);
     INPUT_ATTR(eAttr);
 
+    inConstParSca = nAttr.createPoint("constraintParentScale", "cps");
+    nAttr.setDefault(1.0f, 1.0f, 1.0f);
+    INPUT_ATTR(nAttr);
+
     MObject outConstraintX = uAttr.create("contraintX", "cx", MFnUnitAttribute::kAngle, 0.0, &status);
     MObject outConstraintY = uAttr.create("contraintY", "cy", MFnUnitAttribute::kAngle, 0.0, &status);
     MObject outConstraintZ = uAttr.create("contraintZ", "cz", MFnUnitAttribute::kAngle, 0.0, &status);
@@ -110,6 +115,7 @@ MStatus AimConstraint::initialize(){
     addAttribute(inConstParInvMtx);
     addAttribute(inConstJntOri);
     addAttribute(inConstRotOrder);
+    addAttribute(inConstParSca);
     addAttribute(outConstraint);
     attributeAffects(inUpVecType, outConstraint);
     attributeAffects(inOffset, outConstraint);
@@ -121,6 +127,7 @@ MStatus AimConstraint::initialize(){
     attributeAffects(inConstParInvMtx, outConstraint);
     attributeAffects(inConstJntOri, outConstraint);
     attributeAffects(inConstRotOrder, outConstraint);
+    attributeAffects(inConstParSca, outConstraint);
 
     return status;
 }
@@ -142,6 +149,9 @@ MStatus AimConstraint::compute(const MPlug& plug, MDataBlock& dataBlock){
     MMatrix mConstParInv = dataBlock.inputValue(inConstParInvMtx).asMatrix();
     MEulerRotation eConstJntOri = MEulerRotation(dataBlock.inputValue(inConstJntOri).asDouble3());
     short constRotOrder = dataBlock.inputValue(inConstRotOrder).asShort();
+    MFloatVector vConstParSca = dataBlock.inputValue(inConstParSca).asFloatVector();
+
+    double constParSca[3] = {vConstParSca.x, vConstParSca.y, vConstParSca.z};
 
     MFloatVector vTargetPos = MFloatVector(mTargetWorld[3][0], mTargetWorld[3][1], mTargetWorld[3][2]);
     MFloatVector vConstPos = MFloatVector(mConstWorld[3][0], mConstWorld[3][1], mConstWorld[3][2]);
@@ -163,13 +173,6 @@ MStatus AimConstraint::compute(const MPlug& plug, MDataBlock& dataBlock){
         nNormal.normalize();
         nBinormal = nAim ^ nNormal;
         nBinormal.normalize();
-        // MFloatMatrix mWorldUp = dataBlock.inputValue(inWorldUpMtx).asFloatMatrix();
-        // MFloatVector vWorldUp = MFloatVector(mWorldUp[3][0], mWorldUp[3][1], mWorldUp[3][2]);
-        // MFloatVector vUpDirection = vWorldUp - vConstPos;
-        // nNormal = vUpDirection - ((vUpDirection * nAim) * nAim);
-        // nNormal.normalize();
-        // nBinormal = nAim ^ nNormal;
-        // nBinormal.normalize();
     }
     float aim[4][4] = {
         {nAim.x, nAim.y, nAim.z, 0.0f},
@@ -179,16 +182,16 @@ MStatus AimConstraint::compute(const MPlug& plug, MDataBlock& dataBlock){
     };
     MMatrix mAim = MMatrix(aim);
     MTransformationMatrix mtxFn = MTransformationMatrix();
+    mtxFn.addScale(constParSca, MSpace::kTransform);
+    MMatrix mInvSca = mtxFn.asMatrix();
+    mtxFn = MTransformationMatrix();
     mtxFn.rotateBy(eConstJntOri, MSpace::kTransform);
     MMatrix mConstJntOri = mtxFn.asMatrix();
     mtxFn = MTransformationMatrix();
     mtxFn.rotateBy(eOffset.invertIt(), MSpace::kTransform);
     MMatrix mOffset = mtxFn.asMatrix();
-    MMatrix mResult = mOffset * mAim * mConstParInv * mConstJntOri.inverse();
-    MEulerRotation eConstraint = MEulerRotation::decompose(
-        mResult,
-        MEulerRotation::RotationOrder::kXYZ
-    );
+    MMatrix mResult = mOffset * mAim * mConstParInv * mInvSca * mConstJntOri.inverse();
+    MEulerRotation eConstraint = MTransformationMatrix(mResult).eulerRotation();
     eConstraint.reorderIt((MEulerRotation::RotationOrder)constRotOrder);
     eConstraint *= targetWeight;
     MVector vConstraint = eConstraint.asVector();

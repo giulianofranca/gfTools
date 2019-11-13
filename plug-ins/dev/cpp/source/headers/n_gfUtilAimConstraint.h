@@ -104,5 +104,6 @@ public:
     static MObject                      inConstParInvMtx;
     static MObject                      inConstJntOri;
     static MObject                      inConstRotOrder;
+    static MObject                      inConstParSca;
     static MObject                      outConstraint;
 };
