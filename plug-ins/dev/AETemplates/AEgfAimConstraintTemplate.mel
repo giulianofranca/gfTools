@@ -10,6 +10,7 @@ global proc AEgfAimConstraintTemplate(string $nodeName){
                 editorTemplate -addControl "targetWeight";
                 editorTemplate -addControl "constraintRotateOrder";
                 editorTemplate -addControl "constraintJointOrient";
+                editorTemplate -addControl "constraintParentScale";
             editorTemplate -endLayout;
             editorTemplate -beginLayout "Input Matrices" -collapse 1;
                 editorTemplate -addControl "worldUpMatrix";

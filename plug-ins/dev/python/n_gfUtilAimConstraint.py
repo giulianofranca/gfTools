@@ -54,6 +54,7 @@ Attributes:
     * Constraint Parent Inverse Matrix: The world inverse matrix of the parent of the constrainted object.
     * Constraint Joint Orient: The joint orient of the constrainted object (if exists).
     * Constraint Rotate Order: The rotate order of the constrainted object.
+    * Constraint Parent Scale: The local scale of the parent of the constrainted object.
     * Out Constraint: The result euler rotation of the constraint.
 
 Todo:
