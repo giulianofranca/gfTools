@@ -1,9 +1,13 @@
 global proc AEgfParentConstraintTemplate(string $nodeName){
     editorTemplate -beginScrollLayout;
         editorTemplate -beginLayout "gfParentConstraint Attributes" -collapse 0;
-            editorTemplate -addControl "target";
-            editorTemplate -addControl "offset";
-            editorTemplate -addControl "weight";
+            editorTemplate -beginLayout "Constraint Attributes" -collapse 0;
+                editorTemplate -addControl "constraintRotateOrder";
+                editorTemplate -addControl "constraintJointOrient";
+                editorTemplate -addControl "constraintParentScale";
+                editorTemplate -addControl "constraintParentInverseMatrix";
+            editorTemplate -endLayout;
+            editorTemplate -addControl "targetList";
         editorTemplate -endLayout;
         AEdependNodeTemplate $nodeName;
     editorTemplate -addExtraControls;

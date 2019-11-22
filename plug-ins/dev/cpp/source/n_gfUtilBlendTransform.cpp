@@ -57,7 +57,7 @@ MStatus BlendTransform::initialize(){
     MFnCompoundAttribute cAttr;
     MFnEnumAttribute eAttr;
 
-    inBlender = nAttr.create("blender", "blender", MFnNumericData::kFloat, 0.0f, &status);
+    inBlender = nAttr.create("blender", "blender", MFnNumericData::kFloat, 0.5f, &status);
     nAttr.setMin(0.0f);
     nAttr.setMax(1.0f);
     INPUT_ATTR(nAttr);

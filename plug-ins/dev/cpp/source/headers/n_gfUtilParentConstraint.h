@@ -56,17 +56,25 @@ Sources:
 */
 #pragma once
 
-#include <vector>
-#include <algorithm>
 #include <cstdint>
 
 #include <maya/MPxNode.h>
 
 #include <maya/MFnMatrixAttribute.h>
 #include <maya/MFnNumericAttribute.h>
+#include <maya/MFnUnitAttribute.h>
+#include <maya/MFnEnumAttribute.h>
+#include <maya/MFnCompoundAttribute.h>
+#include <maya/MTransformationMatrix.h>
 #include <maya/MMatrix.h>
+#include <maya/MVector.h>
+// #include <maya/MFloatVector.h>
+#include <maya/MFloatVector.h>
+#include <maya/MEulerRotation.h>
+#include <maya/MQuaternion.h>
 
-using namespace std;
+#include <maya/MGlobal.h>
+#include <vector>
 
 
 class ParentConstraint : public MPxNode{
@@ -87,8 +95,15 @@ public:
     const static MString                kNodeClassify;
     const static MTypeId                kNodeID;
 
-    static MObject                      inTarget;
-    static MObject                      inOffset;
-    static MObject                      inWeight;
-    static MObject                      outConstraint;
+    static MObject                      inConstraintJntOri;
+    static MObject                      inConstraintRotOrder;
+    static MObject                      inConstraintParInvMtx;
+    static MObject                      inConstraintParSca;
+    static MObject                      inTargetWorldMatrix;
+    static MObject                      inTargetOffset;
+    static MObject                      inTargetWeight;
+    static MObject                      inTargetList;
+    static MObject                      outConstTrans;
+    static MObject                      outConstRot;
+    static MObject                      outConstSca;
 };

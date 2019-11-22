@@ -207,6 +207,7 @@ n_HelperJoint.HelperJoint.kNodeName = "gfHelperJoint_P"
 n_HelperJoint.HelperJoint.kNodeClassify = "utility/general"
 n_HelperJoint.HelperJoint.kNodeID = om2.MTypeId(0x0012f7c4)
 n_DistributeAlongSurface.DistributeAlongSurface.kNodeName = "gfDistributeAlongSurface_P"
+# n_DistributeAlongSurface.DistributeAlongSurface.kNodeName = "gfSurfaceDistribute_P"
 n_DistributeAlongSurface.DistributeAlongSurface.kNodeClassify = "utility/general"
 n_DistributeAlongSurface.DistributeAlongSurface.kNodeID = om2.MTypeId(0x0012f7c5)
 # gfUtil

@@ -95,14 +95,19 @@ class ParentConstraint(om2.MPxNode):
     kNodeClassify = ""
     kNodeID = ""
 
-    inOffset = om2.MObject()
-    inTargetWMtx = om2.MObject()
+    inConstraintJntOri = om2.MObject()
+    inConstraintRotOrder = om2.MObject()
+    inConstraintParInvMtx = om2.MObject()
+    inConstraintParSca = om2.MObject()
+    # inTargetJntOri = om2.MObject()
     # inTargetRotOrder = om2.MObject()
-    # inTargetWeight = om2.MObject()
-    inConstParInvMtx = om2.MObject()
-    # inConstJntOri = om2.MObject()
-    # inConstRotOrder = om2.MObject()
-    outConstraint = om2.MObject()
+    inTargetWorldMatrix = om2.MObject()
+    inTargetOffset = om2.MObject()
+    inTargetWeight = om2.MObject()
+    inTargetList = om2.MObject()
+    outConstTrans = om2.MObject()
+    outConstRot = om2.MObject()
+    outConstSca = om2.MObject()
 
     def __init__(self):
         """ Constructor. """
@@ -120,39 +125,19 @@ class ParentConstraint(om2.MPxNode):
         as static members to ParentConstraint class. Instances of ParentConstraint will use these attributes to create plugs
         for use in the compute() method.
         """
-        eAttr = om2.MFnEnumAttribute()
         mAttr = om2.MFnMatrixAttribute()
         nAttr = om2.MFnNumericAttribute()
         uAttr = om2.MFnUnitAttribute()
-
-        ParentConstraint.inOffset = mAttr.create("offset", "offset", om2.MFnMatrixAttribute.kDouble)
-        INPUT_ATTR(mAttr)
-
-        ParentConstraint.inTargetWMtx = mAttr.create("targetWorldMatrix", "twmtx", om2.MFnMatrixAttribute.kDouble)
-        INPUT_ATTR(mAttr)
-
-        # ParentConstraint.inTargetRotOrder = eAttr.create("targetRotateOrder", "tro", 0)
-        # eAttr.addField("xyz", 0)
-        # eAttr.addField("yzx", 1)
-        # eAttr.addField("zxy", 2)
-        # eAttr.addField("xzy", 3)
-        # eAttr.addField("yxz", 4)
-        # eAttr.addField("zyx", 5)
-        # INPUT_ATTR(eAttr)
-
-        ParentConstraint.inTargetWeight = nAttr.create("targetWeight", "tw", om2.MFnNumericData.kDouble, 1.0)
-        INPUT_ATTR(nAttr)
-
-        ParentConstraint.inConstParInvMtx = mAttr.create("constraintParentInverseMatrix", "cpim", om2.MFnMatrixAttribute.kDouble)
-        INPUT_ATTR(mAttr)
+        eAttr = om2.MFnEnumAttribute()
+        cAttr = om2.MFnCompoundAttribute()
 
         constJntOriX = uAttr.create("constraintJointOrientX", "cjorx", om2.MFnUnitAttribute.kAngle, 0.0)
         constJntOriY = uAttr.create("constraintJointOrientY", "cjory", om2.MFnUnitAttribute.kAngle, 0.0)
         constJntOriZ = uAttr.create("constraintJointOrientZ", "cjorz", om2.MFnUnitAttribute.kAngle, 0.0)
-        ParentConstraint.inConstJntOri = nAttr.create("constraintJointOrient", "cjor", constJntOriX, constJntOriY, constJntOriZ)
+        ParentConstraint.inConstraintJntOri = nAttr.create("constraintJointOrient", "cjor", constJntOriX, constJntOriY, constJntOriZ)
         INPUT_ATTR(nAttr)
 
-        ParentConstraint.inConstRotOrder = eAttr.create("constraintRotateOrder", "cro", 0)
+        ParentConstraint.inConstraintRotOrder = eAttr.create("constraintRotateOrder", "croo", 0)
         eAttr.addField("xyz", 0)
         eAttr.addField("yzx", 1)
         eAttr.addField("zxy", 2)
@@ -161,24 +146,93 @@ class ParentConstraint(om2.MPxNode):
         eAttr.addField("zyx", 5)
         INPUT_ATTR(eAttr)
 
-        ParentConstraint.outConstraint = mAttr.create("constraint", "const", om2.MFnMatrixAttribute.kDouble)
-        OUTPUT_ATTR(mAttr)
+        ParentConstraint.inConstraintParInvMtx = mAttr.create("constraintParentInverseMatrix", "cpim", om2.MFnMatrixAttribute.kDouble)
+        INPUT_ATTR(mAttr)
 
-        ParentConstraint.addAttribute(ParentConstraint.inOffset)
-        ParentConstraint.addAttribute(ParentConstraint.inTargetWMtx)
-        # ParentConstraint.addAttribute(ParentConstraint.inTargetRotOrder)
-        ParentConstraint.addAttribute(ParentConstraint.inTargetWeight)
-        ParentConstraint.addAttribute(ParentConstraint.inConstParInvMtx)
-        ParentConstraint.addAttribute(ParentConstraint.inConstJntOri)
-        ParentConstraint.addAttribute(ParentConstraint.inConstRotOrder)
-        ParentConstraint.addAttribute(ParentConstraint.outConstraint)
-        ParentConstraint.attributeAffects(ParentConstraint.inOffset, ParentConstraint.outConstraint)
-        ParentConstraint.attributeAffects(ParentConstraint.inTargetWMtx, ParentConstraint.outConstraint)
-        # ParentConstraint.attributeAffects(ParentConstraint.inTargetRotOrder, ParentConstraint.outConstraint)
-        ParentConstraint.attributeAffects(ParentConstraint.inTargetWeight, ParentConstraint.outConstraint)
-        ParentConstraint.attributeAffects(ParentConstraint.inConstParInvMtx, ParentConstraint.outConstraint)
-        ParentConstraint.attributeAffects(ParentConstraint.inConstJntOri, ParentConstraint.outConstraint)
-        ParentConstraint.attributeAffects(ParentConstraint.inConstRotOrder, ParentConstraint.outConstraint)
+        ParentConstraint.inConstraintParSca = nAttr.createPoint("constraintParentScale", "cps")
+        nAttr.default = (1.0, 1.0, 1.0)
+        INPUT_ATTR(nAttr)
+
+        ParentConstraint.inTargetWorldMatrix = mAttr.create("targetWorldMatrix", "twmtx", om2.MFnMatrixAttribute.kDouble)
+        INPUT_ATTR(mAttr)
+
+        ParentConstraint.inTargetOffset = mAttr.create("targetOffset", "toff", om2.MFnMatrixAttribute.kDouble)
+        INPUT_ATTR(mAttr)
+
+        # targetJntOriX = uAttr.create("targetJointOrientX", "tjorx", om2.MFnUnitAttribute.kAngle, 0.0)
+        # targetJntOriY = uAttr.create("targetJointOrientY", "tjory", om2.MFnUnitAttribute.kAngle, 0.0)
+        # targetJntOriZ = uAttr.create("targetJointOrientZ", "tjorz", om2.MFnUnitAttribute.kAngle, 0.0)
+        # ParentConstraint.inTargetJntOri = nAttr.create("targetJointOrient", "tjor", targetJntOriX, targetJntOriY, targetJntOriZ)
+        # INPUT_ATTR(nAttr)
+
+        # ParentConstraint.inTargetRotOrder = eAttr.create("targetRotateOrder", "troo", 0)
+        # eAttr.addField("xyz", 0)
+        # eAttr.addField("yzx", 1)
+        # eAttr.addField("zxy", 2)
+        # eAttr.addField("xzy", 3)
+        # eAttr.addField("yxz", 4)
+        # eAttr.addField("zyx", 5)
+        # INPUT_ATTR(eAttr)
+
+        ParentConstraint.inTargetWeight = nAttr.create("targetWeight", "twght", om2.MFnNumericData.kFloat, 1.0)
+        INPUT_ATTR(nAttr)
+
+        ParentConstraint.inTargetList = cAttr.create("targetList", "tlist")
+        cAttr.addChild(ParentConstraint.inTargetWorldMatrix)
+        cAttr.addChild(ParentConstraint.inTargetOffset)
+        # cAttr.addChild(ParentConstraint.inTargetJntOri)
+        # cAttr.addChild(ParentConstraint.inTargetRotOrder)
+        cAttr.addChild(ParentConstraint.inTargetWeight)
+        cAttr.array = True
+
+        ParentConstraint.outConstTrans = nAttr.createPoint("constraintTranslate", "ctrans")
+        OUTPUT_ATTR(nAttr)
+
+        outConstRotX = uAttr.create("constraintRotateX", "crox", om2.MFnUnitAttribute.kAngle, 0.0)
+        outConstRotY = uAttr.create("constraintRotateY", "croy", om2.MFnUnitAttribute.kAngle, 0.0)
+        outConstRotZ = uAttr.create("constraintRotateZ", "croz", om2.MFnUnitAttribute.kAngle, 0.0)
+        ParentConstraint.outConstRot = nAttr.create("constraintRotate", "cro", outConstRotX, outConstRotY, outConstRotZ)
+        OUTPUT_ATTR(nAttr)
+
+        ParentConstraint.outConstSca = nAttr.createPoint("constraintScale", "csca")
+        nAttr.default = (1.0, 1.0, 1.0)
+        OUTPUT_ATTR(nAttr)
+
+        ParentConstraint.addAttribute(ParentConstraint.inConstraintJntOri)
+        ParentConstraint.addAttribute(ParentConstraint.inConstraintRotOrder)
+        ParentConstraint.addAttribute(ParentConstraint.inConstraintParInvMtx)
+        ParentConstraint.addAttribute(ParentConstraint.inConstraintParSca)
+        ParentConstraint.addAttribute(ParentConstraint.inTargetList)
+        ParentConstraint.addAttribute(ParentConstraint.outConstTrans)
+        ParentConstraint.addAttribute(ParentConstraint.outConstRot)
+        ParentConstraint.addAttribute(ParentConstraint.outConstSca)
+        ParentConstraint.attributeAffects(ParentConstraint.inConstraintJntOri, ParentConstraint.outConstTrans)
+        ParentConstraint.attributeAffects(ParentConstraint.inConstraintRotOrder, ParentConstraint.outConstTrans)
+        ParentConstraint.attributeAffects(ParentConstraint.inConstraintParInvMtx, ParentConstraint.outConstTrans)
+        ParentConstraint.attributeAffects(ParentConstraint.inConstraintParSca, ParentConstraint.outConstTrans)
+        ParentConstraint.attributeAffects(ParentConstraint.inTargetWorldMatrix, ParentConstraint.outConstTrans)
+        ParentConstraint.attributeAffects(ParentConstraint.inTargetOffset, ParentConstraint.outConstTrans)
+        # ParentConstraint.attributeAffects(ParentConstraint.inTargetJntOri, ParentConstraint.outConstTrans)
+        # ParentConstraint.attributeAffects(ParentConstraint.inTargetRotOrder, ParentConstraint.outConstTrans)
+        ParentConstraint.attributeAffects(ParentConstraint.inTargetWeight, ParentConstraint.outConstTrans)
+        ParentConstraint.attributeAffects(ParentConstraint.inConstraintJntOri, ParentConstraint.outConstRot)
+        ParentConstraint.attributeAffects(ParentConstraint.inConstraintRotOrder, ParentConstraint.outConstRot)
+        ParentConstraint.attributeAffects(ParentConstraint.inConstraintParInvMtx, ParentConstraint.outConstRot)
+        ParentConstraint.attributeAffects(ParentConstraint.inConstraintParSca, ParentConstraint.outConstRot)
+        ParentConstraint.attributeAffects(ParentConstraint.inTargetWorldMatrix, ParentConstraint.outConstRot)
+        ParentConstraint.attributeAffects(ParentConstraint.inTargetOffset, ParentConstraint.outConstRot)
+        # ParentConstraint.attributeAffects(ParentConstraint.inTargetJntOri, ParentConstraint.outConstRot)
+        # ParentConstraint.attributeAffects(ParentConstraint.inTargetRotOrder, ParentConstraint.outConstRot)
+        ParentConstraint.attributeAffects(ParentConstraint.inTargetWeight, ParentConstraint.outConstRot)
+        ParentConstraint.attributeAffects(ParentConstraint.inConstraintJntOri, ParentConstraint.outConstSca)
+        ParentConstraint.attributeAffects(ParentConstraint.inConstraintRotOrder, ParentConstraint.outConstSca)
+        ParentConstraint.attributeAffects(ParentConstraint.inConstraintParInvMtx, ParentConstraint.outConstSca)
+        ParentConstraint.attributeAffects(ParentConstraint.inConstraintParSca, ParentConstraint.outConstSca)
+        ParentConstraint.attributeAffects(ParentConstraint.inTargetWorldMatrix, ParentConstraint.outConstSca)
+        ParentConstraint.attributeAffects(ParentConstraint.inTargetOffset, ParentConstraint.outConstSca)
+        # ParentConstraint.attributeAffects(ParentConstraint.inTargetJntOri, ParentConstraint.outConstSca)
+        # ParentConstraint.attributeAffects(ParentConstraint.inTargetRotOrder, ParentConstraint.outConstSca)
+        ParentConstraint.attributeAffects(ParentConstraint.inTargetWeight, ParentConstraint.outConstSca)
 
     def compute(self, plug, dataBlock):
         """
@@ -187,36 +241,51 @@ class ParentConstraint(om2.MPxNode):
             * dataBlock contains the data on which we will base our computations.
         """
         # pylint: disable=no-self-use
-        if plug != ParentConstraint.outConstraint:
-            return om2.kUnknownParameter
-
-        mOffset = dataBlock.inputValue(ParentConstraint.inOffset).asMatrix()
-        mTargetWorld = dataBlock.inputValue(ParentConstraint.inTargetWMtx).asMatrix()
-        # targetRotOrder = dataBlock.inputValue(ParentConstraint.inTargetRotOrder).asShort()
-        # targetWeight = dataBlock.inputValue(ParentConstraint.inTargetWeight).asDouble()
-        mConstParInv = dataBlock.inputValue(ParentConstraint.inConstParInvMtx).asMatrix()
-        eConstJntOri = om2.MEulerRotation(dataBlock.inputValue(ParentConstraint.inConstJntOri).asDouble3())
-        constRotOrder = dataBlock.inputValue(ParentConstraint.inConstRotOrder).asShort()
-
-        # mtxFn = om2.MTransformationMatrix()
-        # mtxFn.rotateBy(eConstJntOri.invertIt(), om2.MSpace.kTransform)
-        # mConstJntOri = mtxFn.asMatrix()
-
-        mResult = mOffset * mTargetWorld * mConstParInv
-
-        vResult = om2.MVector(mResult[12], mResult[13], mResult[14])
-        eResult = om2.MEulerRotation.decompose(mResult, om2.MEulerRotation.kXYZ)
-        eResult.reorderIt(constRotOrder)
-        eResult += eConstJntOri.invertIt()
-        result = om2.MTransformationMatrix(mResult).scale(om2.MSpace.kTransform)
+        eConstJntOri = om2.MEulerRotation(dataBlock.inputValue(ParentConstraint.inConstraintJntOri).asDouble3())
+        mConstParInv = dataBlock.inputValue(ParentConstraint.inConstraintParInvMtx).asMatrix()
+        constRotOrder = dataBlock.inputValue(ParentConstraint.inConstraintRotOrder).asShort()
+        constParSca = dataBlock.inputValue(ParentConstraint.inConstraintParSca).asFloat3()
+        targetListHandle = dataBlock.inputArrayValue(ParentConstraint.inTargetList)
+        mTargetsAdded = om2.MMatrix()
         mtxFn = om2.MTransformationMatrix()
-        mtxFn.scaleBy(result, om2.MSpace.kTransform)
-        mtxFn.rotateBy(eResult, om2.MSpace.kTransform)
-        mtxFn.translateBy(vResult, om2.MSpace.kTransform)
+        mtxFn.scaleBy(constParSca, om2.MSpace.kTransform)
+        mInvSca = mtxFn.asMatrix()
 
-        mConstraint = mtxFn.asMatrix()
-        # mConstraint *= targetWeight
+        for i in range(len(targetListHandle)):
+            targetListHandle.jumpToLogicalElement(i)
+            targetHandle = targetListHandle.inputValue()
+            # targetJntOri = om2.MEulerRotation(targetHandle.child(ParentConstraint.inTargetJntOri).asDouble3())
+            # targetRotOrder = targetHandle.child(ParentConstraint.inTargetRotOrder).asShort()
+            mTargetW = targetHandle.child(ParentConstraint.inTargetWorldMatrix).asMatrix()
+            mOffset = targetHandle.child(ParentConstraint.inTargetOffset).asMatrix()
+            targetWeight = targetHandle.child(ParentConstraint.inTargetWeight).asFloat()
 
-        outConstraintHandle = dataBlock.outputValue(ParentConstraint.outConstraint)
-        outConstraintHandle.setMMatrix(mConstraint)
-        outConstraintHandle.setClean()
+            mTarget = mOffset * (mTargetW * targetWeight)
+            if mTargetsAdded == om2.MMatrix():
+                mTargetsAdded = mTarget
+            else:
+                mTargetsAdded += mTarget
+
+        mResult = mTargetsAdded * mConstParInv * mInvSca
+
+        if plug == ParentConstraint.outConstTrans:
+            outTransHandle = dataBlock.outputValue(ParentConstraint.outConstTrans)
+            outTrans = om2.MFloatVector(mResult[12], mResult[13], mResult[14])
+            outTransHandle.setMFloatVector(outTrans)
+            outTransHandle.setClean()
+        if plug == ParentConstraint.outConstRot:
+            outRotHandle = dataBlock.outputValue(ParentConstraint.outConstRot)
+            mtxFn = om2.MTransformationMatrix(mResult)
+            eRotMtx = mtxFn.rotation(asQuaternion=False)
+            qRotMtx = eRotMtx.asQuaternion()
+            qConstJntOri = eConstJntOri.asQuaternion()
+            qOutRot = qRotMtx * qConstJntOri.invertIt()
+            outRot = qOutRot.asEulerRotation().reorderIt(constRotOrder)
+            outRotHandle.setMVector(outRot.asVector())
+            outRotHandle.setClean()
+        if plug == ParentConstraint.outConstSca:
+            outScaHandle = dataBlock.outputValue(ParentConstraint.outConstSca)
+            mtxFn = om2.MTransformationMatrix(mResult)
+            outSca = mtxFn.scale(om2.MSpace.kWorld)
+            outScaHandle.set3Float(outSca[0], outSca[1], outSca[2])
+            outScaHandle.setClean()
