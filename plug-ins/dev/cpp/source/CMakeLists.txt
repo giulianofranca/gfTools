@@ -4,6 +4,7 @@ set(SOURCE_FILES
     "n_gfRigPSDVectorAngle.cpp" "headers/n_gfRigPSDVectorAngle.h"
     "n_gfRigIKVChain.cpp" "headers/n_gfRigIKVChain.h"
     "n_gfRigDistributeAlongSurface.cpp" "headers/n_gfRigDistributeAlongSurface.h"
+    "n_gfRigTwistExtractor.cpp" "headers/n_gfRigTwistExtractor.h"
     "n_gfUtilBlendTransform.cpp" "headers/n_gfUtilBlendTransform.h"
     "n_gfUtilAimConstraint.cpp" "headers/n_gfUtilAimConstraint.h"
     "n_gfUtilParentConstraint.cpp" "headers/n_gfUtilParentConstraint.h"

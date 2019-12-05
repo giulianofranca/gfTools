@@ -1,0 +1,15 @@
+global proc AEgfTwistExtractorTemplate(string $nodeName){
+    editorTemplate -beginScrollLayout;
+        editorTemplate -beginLayout "gfTwistExtractor Attributes" -collapse 0;
+            editorTemplate -addControl "useAxisAsAim";
+            editorTemplate -addControl "aimAxis";
+            editorTemplate -addSeparator;
+            editorTemplate -addControl "targetJointOrient";
+        editorTemplate -endLayout;
+        editorTemplate -suppress "targetWorldMatrix";
+        editorTemplate -suppress "targetParentInverseMatrix";
+        editorTemplate -suppress "aimWorldMatrix";
+        AEdependNodeTemplate $nodeName;
+    editorTemplate -addExtraControls;
+    editorTemplate -endScrollLayout;
+}
