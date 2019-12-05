@@ -195,7 +195,7 @@ void DebugVector::drawArrow(MFloatVector& startPnt, MFloatVector& endPnt, float 
     double aim[4][4] = {
         {nAim.x, nAim.y, nAim.z, 0.0},
         {nNormal.x, nNormal.y, nNormal.z, 0.0},
-        {nBinormal.y, nBinormal.y, nBinormal.z, 0.0},
+        {nBinormal.x, nBinormal.y, nBinormal.z, 0.0},
         {startPnt.x, startPnt.y, startPnt.z, 1.0}
     };
     MMatrix mBase = MMatrix(aim);
@@ -238,7 +238,7 @@ void DebugVector::drawArrow(MFloatVector& startPnt, MFloatVector& endPnt, float 
     double aim[4][4] = {
         {nAim.x, nAim.y, nAim.z, 0.0},
         {nNormal.x, nNormal.y, nNormal.z, 0.0},
-        {nBinormal.y, nBinormal.y, nBinormal.z, 0.0},
+        {nBinormal.x, nBinormal.y, nBinormal.z, 0.0},
         {startPnt.x, startPnt.y, startPnt.z, 1.0}
     };
     MMatrix mBase = MMatrix(aim);

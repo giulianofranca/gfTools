@@ -66,6 +66,7 @@ Sources:
 #include "headers/n_gfRigPSDVectorAngle.h"
 #include "headers/n_gfRigIKVChain.h"
 #include "headers/n_gfRigDistributeAlongSurface.h"
+#include "headers/n_gfRigTwistExtractor.h"
 // gfUtil
 #include "headers/n_gfUtilBlendTransform.h"
 #include "headers/n_gfUtilAimConstraint.h"
@@ -153,46 +154,49 @@ const MTypeId IKVChainSolver::kNodeID = 0x00130d82;
 const MString DistributeAlongSurface::kNodeName = "gfDistributeAlongSurface";
 const MString DistributeAlongSurface::kNodeClassify = "utility/general";
 const MTypeId DistributeAlongSurface::kNodeID = 0x00130d83;
+const MString TwistExtractor::kNodeName = "gfTwistExtractor";
+const MString TwistExtractor::kNodeClassify = "utility/general";
+const MTypeId TwistExtractor::kNodeID = 0x00130d84;
 // gfUtil
 const MString BlendTransform::kNodeName = "gfBlendTransform";
 const MString BlendTransform::kNodeClassify = "utility/general";
-const MTypeId BlendTransform::kNodeID = 0x00130d84;
+const MTypeId BlendTransform::kNodeID = 0x00130d85;
 const MString AimConstraint::kNodeName = "gfAimConstraint";
 const MString AimConstraint::kNodeClassify = "utility/general";
-const MTypeId AimConstraint::kNodeID = 0x00130d85;
+const MTypeId AimConstraint::kNodeID = 0x00130d86;
 const MString ParentConstraint::kNodeName = "gfParentConstraint";
 const MString ParentConstraint::kNodeClassify = "utility/general";
-const MTypeId ParentConstraint::kNodeID = 0x00130d86;
+const MTypeId ParentConstraint::kNodeID = 0x00130d87;
 const MString AngularMath::kNodeName = "gfAngleMath";
 const MString AngularMath::kNodeClassify = "utility/general";
-const MTypeId AngularMath::kNodeID = 0x00130d87;
+const MTypeId AngularMath::kNodeID = 0x00130d88;
 const MString AngularScalarMath::kNodeName = "gfAngleScalarMath";
 const MString AngularScalarMath::kNodeClassify = "utility/general";
-const MTypeId AngularScalarMath::kNodeID = 0x00130d88;
+const MTypeId AngularScalarMath::kNodeID = 0x00130d89;
 const MString AngularTrigMath::kNodeName = "gfAngleTrigMath";
 const MString AngularTrigMath::kNodeClassify = "utility/general";
-const MTypeId AngularTrigMath::kNodeID = 0x00130d89;
+const MTypeId AngularTrigMath::kNodeID = 0x00130d8a;
 const MString AngleToDouble::kNodeName = "gfAngleToDouble";
 const MString AngleToDouble::kNodeClassify = "utility/general";
-const MTypeId AngleToDouble::kNodeID = 0x00130d8a;
+const MTypeId AngleToDouble::kNodeID = 0x00130d8b;
 const MString DoubleToAngle::kNodeName = "gfDoubleToAngle";
 const MString DoubleToAngle::kNodeClassify = "utility/general";
-const MTypeId DoubleToAngle::kNodeID = 0x00130d8b;
+const MTypeId DoubleToAngle::kNodeID = 0x00130d8c;
 const MString EulerMath::kNodeName = "gfEulerMath";
 const MString EulerMath::kNodeClassify = "utility/general";
-const MTypeId EulerMath::kNodeID = 0x00130d8c;
+const MTypeId EulerMath::kNodeID = 0x00130d8d;
 const MString EulerScalarMath::kNodeName = "gfEulerScalarMath";
 const MString EulerScalarMath::kNodeClassify = "utility/general";
-const MTypeId EulerScalarMath::kNodeID = 0x00130d8d;
+const MTypeId EulerScalarMath::kNodeID = 0x00130d8e;
 const MString EulerToVector::kNodeName = "gfEulerToVector";
 const MString EulerToVector::kNodeClassify = "utility/general";
-const MTypeId EulerToVector::kNodeID = 0x00130d8e;
+const MTypeId EulerToVector::kNodeID = 0x00130d8f;
 const MString VectorToEuler::kNodeName = "gfVectorToEuler";
 const MString VectorToEuler::kNodeClassify = "utility/general";
-const MTypeId VectorToEuler::kNodeID =0x00130d8f;
+const MTypeId VectorToEuler::kNodeID =0x00130d90;
 const MString DecomposeRowMatrix::kNodeName = "gfDecompRowMtx";
 const MString DecomposeRowMatrix::kNodeClassify = "utility/general";
-const MTypeId DecomposeRowMatrix::kNodeID = 0x00130d90;
+const MTypeId DecomposeRowMatrix::kNodeID = 0x00130d91;
 
 
 MStatus initializePlugin(MObject mobject){
@@ -204,6 +208,7 @@ MStatus initializePlugin(MObject mobject){
     REGISTER_NODE(VectorAnglePSD, mPlugin);
     REGISTER_NODE(IKVChainSolver, mPlugin);
     REGISTER_NODE(DistributeAlongSurface, mPlugin);
+    REGISTER_NODE(TwistExtractor, mPlugin);
     REGISTER_NODE(BlendTransform, mPlugin);
     REGISTER_NODE(AimConstraint, mPlugin);
     REGISTER_NODE(ParentConstraint, mPlugin);
@@ -229,6 +234,7 @@ MStatus uninitializePlugin(MObject mobject){
     DEREGISTER_NODE(VectorAnglePSD, mPlugin);
     DEREGISTER_NODE(IKVChainSolver, mPlugin);
     DEREGISTER_NODE(DistributeAlongSurface, mPlugin);
+    DEREGISTER_NODE(TwistExtractor, mPlugin);
     DEREGISTER_NODE(BlendTransform, mPlugin);
     DEREGISTER_NODE(AimConstraint, mPlugin);
     DEREGISTER_NODE(ParentConstraint, mPlugin);
