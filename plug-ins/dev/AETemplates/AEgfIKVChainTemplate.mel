@@ -11,6 +11,7 @@ global proc AEgfIKVChainTemplate(string $nodeName){
             editorTemplate -endLayout;
             editorTemplate -beginLayout "Inverse Kinematics Options" -collapse 0;
                 editorTemplate -addControl "hierarchyMode";
+                editorTemplate -addControl "flipOrientation";
                 editorTemplate -addControl "restLength1";
                 editorTemplate -addControl "restLength2";
                 editorTemplate -addControl "compressionLimit";

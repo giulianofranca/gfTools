@@ -40,6 +40,7 @@ MObject IKVChainSolver::inStretch;
 MObject IKVChainSolver::inClampStretch;
 MObject IKVChainSolver::inClampValue;
 MObject IKVChainSolver::inSquash;
+MObject IKVChainSolver::inFlipOri;
 MObject IKVChainSolver::outChain;
 
 void* IKVChainSolver::creator(){
@@ -141,6 +142,9 @@ MStatus IKVChainSolver::initialize(){
     nAttr.setMax(1.0);
     INPUT_ATTR(nAttr);
 
+    inFlipOri = nAttr.create("flipOrientation", "flip", MFnNumericData::kBoolean, false, &status);
+    INPUT_ATTR(nAttr);
+
     outChain = mAttr.create("outChain", "oc", MFnMatrixAttribute::kDouble, &status);
     mAttr.setArray(true);
     OUTPUT_ATTR(mAttr);
@@ -164,6 +168,7 @@ MStatus IKVChainSolver::initialize(){
     addAttribute(inClampStretch);
     addAttribute(inClampValue);
     addAttribute(inSquash);
+    addAttribute(inFlipOri);
     addAttribute(outChain);
     attributeAffects(inRoot, outChain);
     attributeAffects(inHandle, outChain);
@@ -184,6 +189,7 @@ MStatus IKVChainSolver::initialize(){
     attributeAffects(inClampStretch, outChain);
     attributeAffects(inClampValue, outChain);
     attributeAffects(inSquash, outChain);
+    attributeAffects(inFlipOri, outChain);
 
     return status;
 }
@@ -206,6 +212,7 @@ MStatus IKVChainSolver::compute(const MPlug& plug, MDataBlock& dataBlock){
     MMatrix mSnap = dataBlock.inputValue(inSnapObj).asMatrix();
     double prefAngle = dataBlock.inputValue(inPreferredAngle).asAngle().asRadians();
     double twist = dataBlock.inputValue(inTwist).asAngle().asRadians();
+    bool flip = dataBlock.inputValue(inFlipOri).asBool();
     MVector vRoot = MVector(mRoot[3][0], mRoot[3][1], mRoot[3][2]);
     MVector vHandle = MVector(mHandle[3][0], mHandle[3][1], mHandle[3][2]);
     MVector vUpVector = MVector(mUpVector[3][0], mUpVector[3][1], mUpVector[3][2]);
@@ -323,10 +330,17 @@ MStatus IKVChainSolver::compute(const MPlug& plug, MDataBlock& dataBlock){
     vector<MMatrix> srtList;
     vector<MMatrix> jntOriList;
     MArrayDataHandle jntOriHandle = dataBlock.inputArrayValue(inJointOrient);
+    MTransformationMatrix mtxFn;
+    MMatrix mFlip;
+    if (flip){
+        mtxFn = MTransformationMatrix();
+        mtxFn.rotateBy(MEulerRotation(0.0, 0.0, -M_PI), MSpace::kTransform);
+        mFlip = mtxFn.asMatrix();
+    }
     for (uint32_t i = 0; i < jntOriHandle.elementCount(); i++){
         jntOriHandle.jumpToArrayElement(i);
         MEulerRotation eOri = MEulerRotation(jntOriHandle.inputValue().asDouble3());
-        MTransformationMatrix mtxFn = MTransformationMatrix();
+        mtxFn = MTransformationMatrix();
         mtxFn.rotateBy(eOri, MSpace::kTransform);
         MMatrix mOri = mtxFn.asMatrix();
         jntOriList.push_back(mOri);
@@ -345,6 +359,8 @@ MStatus IKVChainSolver::compute(const MPlug& plug, MDataBlock& dataBlock){
         mLocal[1][0] = -betaSin;
         mLocal[1][1] = betaCos;
         mResult = MMatrix();
+        if (flip)
+            mLocal *= mFlip;
         if (jntOriList.size() >= 1)
             mResult = mScale * mLocal * mBasis * mParInv * jntOriList[0].inverse();
         else
@@ -360,14 +376,20 @@ MStatus IKVChainSolver::compute(const MPlug& plug, MDataBlock& dataBlock){
             mResult = mScale * mLocal * jntOriList[1].inverse();
         else
             mResult = mScale * mLocal;
-        mResult[3][0] = length1;
+        if (flip)
+            mResult[3][0] = -length1;
+        else
+            mResult[3][0] = length1;
         srtList.push_back(mResult);
         mLocal = MMatrix();
         mLocal[0][0] = alphaCos;
         mLocal[0][1] = alphaSin;
         mLocal[1][0] = -alphaSin;
         mLocal[1][1] = alphaCos;
-        mLocal[3][0] = length2;
+        if (flip)
+            mLocal[3][0] = -length2;
+        else
+            mLocal[3][0] = length2;
         srtList.push_back(mLocal);
     }
     else{

@@ -131,6 +131,7 @@ class IKVChainSolver(om2.MPxNode):
     inClampStretch = om2.MObject()
     inClampValue = om2.MObject()
     inSquash = om2.MObject()
+    inFlipOri = om2.MObject()
     outChain = om2.MObject()
 
     def __init__(self):
@@ -236,6 +237,9 @@ class IKVChainSolver(om2.MPxNode):
         nAttr.setMax(1.0)
         INPUT_ATTR(nAttr)
 
+        IKVChainSolver.inFlipOri = nAttr.create("flipOrientation", "flip", om2.MFnNumericData.kBoolean, False)
+        INPUT_ATTR(nAttr)
+
         IKVChainSolver.outChain = mAttr.create("outChain", "oc", om2.MFnMatrixAttribute.kDouble)
         mAttr.array = True
         OUTPUT_ATTR(mAttr)
@@ -259,6 +263,7 @@ class IKVChainSolver(om2.MPxNode):
         IKVChainSolver.addAttribute(IKVChainSolver.inClampStretch)
         IKVChainSolver.addAttribute(IKVChainSolver.inClampValue)
         IKVChainSolver.addAttribute(IKVChainSolver.inSquash)
+        IKVChainSolver.addAttribute(IKVChainSolver.inFlipOri)
         IKVChainSolver.addAttribute(IKVChainSolver.outChain)
         IKVChainSolver.attributeAffects(IKVChainSolver.inRoot, IKVChainSolver.outChain)
         IKVChainSolver.attributeAffects(IKVChainSolver.inHandle, IKVChainSolver.outChain)
@@ -279,6 +284,7 @@ class IKVChainSolver(om2.MPxNode):
         IKVChainSolver.attributeAffects(IKVChainSolver.inClampStretch, IKVChainSolver.outChain)
         IKVChainSolver.attributeAffects(IKVChainSolver.inClampValue, IKVChainSolver.outChain)
         IKVChainSolver.attributeAffects(IKVChainSolver.inSquash, IKVChainSolver.outChain)
+        IKVChainSolver.attributeAffects(IKVChainSolver.inFlipOri, IKVChainSolver.outChain)
 
     def compute(self, plug, dataBlock):
         """
@@ -299,6 +305,7 @@ class IKVChainSolver(om2.MPxNode):
         mSnap = dataBlock.inputValue(IKVChainSolver.inSnapObj).asMatrix()
         prefAngle = dataBlock.inputValue(IKVChainSolver.inPreferredAngle).asAngle().asRadians()
         twist = dataBlock.inputValue(IKVChainSolver.inTwist).asAngle().asRadians()
+        flip = dataBlock.inputValue(IKVChainSolver.inFlipOri).asBool()
         vRoot = om2.MVector(mRoot[12], mRoot[13], mRoot[14])
         vHandle = om2.MVector(mHandle[12], mHandle[13], mHandle[14])
         vUpVector = om2.MVector(mUpVector[12], mUpVector[13], mUpVector[14])
@@ -399,6 +406,10 @@ class IKVChainSolver(om2.MPxNode):
         srtList = []
         jntOriList = []
         jntOriHandle = dataBlock.inputArrayValue(IKVChainSolver.inJointOrient)
+        if flip:
+            mtxFn = om2.MTransformationMatrix()
+            mtxFn.rotateBy(om2.MEulerRotation(0.0, 0.0, -math.pi), om2.MSpace.kTransform)
+            mFlip = mtxFn.asMatrix()
         for i in range(len(jntOriHandle)):
             jntOriHandle.jumpToLogicalElement(i)
             eOri = om2.MEulerRotation(jntOriHandle.inputValue().asDouble3())
@@ -417,6 +428,8 @@ class IKVChainSolver(om2.MPxNode):
             mLocal[1] = betaSin
             mLocal[4] = -betaSin
             mLocal[5] = betaCos
+            if flip:
+                mLocal *= mFlip
             if len(jntOriList) >= 1:
                 mResult = mScale * mLocal * mBasis * mParInv * jntOriList[0].inverse()
             else:
@@ -431,14 +444,20 @@ class IKVChainSolver(om2.MPxNode):
                 mResult = mScale * mLocal * jntOriList[1].inverse()
             else:
                 mResult = mScale * mLocal
-            mResult[12] = length1
+            if flip:
+                mResult[12] = -length1
+            else:
+                mResult[12] = length1
             srtList.append(mResult)
             mLocal = om2.MMatrix()
             mLocal[0] = alphaCos
             mLocal[1] = alphaSin
             mLocal[4] = -alphaSin
             mLocal[5] = alphaCos
-            mLocal[12] = length2
+            if flip:
+                mLocal[12] = -length2
+            else:
+                mLocal[12] = length2
             srtList.append(mLocal)
         else:
             mScale = om2.MMatrix()

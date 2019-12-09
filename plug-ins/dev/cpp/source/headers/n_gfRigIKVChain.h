@@ -132,5 +132,6 @@ public:
     static MObject                      inClampStretch;
     static MObject                      inClampValue;
     static MObject                      inSquash;
+    static MObject                      inFlipOri;
     static MObject                      outChain;
 };
