@@ -82,6 +82,8 @@ import n_gfRigPSDVectorAngle as n_VectorAnglePSD
 import n_gfRigIKVChain as n_IKVChainSolver
 import n_gfRigHelperJoint as n_HelperJoint
 import n_gfRigDistributeAlongSurface as n_DistributeAlongSurface
+import n_gfRigTwistExtractor as n_TwistExtractor
+import n_gfRigQuadraticCurve as n_QuadraticCurve
 # gfUtil
 import n_gfUtilBlendTransform as n_BlendTransform
 import n_gfUtilAimConstraint as n_AimConstraint
@@ -106,6 +108,8 @@ reload(n_VectorAnglePSD)
 reload(n_IKVChainSolver)
 reload(n_HelperJoint)
 reload(n_DistributeAlongSurface)
+reload(n_TwistExtractor)
+reload(n_QuadraticCurve)
 # gfUtil
 reload(n_BlendTransform)
 reload(n_AimConstraint)
@@ -206,50 +210,55 @@ n_IKVChainSolver.IKVChainSolver.kNodeID = om2.MTypeId(0x0012f7c3)
 n_HelperJoint.HelperJoint.kNodeName = "gfHelperJoint_P"
 n_HelperJoint.HelperJoint.kNodeClassify = "utility/general"
 n_HelperJoint.HelperJoint.kNodeID = om2.MTypeId(0x0012f7c4)
-n_DistributeAlongSurface.DistributeAlongSurface.kNodeName = "gfDistributeAlongSurface_P"
-# n_DistributeAlongSurface.DistributeAlongSurface.kNodeName = "gfSurfaceDistribute_P"
+n_DistributeAlongSurface.DistributeAlongSurface.kNodeName = "gfDistributeAlongSurface_P" # gfSurfaceDistribute_P
 n_DistributeAlongSurface.DistributeAlongSurface.kNodeClassify = "utility/general"
 n_DistributeAlongSurface.DistributeAlongSurface.kNodeID = om2.MTypeId(0x0012f7c5)
+n_TwistExtractor.TwistExtractor.kNodeName = "gfTwistExtractor_P"
+n_TwistExtractor.TwistExtractor.kNodeClassify = "utility/general"
+n_TwistExtractor.TwistExtractor.kNodeID = om2.MTypeId(0x0012f7c6)
+n_QuadraticCurve.QuadraticCurve.kNodeName = "gfQuadraticCurve_P"
+n_QuadraticCurve.QuadraticCurve.kNodeClassify = "utility/general"
+n_QuadraticCurve.QuadraticCurve.kNodeID = om2.MTypeId(0x0012f7c7)
 # gfUtil
 n_BlendTransform.BlendTransform.kNodeName = "gfBlendTransforn_P"
 n_BlendTransform.BlendTransform.kNodeClassify = "utility/general"
-n_BlendTransform.BlendTransform.kNodeID = om2.MTypeId(0x0012f7c6)
+n_BlendTransform.BlendTransform.kNodeID = om2.MTypeId(0x0012f7c8)
 n_AimConstraint.AimConstraint.kNodeName = "gfAimConstraint_P"
 n_AimConstraint.AimConstraint.kNodeClassify = "utility/general"
-n_AimConstraint.AimConstraint.kNodeID = om2.MTypeId(0x0012f7c7)
+n_AimConstraint.AimConstraint.kNodeID = om2.MTypeId(0x0012f7c9)
 n_ParentConstraint.ParentConstraint.kNodeName = "gfParentConstraint_P"
 n_ParentConstraint.ParentConstraint.kNodeClassify = "utility/general"
-n_ParentConstraint.ParentConstraint.kNodeID = om2.MTypeId(0x0012f7c8)
+n_ParentConstraint.ParentConstraint.kNodeID = om2.MTypeId(0x0012f7ca)
 n_AngularMath.AngularMath.kNodeName = "gfAngleMath_P"
 n_AngularMath.AngularMath.kNodeClassify = "utility/general"
-n_AngularMath.AngularMath.kNodeID = om2.MTypeId(0x0012f7c9)
+n_AngularMath.AngularMath.kNodeID = om2.MTypeId(0x0012f7cb)
 n_AngularScalarMath.AngularScalarMath.kNodeName = "gfAngleScalarMath_P"
 n_AngularScalarMath.AngularScalarMath.kNodeClassify = "utility/general"
-n_AngularScalarMath.AngularScalarMath.kNodeID = om2.MTypeId(0x0012f7ca)
+n_AngularScalarMath.AngularScalarMath.kNodeID = om2.MTypeId(0x0012f7cc)
 n_AngularTrigMath.AngularTrigMath.kNodeName = "gfAngleTrigMath_P"
 n_AngularTrigMath.AngularTrigMath.kNodeClassify = "utility/general"
-n_AngularTrigMath.AngularTrigMath.kNodeID = om2.MTypeId(0x0012f7cb)
+n_AngularTrigMath.AngularTrigMath.kNodeID = om2.MTypeId(0x0012f7cd)
 n_AngleToDouble.AngleToDouble.kNodeName = "gfAngleToDouble_P"
 n_AngleToDouble.AngleToDouble.kNodeClassify = "utility/general"
-n_AngleToDouble.AngleToDouble.kNodeID = om2.MTypeId(0x0012f7cc)
+n_AngleToDouble.AngleToDouble.kNodeID = om2.MTypeId(0x0012f7ce)
 n_DoubleToAngle.DoubleToAngle.kNodeName = "gfDoubleToAngle_P"
 n_DoubleToAngle.DoubleToAngle.kNodeClassify = "utility/general"
-n_DoubleToAngle.DoubleToAngle.kNodeID = om2.MTypeId(0x0012f7cd)
+n_DoubleToAngle.DoubleToAngle.kNodeID = om2.MTypeId(0x0012f7cf)
 n_EulerMath.EulerMath.kNodeName = "gfEulerMath_P"
 n_EulerMath.EulerMath.kNodeClassify = "utility/general"
-n_EulerMath.EulerMath.kNodeID = om2.MTypeId(0x0012f7ce)
+n_EulerMath.EulerMath.kNodeID = om2.MTypeId(0x0012f7d0)
 n_EulerScalarMath.EulerScalarMath.kNodeName = "gfEulerScalarMath_P"
 n_EulerScalarMath.EulerScalarMath.kNodeClassify = "utility/general"
-n_EulerScalarMath.EulerScalarMath.kNodeID = om2.MTypeId(0x0012f7cf)
+n_EulerScalarMath.EulerScalarMath.kNodeID = om2.MTypeId(0x0012f7d1)
 n_EulerToVector.EulerToVector.kNodeName = "gfEulerToVector_P"
 n_EulerToVector.EulerToVector.kNodeClassify = "utility/general"
-n_EulerToVector.EulerToVector.kNodeID = om2.MTypeId(0x0012f7d0)
+n_EulerToVector.EulerToVector.kNodeID = om2.MTypeId(0x0012f7d2)
 n_VectorToEuler.VectorToEuler.kNodeName = "gfVectorToEuler_P"
 n_VectorToEuler.VectorToEuler.kNodeClassify = "utility/general"
-n_VectorToEuler.VectorToEuler.kNodeID = om2.MTypeId(0x0012f7d1)
+n_VectorToEuler.VectorToEuler.kNodeID = om2.MTypeId(0x0012f7d3)
 n_DecomposeRowMatrix.DecomposeRowMatrix.kNodeName = "gfDecompRowMtx_P"
 n_DecomposeRowMatrix.DecomposeRowMatrix.kNodeClassify = "utility/general"
-n_DecomposeRowMatrix.DecomposeRowMatrix.kNodeID = om2.MTypeId(0x0012f7d2)
+n_DecomposeRowMatrix.DecomposeRowMatrix.kNodeID = om2.MTypeId(0x0012f7d4)
 
 
 def initializePlugin(mobject):
@@ -262,6 +271,8 @@ def initializePlugin(mobject):
     REGISTER_NODE(n_IKVChainSolver.IKVChainSolver, mplugin2)
     REGISTER_NODE(n_HelperJoint.HelperJoint, mplugin2)
     REGISTER_NODE(n_DistributeAlongSurface.DistributeAlongSurface, mplugin2)
+    REGISTER_NODE(n_TwistExtractor.TwistExtractor, mplugin2)
+    REGISTER_NODE(n_QuadraticCurve.QuadraticCurve, mplugin2)
     REGISTER_NODE(n_BlendTransform.BlendTransform, mplugin2)
     REGISTER_NODE(n_AimConstraint.AimConstraint, mplugin2)
     REGISTER_NODE(n_ParentConstraint.ParentConstraint, mplugin2)
@@ -288,6 +299,8 @@ def uninitializePlugin(mobject):
     DEREGISTER_NODE(n_IKVChainSolver.IKVChainSolver, mplugin2)
     DEREGISTER_NODE(n_HelperJoint.HelperJoint, mplugin2)
     DEREGISTER_NODE(n_DistributeAlongSurface.DistributeAlongSurface, mplugin2)
+    DEREGISTER_NODE(n_TwistExtractor.TwistExtractor, mplugin2)
+    DEREGISTER_NODE(n_QuadraticCurve.QuadraticCurve, mplugin2)
     DEREGISTER_NODE(n_BlendTransform.BlendTransform, mplugin2)
     DEREGISTER_NODE(n_AimConstraint.AimConstraint, mplugin2)
     DEREGISTER_NODE(n_ParentConstraint.ParentConstraint, mplugin2)
