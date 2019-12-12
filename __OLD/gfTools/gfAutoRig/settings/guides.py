@@ -3,9 +3,9 @@ import maya.OpenMaya as om
 import maya.OpenMayaRender as omr
 from functools import partial
 
-from gfTools.gfAutoRig.settings import controls as ctrls
-from gfTools.gfAutoRig.components import humanLegs as HLegs
-from gfTools.gfAutoRig.components import humanArms as HArms
+from gfTools.__OLD.gfTools.gfAutoRig.settings import controls as ctrls
+from gfTools.__OLD.gfTools.gfAutoRig.components import humanLegs as HLegs
+from gfTools.__OLD.gfTools.gfAutoRig.components import humanArms as HArms
 reload(ctrls); reload(HLegs); reload(HArms)
 
 

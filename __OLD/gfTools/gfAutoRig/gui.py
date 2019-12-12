@@ -5,10 +5,10 @@ from functools import partial
 import os
 
 
-from gfTools.gfAutoRig.settings import log
-from gfTools.gfAutoRig.settings import guides
-from gfTools.gfAutoRig.settings.uiConfig import masterUIConfig
-from gfTools.gfAutoRig.settings import buildRig as rig
+from gfTools.__OLD.gfTools.gfAutoRig.settings import log
+from gfTools.__OLD.gfTools.gfAutoRig.settings import guides
+from gfTools.__OLD.gfTools.gfAutoRig.settings.uiConfig import masterUIConfig
+from gfTools.__OLD.gfTools.gfAutoRig.settings import buildRig as rig
 reload(log)
 reload(guides)
 reload(masterUIConfig)

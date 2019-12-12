@@ -3,8 +3,8 @@ import maya.mel as mel
 from functools import partial
 
 
-from gfTools.gfAutoRig.settings import guides
-from gfTools.gfAutoRig.settings import log
+from gfTools.__OLD.gfTools.gfAutoRig.settings import guides
+from gfTools.__OLD.gfTools.gfAutoRig.settings import log
 reload(guides); reload(log)
 
 

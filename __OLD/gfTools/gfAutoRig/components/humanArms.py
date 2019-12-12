@@ -4,8 +4,8 @@ import maya.mel as mel
 import maya.OpenMaya as om
 
 
-from gfTools.gfAutoRig.settings import log
-from gfTools.gfAutoRig.settings import controls as ctrl
+from gfTools.__OLD.gfTools.gfAutoRig.settings import log
+from gfTools.__OLD.gfTools.gfAutoRig.settings import controls as ctrl
 reload(log); reload(ctrl)
 
 

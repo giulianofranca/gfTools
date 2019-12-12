@@ -3,12 +3,12 @@ import maya.mel as mel
 from functools import partial
 
 
-from gfTools.gfAutoRig.settings import guides
-from gfTools.gfAutoRig.settings import log
-from gfTools.gfAutoRig.settings.uiConfig import HSpineUIConfig as HSpineUI
-from gfTools.gfAutoRig.settings.uiConfig import HLegsUIConfig as HLegsUI
-from gfTools.gfAutoRig.settings.uiConfig import HArmsUIConfig as HArmsUI
-from gfTools.gfAutoRig.settings.uiConfig import HHeadsUIConfig as HHeadsUI
+from gfTools.__OLD.gfTools.gfAutoRig.settings import guides
+from gfTools.__OLD.gfTools.gfAutoRig.settings import log
+from gfTools.__OLD.gfTools.gfAutoRig.settings.uiConfig import HSpineUIConfig as HSpineUI
+from gfTools.__OLD.gfTools.gfAutoRig.settings.uiConfig import HLegsUIConfig as HLegsUI
+from gfTools.__OLD.gfTools.gfAutoRig.settings.uiConfig import HArmsUIConfig as HArmsUI
+from gfTools.__OLD.gfTools.gfAutoRig.settings.uiConfig import HHeadsUIConfig as HHeadsUI
 reload(guides); reload(log); reload(HLegsUI); reload(HArmsUI); reload(HSpineUI); reload(HHeadsUI)
 
 

@@ -3,13 +3,13 @@ import maya.mel as mel
 from functools import partial
 
 
-from gfTools.gfAutoRig.settings import log
-from gfTools.gfAutoRig.settings.uiConfig import masterUIConfig
-from gfTools.gfAutoRig.components import humanLegs as HLegs
-from gfTools.gfAutoRig.components import humanArms as HArms
-from gfTools.gfAutoRig.components import humanSpine as HSpine
-from gfTools.gfAutoRig.components import humanHeads as HHeads
-from gfTools.gfAutoRig.settings import controls as ctrl
+from gfTools.__OLD.gfTools.gfAutoRig.settings import log
+from gfTools.__OLD.gfTools.gfAutoRig.settings.uiConfig import masterUIConfig
+from gfTools.__OLD.gfTools.gfAutoRig.components import humanLegs as HLegs
+from gfTools.__OLD.gfTools.gfAutoRig.components import humanArms as HArms
+from gfTools.__OLD.gfTools.gfAutoRig.components import humanSpine as HSpine
+from gfTools.__OLD.gfTools.gfAutoRig.components import humanHeads as HHeads
+from gfTools.__OLD.gfTools.gfAutoRig.settings import controls as ctrl
 reload(log); reload(masterUIConfig); reload(HLegs); reload(HSpine); reload(HHeads); reload(ctrl)
 
 
