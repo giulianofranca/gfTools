@@ -57,6 +57,10 @@ Todo:
 
 Sources:
     * NDA
+    # spans = numCVs - degree. (3 - 2 = 1)
+    # knots = spans + 2 * degree - 1. (1 + 4 - 1 = 4)
+    # degree = N
+    # numSpans = M
 
 This code supports Pylint. Rc file in project.
 """
@@ -101,6 +105,7 @@ class QuadraticCurve(om2.MPxNode):
     inEndUpObj = om2.MObject()
     inLockLength = om2.MObject()
     inRestLength = om2.MObject()
+    inSlide = om2.MObject()
     inPreferredAngle = om2.MObject()
     outTransforms = om2.MObject()
     outCurve = om2.MObject()
@@ -148,6 +153,11 @@ class QuadraticCurve(om2.MPxNode):
         nAttr.setMin(0.0)
         INPUT_ATTR(nAttr)
 
+        QuadraticCurve.inSlide = nAttr.create("slide", "slide", om2.MFnNumericData.kFloat, 0.0)
+        nAttr.setMin(0.0)
+        nAttr.setMax(1.0)
+        INPUT_ATTR(nAttr)
+
         QuadraticCurve.inPreferredAngle = uAttr.create("preferredAngle", "pangle", om2.MFnUnitAttribute.kAngle)
         uAttr.setMin(0.0)
         uAttr.setMax(om2.MAngle(360.0, om2.MAngle.kDegrees).asRadians())
@@ -166,6 +176,7 @@ class QuadraticCurve(om2.MPxNode):
         QuadraticCurve.addAttribute(QuadraticCurve.inEndUpObj)
         QuadraticCurve.addAttribute(QuadraticCurve.inLockLength)
         QuadraticCurve.addAttribute(QuadraticCurve.inRestLength)
+        QuadraticCurve.addAttribute(QuadraticCurve.inSlide)
         QuadraticCurve.addAttribute(QuadraticCurve.inPreferredAngle)
         QuadraticCurve.addAttribute(QuadraticCurve.outTransforms)
         QuadraticCurve.addAttribute(QuadraticCurve.outCurve)
@@ -176,6 +187,7 @@ class QuadraticCurve(om2.MPxNode):
         QuadraticCurve.attributeAffects(QuadraticCurve.inEndUpObj, QuadraticCurve.outTransforms)
         QuadraticCurve.attributeAffects(QuadraticCurve.inLockLength, QuadraticCurve.outTransforms)
         QuadraticCurve.attributeAffects(QuadraticCurve.inRestLength, QuadraticCurve.outTransforms)
+        QuadraticCurve.attributeAffects(QuadraticCurve.inSlide, QuadraticCurve.outTransforms)
         QuadraticCurve.attributeAffects(QuadraticCurve.inPreferredAngle, QuadraticCurve.outTransforms)
 
     def compute(self, plug, dataBlock):
@@ -188,16 +200,15 @@ class QuadraticCurve(om2.MPxNode):
         ctrlPntsHandle = dataBlock.inputArrayValue(QuadraticCurve.inControlPoints)
         ctrlPnts = om2.MPointArray()
 
+        if len(ctrlPntsHandle) < 3:
+            return
+
         for i in range(3):
             ctrlPntsHandle.jumpToLogicalElement(i)
             mCtrlPnt = ctrlPntsHandle.inputValue().asMatrix()
             ctrlPnt = om2.MPoint(mCtrlPnt[12], mCtrlPnt[13], mCtrlPnt[14])
             ctrlPnts.append(ctrlPnt)
 
-        # spans = numCVs - degree. (3 - 2 = 1)
-        # knots = spans + 2 * degree - 1. (1 + 4 - 1 = 4)
-        # degree = N
-        # numSpans = M
         crvKnots = om2.MDoubleArray([0, 0, 1, 1])
         crvDegree = 2
         crvForm = om2.MFnNurbsCurve.kOpen
@@ -218,13 +229,16 @@ class QuadraticCurve(om2.MPxNode):
             outTransHandle = dataBlock.outputArrayValue(QuadraticCurve.outTransforms)
             lockLength = dataBlock.inputValue(QuadraticCurve.inLockLength).asFloat()
             restLength = dataBlock.inputValue(QuadraticCurve.inRestLength).asFloat()
-            crvLength = crvFn.length()
+            slide = dataBlock.inputValue(QuadraticCurve.inSlide).asFloat()
             numOutputs = len(outTransHandle)
+            crvLength = crvFn.length()
+            parRejected = crvFn.findParamFromLength(crvLength - restLength)
             stepFull = 1.0 / (numOutputs - 1) if numOutputs > 1 else 0.0
-            stepLock = (min(restLength, crvLength) / crvLength) / (numOutputs - 1) if numOutputs > 1 else 0.0
+            stepLock = crvFn.findParamFromLength(restLength) / (numOutputs - 1) if numOutputs > 1 else 0.0
             step = (1.0 - lockLength) * stepFull + lockLength * stepLock
+            parSlide = parRejected * slide * lockLength
             for i in range(numOutputs):
-                parameter = step * i
+                parameter = (step * i)# + parSlide
                 pos = crvFn.getPointAtParam(parameter, om2.MSpace.kObject)
                 vPos = om2.MVector(pos.x, pos.y, pos.z)
                 mtx = [
@@ -238,6 +252,17 @@ class QuadraticCurve(om2.MPxNode):
                 resultHandle = outTransHandle.outputValue()
                 resultHandle.setMMatrix(mOut)
             outTransHandle.setAllClean()
+
+        else:
+            return om2.kUnknownParameter
+
+
+
+
+
+
+
+
             # prefAngle = dataBlock.inputValue(QuadraticCurve.inPreferredAngle).asAngle().asRadians()
             # enableTwist = dataBlock.inputValue(QuadraticCurve.inEnableTwist).asBool()
             # mStartUp = dataBlock.inputValue(QuadraticCurve.inStartUpObj).asMatrix()
