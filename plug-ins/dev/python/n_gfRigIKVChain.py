@@ -112,18 +112,19 @@ class IKVChainSolver(om2.MPxNode):
     kNodeClassify = ""
     kNodeID = ""
 
-    inRoot = om2.MObject()
-    inHandle = om2.MObject()
-    inUpVector = om2.MObject()
-    inParInvMtx = om2.MObject()
-    inJointOrient = om2.MObject()
+    inRoot = om2.MObject() #
+    inHandle = om2.MObject() #
+    inUpVector = om2.MObject() #
+    inParInvMtx = om2.MObject() #
+    inJointOrient = om2.MObject() #
+    inOffset = om2.MObject()
     inPreferredAngle = om2.MObject()
     inPvMode = om2.MObject()
     inTwist = om2.MObject()
     inHierarchyMode = om2.MObject()
-    inRestLength1 = om2.MObject()
-    inRestLength2 = om2.MObject()
-    inCompressionLimit = om2.MObject()
+    inRestLength1 = om2.MObject() #
+    inRestLength2 = om2.MObject() #
+    inCompressionLimit = om2.MObject() #
     inSoftness = om2.MObject()
     inSnapUpVector = om2.MObject()
     inSnapObj = om2.MObject()
@@ -173,6 +174,10 @@ class IKVChainSolver(om2.MPxNode):
         IKVChainSolver.inJointOrient = nAttr.create("jointOrient", "jo", jntOriX, jntOriY, jntOriZ)
         nAttr.array = True
         INPUT_ATTR(nAttr)
+
+        IKVChainSolver.inOffset = mAttr.create("offset", "offset", om2.MFnMatrixAttribute.kDouble)
+        mAttr.array = True
+        INPUT_ATTR(mAttr)
 
         IKVChainSolver.inPreferredAngle = uAttr.create("preferredAngle", "pa", om2.MFnUnitAttribute.kAngle, 0.0)
         uAttr.setMin(0.0)
@@ -249,6 +254,7 @@ class IKVChainSolver(om2.MPxNode):
         IKVChainSolver.addAttribute(IKVChainSolver.inUpVector)
         IKVChainSolver.addAttribute(IKVChainSolver.inParInvMtx)
         IKVChainSolver.addAttribute(IKVChainSolver.inJointOrient)
+        IKVChainSolver.addAttribute(IKVChainSolver.inOffset)
         IKVChainSolver.addAttribute(IKVChainSolver.inPreferredAngle)
         IKVChainSolver.addAttribute(IKVChainSolver.inPvMode)
         IKVChainSolver.addAttribute(IKVChainSolver.inTwist)
@@ -270,6 +276,7 @@ class IKVChainSolver(om2.MPxNode):
         IKVChainSolver.attributeAffects(IKVChainSolver.inUpVector, IKVChainSolver.outChain)
         IKVChainSolver.attributeAffects(IKVChainSolver.inParInvMtx, IKVChainSolver.outChain)
         IKVChainSolver.attributeAffects(IKVChainSolver.inJointOrient, IKVChainSolver.outChain)
+        IKVChainSolver.attributeAffects(IKVChainSolver.inOffset, IKVChainSolver.outChain)
         IKVChainSolver.attributeAffects(IKVChainSolver.inPreferredAngle, IKVChainSolver.outChain)
         IKVChainSolver.attributeAffects(IKVChainSolver.inPvMode, IKVChainSolver.outChain)
         IKVChainSolver.attributeAffects(IKVChainSolver.inTwist, IKVChainSolver.outChain)
@@ -292,7 +299,6 @@ class IKVChainSolver(om2.MPxNode):
             * plug is a connection point related to one of our node attributes (either an input or an output).
             * dataBlock contains the data on which we will base our computations.
         """
-        # pylint: disable=R0201
         if plug != IKVChainSolver.outChain:
             return om2.kUnknownParameter
 
