@@ -24,6 +24,7 @@ kTertiaryControlColor = om2.MColor([1.0, 1.0, 1.0])
 kQuaternaryControlColor = om2.MColor([1.0, 1.0, 1.0])
 kGlobalControlColor = om2.MColor([1.0, 1.0, 1.0])
 
+
 def findUpVectorPosition(const, parent=None, create=False):
     """Find up vector local position based on a object matrix.
 
@@ -1009,3 +1010,101 @@ def findPreferredAngleIK():
 
     theta = math.acos(nWXAxis * nYAxis)
     return theta
+
+def createFK(sections=1, rootList=None, connect=True):
+    """Create a FK Chain with given roots.
+
+    Rotation attributes can be connected automatically with connect argument setted to True.
+
+    Args:
+        sections (int: 1 [Optional]): The number of controls to be created in each segment.
+        rootList (list: None [Optional]): The list of the root objects. If None, the function will get the active selection list.
+        connect (bool: True [Optional]): Auto-connect rotate attributes.
+
+    Returns:
+        True: If succeed.
+
+    Raises:
+        AssertionError: If sections argument is not integer.
+        AssertionError: If sections argument is less than 1.
+    """
+    assert isinstance(sections, int), "Argument sections must be int."
+    assert sections >= 1, "Argument sections must be greater than 1."
+    if not isinstance(rootList, list) or rootList is None:
+        rootList = om2.MGlobal.getActiveSelectionList()
+    else:
+        listObjs = rootList
+        rootList = om2.MSelectionList()
+        for obj in listObjs:
+            rootList.add(obj)
+    objCreator = om2.MFnDagNode()
+    dagMod = om2.MDagModifier()
+    for root in range(rootList.length()):
+        rootPath = rootList.getDagPath(root)
+        rootName = rootPath.partialPathName()
+        itDag = om2.MItDag()
+        itDag.reset(rootPath, om2.MItDag.kDepthFirst)
+        rootGrp = objCreator.create("transform", "%s_ctrlGrp" % rootName)
+        parentDict = dict()
+        while not itDag.isDone():
+            curObjPath = itDag.getPath()
+            if curObjPath.childCount() >= 1:
+                curObjName = curObjPath.partialPathName()
+                curParObjPath = om2.MDagPath.getAPathTo(om2.MFnDagNode(curObjPath).parent(0))
+                curParObjName = curParObjPath.partialPathName()
+                transformation = curObjPath.inclusiveMatrix()
+                # Create objects
+                if sections == 1:
+                    curBuffName = "%s_bufferCtrl" % curObjName
+                    curCtrlName = "%s_ctrl" % curObjName
+                    curBuff = objCreator.create("transform", curBuffName, rootGrp)
+                    ctrl = cmds.circle(c=(0, 0, 0), nr=(1, 0, 0), sw=360, r=4, d=3,
+                                       ut=False, s=8, ch=False)[0]
+                    curCtrl = om2.MSelectionList().add(ctrl).getDependNode(0)
+                    dagMod.reparentNode(curCtrl, curBuff)
+                    dagMod.renameNode(curCtrl, curCtrlName)
+                    dagMod.doIt()
+                    parentDict[curObjName] = {
+                        "Buffer": curBuff,
+                        "Control": curCtrl,
+                        "Transformation": transformation
+                    }
+                # Configure objects
+                curTrans = parentDict[curObjName]["Buffer"]
+                curMtxW = parentDict[curObjName]["Transformation"]
+                curCtrlPath = om2.MDagPath.getAPathTo(curTrans)
+                transFn = om2.MFnTransform(curCtrlPath)
+                if curParObjName != "":
+                    if curParObjName in parentDict.keys():
+                        parent = parentDict[curParObjName]["Control"]
+                        current = parentDict[curObjName]["Buffer"]
+                        dagMod.reparentNode(current, parent)
+                        dagMod.doIt()
+                        parentMtxW = parentDict[curParObjName]["Transformation"]
+                    else:
+                        parentMtxW = om2.MMatrix.kIdentity
+                    curMtx = curMtxW * parentMtxW.inverse()
+                    mtxFn = om2.MTransformationMatrix(curMtx)
+                    objTrans = mtxFn.translation(om2.MSpace.kWorld)
+                    objRot = mtxFn.rotation(asQuaternion=False)
+                    objSca = mtxFn.scale(om2.MSpace.kWorld)
+                    transFn.setTranslation(objTrans, om2.MSpace.kTransform)
+                    transFn.setRotation(objRot, om2.MSpace.kTransform)
+                    transFn.setScale(objSca)
+                else:
+                    mtxFn = om2.MTransformationMatrix(curMtxW)
+                    objTrans = mtxFn.translation(om2.MSpace.kWorld)
+                    objRot = mtxFn.rotation(asQuaternion=False)
+                    objSca = mtxFn.scale(om2.MSpace.kWorld)
+                    transFn.setTranslation(objTrans, om2.MSpace.kTransform)
+                    transFn.setRotation(objRot, om2.MSpace.kTransform)
+                    transFn.setScale(objSca)
+                if connect:
+                    dagFn = om2.MFnDagNode(curObjPath)
+                    targetRotPlug = dagFn.findPlug("rotate", False)
+                    nodeFn = om2.MFnDependencyNode(parentDict[curObjName]["Control"])
+                    sourceRotPlug = nodeFn.findPlug("rotate", False)
+                    dagMod.connect(sourceRotPlug, targetRotPlug)
+                    dagMod.doIt()
+            itDag.next()
+    return True
