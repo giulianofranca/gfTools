@@ -57,14 +57,17 @@ class HelperJoint(om2.MPxNode):
     kNodeClassify = ""
     kNodeID = ""
 
-    inSourceMtx1 = om2.MObject()            # Shin
-    inSourceMtx2 = om2.MObject()            # Thigh
-    inSource1Offset = om2.MObject()         # Jnt to Shin offset
-    inSource2Offset = om2.MObject()         # Jnt to Thigh offset
-    inParentInverseMtx = om2.MObject()      # Parent inverse matrix
-    inPositiveMult = om2.MObject()          # Positive multiplier
-    inNegativeMult = om2.MObject()          # Negative multiplier
-    outMtx = om2.MObject()                  # The result joint matrix in worldSpace
+    inSource = om2.MObject()                # Source object
+    inSourceParent = om2.MObject()          # Parent of source object
+    inParInvMtx = om2.MObject()             # The world inverse matrix of the parent of the target obj
+    inPositionOffset = om2.MObject()        # The position offset of target object
+    inRotationOffset = om2.MObject()        # The rotation offset of target object
+    inRotAngle = om2.MObject()              # The angle of rotation to evaluate
+    inRestAngle = om2.MObject()             # The rest angle of rotation
+    inPosMult = om2.MObject()               # The positive angle multiplier of target
+    inNegMult = om2.MObject()               # The negative angle multiplier of target
+    inTargetList = om2.MObject()            # Compound attribute for all target attributes
+    outTransform = om2.MObject()            # The result matrix for the target
 
     def __init__(self):
         """ Constructor. """
@@ -84,48 +87,66 @@ class HelperJoint(om2.MPxNode):
         """
         nAttr = om2.MFnNumericAttribute()
         mAttr = om2.MFnMatrixAttribute()
+        uAttr = om2.MFnUnitAttribute()
+        cAttr = om2.MFnCompoundAttribute()
 
-        HelperJoint.inSourceMtx1 = mAttr.create("sourceMtx1", "smtx1", om2.MFnMatrixAttribute.kDouble)
+        HelperJoint.inSource = mAttr.create("source", "source", om2.MFnMatrixAttribute.kDouble)
         INPUT_ATTR(mAttr)
 
-        HelperJoint.inSourceMtx2 = mAttr.create("sourceMtx2", "smtx2", om2.MFnMatrixAttribute.kDouble)
+        HelperJoint.inSourceParent = mAttr.create("sourceParent", "sourceparent", om2.MFnMatrixAttribute.kDouble)
         INPUT_ATTR(mAttr)
 
-        HelperJoint.inSource1Offset = mAttr.create("sourceOffset1", "so1", om2.MFnMatrixAttribute.kDouble)
+        HelperJoint.inParInvMtx = mAttr.create("parentInverseMatrix", "pimtx", om2.MFnMatrixAttribute.kDouble)
         INPUT_ATTR(mAttr)
 
-        HelperJoint.inSource2Offset = mAttr.create("sourceOffset2", "so2", om2.MFnMatrixAttribute.kDouble)
-        INPUT_ATTR(mAttr)
-
-        HelperJoint.inParentInverseMtx = mAttr.create("parentInverseMatrix", "pim", om2.MFnMatrixAttribute.kDouble)
-        INPUT_ATTR(mAttr)
-
-        HelperJoint.inPositiveMult = nAttr.create("positiveMultiplier", "posm", om2.MFnNumericData.kFloat, 1.0)
-        nAttr.setMin(0.0)
+        HelperJoint.inPositionOffset = nAttr.createPoint("positionOffset", "posoff")
         INPUT_ATTR(nAttr)
 
-        HelperJoint.inNegativeMult = nAttr.create("negativeMultiplier", "negm", om2.MFnNumericData.kFloat, 1.0)
-        nAttr.setMin(0.0)
+        rotOffX = uAttr.create("rotationOffsetX", "rotoffx", om2.MFnUnitAttribute.kAngle, 0.0)
+        rotOffY = uAttr.create("rotationOffsetY", "rotoffy", om2.MFnUnitAttribute.kAngle, 0.0)
+        rotOffZ = uAttr.create("rotationOffsetZ", "rotoffz", om2.MFnUnitAttribute.kAngle, 0.0)
+        HelperJoint.inRotationOffset = nAttr.create("rotationOffset", "rotoff", rotOffX, rotOffY, rotOffZ)
         INPUT_ATTR(nAttr)
 
-        HelperJoint.outMtx = mAttr.create("outMatrix", "omtx", om2.MFnMatrixAttribute.kDouble)
+        HelperJoint.inRotAngle = uAttr.create("rotationAngle", "rotangle", om2.MFnUnitAttribute.kAngle, 0.0)
+        INPUT_ATTR(uAttr)
+
+        HelperJoint.inRestAngle = uAttr.create("restAngle", "rang", om2.MFnUnitAttribute.kAngle, 0.0)
+        INPUT_ATTR(uAttr)
+
+        HelperJoint.inPosMult = nAttr.create("positiveMultiplier", "posmult", om2.MFnNumericData.kFloat, 0.0)
+        INPUT_ATTR(nAttr)
+
+        HelperJoint.inNegMult = nAttr.create("negativeMultiplier", "negmult", om2.MFnNumericData.kFloat, 0.0)
+        INPUT_ATTR(nAttr)
+
+        HelperJoint.inTargetList = cAttr.create("targetList", "tgtl")
+        cAttr.addChild(HelperJoint.inPositionOffset)
+        cAttr.addChild(HelperJoint.inRotationOffset)
+        cAttr.addChild(HelperJoint.inRotAngle)
+        cAttr.addChild(HelperJoint.inRestAngle)
+        cAttr.addChild(HelperJoint.inPosMult)
+        cAttr.addChild(HelperJoint.inNegMult)
+        cAttr.array = True
+
+        HelperJoint.outTransform = mAttr.create("outTransform", "outtrans", om2.MFnMatrixAttribute.kDouble)
+        mAttr.array = True
         OUTPUT_ATTR(mAttr)
 
-        HelperJoint.addAttribute(HelperJoint.inSourceMtx1)
-        HelperJoint.addAttribute(HelperJoint.inSourceMtx2)
-        HelperJoint.addAttribute(HelperJoint.inSource1Offset)
-        HelperJoint.addAttribute(HelperJoint.inSource2Offset)
-        HelperJoint.addAttribute(HelperJoint.inParentInverseMtx)
-        HelperJoint.addAttribute(HelperJoint.inPositiveMult)
-        HelperJoint.addAttribute(HelperJoint.inNegativeMult)
-        HelperJoint.addAttribute(HelperJoint.outMtx)
-        HelperJoint.attributeAffects(HelperJoint.inSourceMtx1, HelperJoint.outMtx)
-        HelperJoint.attributeAffects(HelperJoint.inSourceMtx2, HelperJoint.outMtx)
-        HelperJoint.attributeAffects(HelperJoint.inSource1Offset, HelperJoint.outMtx)
-        HelperJoint.attributeAffects(HelperJoint.inSource2Offset, HelperJoint.outMtx)
-        HelperJoint.attributeAffects(HelperJoint.inParentInverseMtx, HelperJoint.outMtx)
-        HelperJoint.attributeAffects(HelperJoint.inPositiveMult, HelperJoint.outMtx)
-        HelperJoint.attributeAffects(HelperJoint.inNegativeMult, HelperJoint.outMtx)
+        HelperJoint.addAttribute(HelperJoint.inSource)
+        HelperJoint.addAttribute(HelperJoint.inSourceParent)
+        HelperJoint.addAttribute(HelperJoint.inParInvMtx)
+        HelperJoint.addAttribute(HelperJoint.inTargetList)
+        HelperJoint.addAttribute(HelperJoint.outTransform)
+        HelperJoint.attributeAffects(HelperJoint.inSource, HelperJoint.outTransform)
+        HelperJoint.attributeAffects(HelperJoint.inSourceParent, HelperJoint.outTransform)
+        HelperJoint.attributeAffects(HelperJoint.inParInvMtx, HelperJoint.outTransform)
+        HelperJoint.attributeAffects(HelperJoint.inPositionOffset, HelperJoint.outTransform)
+        HelperJoint.attributeAffects(HelperJoint.inRotationOffset, HelperJoint.outTransform)
+        HelperJoint.attributeAffects(HelperJoint.inRotAngle, HelperJoint.outTransform)
+        HelperJoint.attributeAffects(HelperJoint.inRestAngle, HelperJoint.outTransform)
+        HelperJoint.attributeAffects(HelperJoint.inPosMult, HelperJoint.outTransform)
+        HelperJoint.attributeAffects(HelperJoint.inNegMult, HelperJoint.outTransform)
 
     def compute(self, plug, dataBlock):
         """
@@ -134,41 +155,61 @@ class HelperJoint(om2.MPxNode):
             * dataBlock contains the data on which we will base our computations.
         """
         # pylint: disable=no-self-use
-        if plug != HelperJoint.outMtx:
+        if plug != HelperJoint.outTransform:
             return om2.kUnknownParameter
 
-        mSource1 = dataBlock.inputValue(HelperJoint.inSourceMtx1).asMatrix()
-        mSource2 = dataBlock.inputValue(HelperJoint.inSourceMtx2).asMatrix()
-        mSource1Offset = dataBlock.inputValue(HelperJoint.inSource1Offset).asMatrix()
-        mSource2Offset = dataBlock.inputValue(HelperJoint.inSource2Offset).asMatrix()
-        mParentInv = dataBlock.inputValue(HelperJoint.inParentInverseMtx).asMatrix()
-        posMult = dataBlock.inputValue(HelperJoint.inPositiveMult).asFloat()
-        negMult = dataBlock.inputValue(HelperJoint.inNegativeMult).asFloat()
+        # mSource = dataBlock.inputValue(HelperJoint.inSource).asMatrix()
+        # mSourceParent = dataBlock.inputValue(HelperJoint.inSourceParent).asMatrix()
+        mtxFn = om2.MTransformationMatrix(dataBlock.inputValue(HelperJoint.inSource).asMatrix())
+        mtxFn.setScale([1.0, 1.0, 1.0], om2.MSpace.kTransform)
+        mSource = mtxFn.asMatrix()
+        mtxFn = om2.MTransformationMatrix(dataBlock.inputValue(HelperJoint.inSourceParent).asMatrix())
+        mtxFn.setScale([1.0, 1.0, 1.0], om2.MSpace.kTransform)
+        mSourceParent = mtxFn.asMatrix()
+        mParInv = dataBlock.inputValue(HelperJoint.inParInvMtx).asMatrix()
+        targetListHandle = dataBlock.inputArrayValue(HelperJoint.inTargetList)
 
-        mSource1Local = mSource1Offset * mSource1
-        mSource2Local = mSource2Offset * mSource2
+        outputList = []
 
-        mOutT = mSource1Local * mParentInv
-        # mOutR = (((mSource1Offset * mSource1) * 0.5) + ((mSource2Offset * mSource2) * 0.5)) * mParentInv
-        eOri1 = om2.MTransformationMatrix(mSource1Local).rotation(asQuaternion=False)
-        eOri1 *= -0.5
-        eOri2 = om2.MTransformationMatrix(mSource2Local).rotation(asQuaternion=False)
-        eOri2 *= -0.5
-        mSource1LocalOri = om2.MTransformationMatrix(mSource1Local).rotateBy(eOri1, om2.MSpace.kTransform).asMatrix()
-        mSource2LocalOri = om2.MTransformationMatrix(mSource2Local).rotateBy(eOri2, om2.MSpace.kTransform).asMatrix()
-        mOutRLocal = mSource2LocalOri + mSource1LocalOri
-        mOutR = mOutRLocal * mParentInv
-        mtxFn = om2.MTransformationMatrix(mOutR)
-        eRot = mtxFn.rotation(asQuaternion=False)
-        mtxFn = om2.MTransformationMatrix(mOutT)
-        vTrans = mtxFn.translation(om2.MSpace.kWorld)
-        scale = mtxFn.scale(om2.MSpace.kTransform)
-        mtxFn = om2.MTransformationMatrix()
-        mtxFn.scaleBy(scale, om2.MSpace.kTransform)
-        mtxFn.rotateBy(eRot, om2.MSpace.kWorld)
-        mtxFn.translateBy(vTrans, om2.MSpace.kWorld)
-        mOut = mtxFn.asMatrix()
+        for i in range(len(targetListHandle)):
+            targetListHandle.jumpToLogicalElement(i)
+            targetHandle = targetListHandle.inputValue()
+            vPosOffset = om2.MVector(targetHandle.child(HelperJoint.inPositionOffset).asFloat3())
+            eRotOffset = om2.MEulerRotation(targetHandle.child(HelperJoint.inRotationOffset).asDouble3())
+            angle = targetHandle.child(HelperJoint.inRotAngle).asAngle().asRadians()
+            restAngle = targetHandle.child(HelperJoint.inRestAngle).asAngle().asRadians()
+            posMult = targetHandle.child(HelperJoint.inPosMult).asFloat()
+            negMult = targetHandle.child(HelperJoint.inNegMult).asFloat()
 
-        outMtxHandle = dataBlock.outputValue(HelperJoint.outMtx)
-        outMtxHandle.setMMatrix(mOut)
-        outMtxHandle.setClean()
+            mPositionOffset = om2.MMatrix()
+            mPositionOffset[12] = vPosOffset.x
+            mPositionOffset[13] = vPosOffset.y
+            mPositionOffset[14] = vPosOffset.z
+            multTranslation = abs(angle) * posMult
+            if angle < restAngle:
+                multTranslation = abs(angle) * negMult
+            vPosOffset.normalize()
+            mMultiplier = om2.MMatrix()
+            mMultiplier[12] = vPosOffset.x * multTranslation
+            mMultiplier[13] = vPosOffset.y * multTranslation
+            mMultiplier[14] = vPosOffset.z * multTranslation
+            mTargetPoint = mMultiplier * mPositionOffset * mSource
+            mTargetOrient = (mSource * 0.5) + (mSourceParent * 0.5)
+
+            vResultPos = om2.MVector(mTargetPoint[12], mTargetPoint[13], mTargetPoint[14])
+            mtxFn = om2.MTransformationMatrix(mTargetOrient)
+            eResultOri = eRotOffset + mtxFn.rotation(asQuaternion=False)
+            mtxFn = om2.MTransformationMatrix()
+            mtxFn.setRotation(eResultOri)
+            mtxFn.setTranslation(vResultPos, om2.MSpace.kTransform)
+            mResult = mtxFn.asMatrix() * mParInv
+            outputList.append(mResult)
+
+        outTransHandle = dataBlock.outputArrayValue(HelperJoint.outTransform)
+        for i in range(len(outTransHandle)):
+            outTransHandle.jumpToLogicalElement(i)
+            resultHandle = outTransHandle.outputValue()
+            if i < len(outTransHandle) and i < len(outputList):
+                resultHandle.setMMatrix(outputList[i])
+            else:
+                resultHandle.setMMatrix(om2.MMatrix.kIdentity)
