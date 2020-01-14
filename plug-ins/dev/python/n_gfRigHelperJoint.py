@@ -60,6 +60,7 @@ class HelperJoint(om2.MPxNode):
     inSource = om2.MObject()                # Source object
     inSourceParent = om2.MObject()          # Parent of source object
     inParInvMtx = om2.MObject()             # The world inverse matrix of the parent of the target obj
+    inSourceParSca = om2.MObject()          # The scale of the parent of source object
     inPositionOffset = om2.MObject()        # The position offset of target object
     inRotationOffset = om2.MObject()        # The rotation offset of target object
     inRotAngle = om2.MObject()              # The angle of rotation to evaluate
@@ -90,14 +91,18 @@ class HelperJoint(om2.MPxNode):
         uAttr = om2.MFnUnitAttribute()
         cAttr = om2.MFnCompoundAttribute()
 
-        HelperJoint.inSource = mAttr.create("source", "source", om2.MFnMatrixAttribute.kDouble)
+        HelperJoint.inSource = mAttr.create("source", "s", om2.MFnMatrixAttribute.kDouble)
         INPUT_ATTR(mAttr)
 
-        HelperJoint.inSourceParent = mAttr.create("sourceParent", "sourceparent", om2.MFnMatrixAttribute.kDouble)
+        HelperJoint.inSourceParent = mAttr.create("sourceParent", "sp", om2.MFnMatrixAttribute.kDouble)
         INPUT_ATTR(mAttr)
 
-        HelperJoint.inParInvMtx = mAttr.create("parentInverseMatrix", "pimtx", om2.MFnMatrixAttribute.kDouble)
+        HelperJoint.inParInvMtx = mAttr.create("targetParentInverseMatrix", "tpimtx", om2.MFnMatrixAttribute.kDouble)
         INPUT_ATTR(mAttr)
+
+        HelperJoint.inSourceParSca = nAttr.createPoint("sourceParentScale", "spsca")
+        nAttr.default = (1.0, 1.0, 1.0)
+        INPUT_ATTR(nAttr)
 
         HelperJoint.inPositionOffset = nAttr.createPoint("positionOffset", "posoff")
         INPUT_ATTR(nAttr)
@@ -127,6 +132,7 @@ class HelperJoint(om2.MPxNode):
         cAttr.addChild(HelperJoint.inRestAngle)
         cAttr.addChild(HelperJoint.inPosMult)
         cAttr.addChild(HelperJoint.inNegMult)
+        # TODO(rotation interpolation): Rotation interpolation of the weighted add matrix.
         cAttr.array = True
 
         HelperJoint.outTransform = mAttr.create("outTransform", "outtrans", om2.MFnMatrixAttribute.kDouble)
@@ -136,11 +142,13 @@ class HelperJoint(om2.MPxNode):
         HelperJoint.addAttribute(HelperJoint.inSource)
         HelperJoint.addAttribute(HelperJoint.inSourceParent)
         HelperJoint.addAttribute(HelperJoint.inParInvMtx)
+        HelperJoint.addAttribute(HelperJoint.inSourceParSca)
         HelperJoint.addAttribute(HelperJoint.inTargetList)
         HelperJoint.addAttribute(HelperJoint.outTransform)
         HelperJoint.attributeAffects(HelperJoint.inSource, HelperJoint.outTransform)
         HelperJoint.attributeAffects(HelperJoint.inSourceParent, HelperJoint.outTransform)
         HelperJoint.attributeAffects(HelperJoint.inParInvMtx, HelperJoint.outTransform)
+        HelperJoint.attributeAffects(HelperJoint.inSourceParSca, HelperJoint.outTransform)
         HelperJoint.attributeAffects(HelperJoint.inPositionOffset, HelperJoint.outTransform)
         HelperJoint.attributeAffects(HelperJoint.inRotationOffset, HelperJoint.outTransform)
         HelperJoint.attributeAffects(HelperJoint.inRotAngle, HelperJoint.outTransform)
@@ -158,15 +166,17 @@ class HelperJoint(om2.MPxNode):
         if plug != HelperJoint.outTransform:
             return om2.kUnknownParameter
 
-        # mSource = dataBlock.inputValue(HelperJoint.inSource).asMatrix()
-        # mSourceParent = dataBlock.inputValue(HelperJoint.inSourceParent).asMatrix()
-        mtxFn = om2.MTransformationMatrix(dataBlock.inputValue(HelperJoint.inSource).asMatrix())
+        mSource = dataBlock.inputValue(HelperJoint.inSource).asMatrix()
+        mtxFn = om2.MTransformationMatrix(mSource)
         mtxFn.setScale([1.0, 1.0, 1.0], om2.MSpace.kTransform)
         mSource = mtxFn.asMatrix()
-        mtxFn = om2.MTransformationMatrix(dataBlock.inputValue(HelperJoint.inSourceParent).asMatrix())
-        mtxFn.setScale([1.0, 1.0, 1.0], om2.MSpace.kTransform)
-        mSourceParent = mtxFn.asMatrix()
+        mSourceParent = dataBlock.inputValue(HelperJoint.inSourceParent).asMatrix()
+
         mParInv = dataBlock.inputValue(HelperJoint.inParInvMtx).asMatrix()
+        sourceParSca = dataBlock.inputValue(HelperJoint.inSourceParSca).asFloat3()
+        mtxFn = om2.MTransformationMatrix()
+        mtxFn.scaleBy(sourceParSca, om2.MSpace.kTransform)
+        mInvSca = mtxFn.asMatrix()
         targetListHandle = dataBlock.inputArrayValue(HelperJoint.inTargetList)
 
         outputList = []
@@ -194,7 +204,7 @@ class HelperJoint(om2.MPxNode):
             mMultiplier[13] = vPosOffset.y * multTranslation
             mMultiplier[14] = vPosOffset.z * multTranslation
             mTargetPoint = mMultiplier * mPositionOffset * mSource
-            mTargetOrient = (mSource * 0.5) + (mSourceParent * 0.5)
+            mTargetOrient = mInvSca * (mSource * 0.5) + (mSourceParent * 0.5)
 
             vResultPos = om2.MVector(mTargetPoint[12], mTargetPoint[13], mTargetPoint[14])
             mtxFn = om2.MTransformationMatrix(mTargetOrient)
