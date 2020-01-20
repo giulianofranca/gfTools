@@ -13,13 +13,7 @@ Requirements:
     Maya 2017 or above.
 
 Todo:
-    * Get the two sources and their respectives offsets.
-    * Add the two matrices blended.
-    * Multiply by the target parent inverse matrix.
-    * Decompose a euler rotation from this matrix.
-    * Get the main source and the respective offset.
-    * Multiply by the target parent inverse matrix.
-    * Decompose a vector translate from this matrix.
+    * NDA.
 
 This code supports Pylint. Rc file in project.
 """
@@ -57,18 +51,19 @@ class HelperJoint(om2.MPxNode):
     kNodeClassify = ""
     kNodeID = ""
 
-    inSource = om2.MObject()                # Source object
-    inSourceParent = om2.MObject()          # Parent of source object
-    inParInvMtx = om2.MObject()             # The world inverse matrix of the parent of the target obj
-    inSourceParSca = om2.MObject()          # The scale of the parent of source object
-    inPositionOffset = om2.MObject()        # The position offset of target object
-    inRotationOffset = om2.MObject()        # The rotation offset of target object
-    inRotAngle = om2.MObject()              # The angle of rotation to evaluate
-    inRestAngle = om2.MObject()             # The rest angle of rotation
-    inPosMult = om2.MObject()               # The positive angle multiplier of target
-    inNegMult = om2.MObject()               # The negative angle multiplier of target
-    inTargetList = om2.MObject()            # Compound attribute for all target attributes
-    outTransform = om2.MObject()            # The result matrix for the target
+    inSource = om2.MObject()
+    inSourceParent = om2.MObject()
+    inParInvMtx = om2.MObject()
+    inSourceParSca = om2.MObject()
+    inPositionOffset = om2.MObject()
+    inRotationOffset = om2.MObject()
+    inRotAngle = om2.MObject()
+    inRestAngle = om2.MObject()
+    inRotInterp = om2.MObject()
+    inPosMult = om2.MObject()
+    inNegMult = om2.MObject()
+    inTargetList = om2.MObject()
+    outTransform = om2.MObject()
 
     def __init__(self):
         """ Constructor. """
@@ -119,6 +114,11 @@ class HelperJoint(om2.MPxNode):
         HelperJoint.inRestAngle = uAttr.create("restAngle", "rang", om2.MFnUnitAttribute.kAngle, 0.0)
         INPUT_ATTR(uAttr)
 
+        HelperJoint.inRotInterp = nAttr.create("rotationInterpolation", "roti", om2.MFnNumericData.kFloat, 0.5)
+        nAttr.setMin(0.0)
+        nAttr.setMax(1.0)
+        INPUT_ATTR(nAttr)
+
         HelperJoint.inPosMult = nAttr.create("positiveMultiplier", "posmult", om2.MFnNumericData.kFloat, 0.0)
         INPUT_ATTR(nAttr)
 
@@ -130,9 +130,9 @@ class HelperJoint(om2.MPxNode):
         cAttr.addChild(HelperJoint.inRotationOffset)
         cAttr.addChild(HelperJoint.inRotAngle)
         cAttr.addChild(HelperJoint.inRestAngle)
+        cAttr.addChild(HelperJoint.inRotInterp)
         cAttr.addChild(HelperJoint.inPosMult)
         cAttr.addChild(HelperJoint.inNegMult)
-        # TODO(rotation interpolation): Rotation interpolation of the weighted add matrix.
         cAttr.array = True
 
         HelperJoint.outTransform = mAttr.create("outTransform", "outtrans", om2.MFnMatrixAttribute.kDouble)
@@ -153,6 +153,7 @@ class HelperJoint(om2.MPxNode):
         HelperJoint.attributeAffects(HelperJoint.inRotationOffset, HelperJoint.outTransform)
         HelperJoint.attributeAffects(HelperJoint.inRotAngle, HelperJoint.outTransform)
         HelperJoint.attributeAffects(HelperJoint.inRestAngle, HelperJoint.outTransform)
+        HelperJoint.attributeAffects(HelperJoint.inRotInterp, HelperJoint.outTransform)
         HelperJoint.attributeAffects(HelperJoint.inPosMult, HelperJoint.outTransform)
         HelperJoint.attributeAffects(HelperJoint.inNegMult, HelperJoint.outTransform)
 
@@ -188,6 +189,7 @@ class HelperJoint(om2.MPxNode):
             eRotOffset = om2.MEulerRotation(targetHandle.child(HelperJoint.inRotationOffset).asDouble3())
             angle = targetHandle.child(HelperJoint.inRotAngle).asAngle().asRadians()
             restAngle = targetHandle.child(HelperJoint.inRestAngle).asAngle().asRadians()
+            rotInterp = targetHandle.child(HelperJoint.inRotInterp).asFloat()
             posMult = targetHandle.child(HelperJoint.inPosMult).asFloat()
             negMult = targetHandle.child(HelperJoint.inNegMult).asFloat()
 
@@ -204,7 +206,7 @@ class HelperJoint(om2.MPxNode):
             mMultiplier[13] = vPosOffset.y * multTranslation
             mMultiplier[14] = vPosOffset.z * multTranslation
             mTargetPoint = mMultiplier * mPositionOffset * mSource
-            mTargetOrient = mInvSca * (mSource * 0.5) + (mSourceParent * 0.5)
+            mTargetOrient = mInvSca * (mSource * (1.0 - rotInterp)) + (mSourceParent * rotInterp)
 
             vResultPos = om2.MVector(mTargetPoint[12], mTargetPoint[13], mTargetPoint[14])
             mtxFn = om2.MTransformationMatrix(mTargetOrient)

@@ -79,7 +79,7 @@ import n_gfDebugVector as n_DebugVector
 import n_gfDebugMatrix as n_DebugMatrix
 # gfRig
 import n_gfRigPSDVectorAngle as n_VectorAnglePSD
-import n_gfRigIKVChain as n_IKVChainSolver
+import n_gfRigIKVChain2 as n_IKVChainSolver
 import n_gfRigHelperJoint as n_HelperJoint
 import n_gfRigDistributeAlongSurface as n_DistributeAlongSurface
 import n_gfRigTwistExtractor as n_TwistExtractor
