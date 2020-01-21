@@ -1,19 +1,15 @@
 # -*- coding: utf-8 -*-
 """
 Copyright (c) 2019 Giuliano França
-
 MIT License
-
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
 to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
-
 The above copyright notice and this permission notice shall be included in all
 copies or substantial portions of the Software.
-
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -21,14 +17,11 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-
 ====================================================================================================
-
 Disclaimer:
     THIS PLUGIN IS JUST A PROTOTYPE. YOU MUST USE THE C++ RELEASE PLUGIN FOR PRODUCTION.
     YOU CAN FIND THE C++ RELEASE PLUGIN FOR YOUR SPECIFIC PLATFORM IN RELEASES FOLDER:
     "gfTools > plug-ins > release"
-
 How to use:
     * Copy the parent folder to the MAYA_SCRIPT_PATH.
     * To find MAYA_SCRIPT_PATH paste this command in a Python tab:
@@ -36,14 +29,11 @@ How to use:
     * In Maya, go to Windows > Settings/Preferences > Plug-in Manager.
     * Browse for "gfTools > plug-ins > dev > python"
     * Find gfTools_P.py and import it.
-
 Requirements:
     * Maya 2017 or above.
-
 Description:
     IK Solver to VChain type of rig. Can be used to replace the default Maya
     IKRPSolver with the plus of some cartoony options.
-
 Attributes:
     * Root: The world matrix of the root object.
     * Handle: The world matrix of the handle object.
@@ -65,15 +55,12 @@ Attributes:
     * Clamp Value: Clamp value of the stretch clamp.
     * Squash: Enable automatic squash of the output chain.
     * Out Chain: The output matrices of the output chain.
-
 Todo:
     * Create and develop the stretchMult attr.
     * Create and develop the squashMult attr.
     * Create and develop the slidePv attr.
-
 Sources:
     * https://www.desmos.com/calculator/wthlznq4aj
-
 This code supports Pylint. Rc file in project.
 """
 
@@ -118,9 +105,23 @@ class IKVChainSolver(om2.MPxNode):
     inOffset = om2.MObject()
     inParInvMtx = om2.MObject()
     inJntOrient = om2.MObject()
+    inSnapUpVector = om2.MObject()
+    inSnap = om2.MObject()
+    inPvMode = om2.MObject() #
+    inPreferredAngle = om2.MObject() #
+    inTwist = om2.MObject() #
     inRestLengthStart = om2.MObject()
     inRestLengthEnd = om2.MObject()
     inCompressionLimit = om2.MObject()
+    inSoftness = om2.MObject()
+    inStretch = om2.MObject()
+    inClampStretch = om2.MObject()
+    inClampValue = om2.MObject()
+    inStartStretchMult = om2.MObject() #
+    inEndStretchMult = om2.MObject() #
+    inSquash = om2.MObject()
+    inStartSquashMult = om2.MObject()
+    inEndSquashMult = om2.MObject()
     outChain = om2.MObject()
 
     def __init__(self):
@@ -166,17 +167,75 @@ class IKVChainSolver(om2.MPxNode):
         nAttr.array = True
         INPUT_ATTR(nAttr)
 
+        IKVChainSolver.inSnapUpVector = nAttr.create("snapUpVector", "supv", om2.MFnNumericData.kFloat, 0.0)
+        nAttr.setMin(0.0)
+        nAttr.setMax(1.0)
+        INPUT_ATTR(nAttr)
+
+        IKVChainSolver.inSnap = mAttr.create("snap", "snap", om2.MFnMatrixAttribute.kDouble)
+        INPUT_ATTR(mAttr)
+
         IKVChainSolver.inRestLengthStart = nAttr.create("restLengthStart", "rls", om2.MFnNumericData.kFloat, 1.0)
         nAttr.setMin(0.001)
         INPUT_ATTR(nAttr)
+        nAttr.keyable = False
+        nAttr.channelBox = True
 
         IKVChainSolver.inRestLengthEnd = nAttr.create("restLengthEnd", "rle", om2.MFnNumericData.kFloat, 1.0)
         nAttr.setMin(0.001)
         INPUT_ATTR(nAttr)
+        nAttr.keyable = False
+        nAttr.channelBox = True
 
         IKVChainSolver.inCompressionLimit = nAttr.create("compressionLimit", "cl", om2.MFnNumericData.kFloat, 0.1)
         nAttr.setMin(0.001)
         nAttr.setMax(0.4)
+        INPUT_ATTR(nAttr)
+
+        IKVChainSolver.inSoftness = nAttr.create("softness", "soft", om2.MFnNumericData.kFloat, 0.0)
+        nAttr.setMin(0.0)
+        nAttr.setSoftMax(0.2)
+        nAttr.setMax(1.0)
+        INPUT_ATTR(nAttr)
+
+        IKVChainSolver.inStretch = nAttr.create("stretch", "st", om2.MFnNumericData.kDouble, 0.0)
+        nAttr.setMin(0.0)
+        nAttr.setMax(1.0)
+        INPUT_ATTR(nAttr)
+
+        IKVChainSolver.inClampStretch = nAttr.create("clampStretch", "cst", om2.MFnNumericData.kDouble, 0.0)
+        nAttr.setMin(0.0)
+        nAttr.setMax(1.0)
+        INPUT_ATTR(nAttr)
+
+        IKVChainSolver.inClampValue = nAttr.create("clampValue", "cstv", om2.MFnNumericData.kDouble, 1.5)
+        nAttr.setMin(1.0)
+        nAttr.setSoftMax(1.8)
+        INPUT_ATTR(nAttr)
+
+        IKVChainSolver.inStartStretchMult = nAttr.create("stretchMultStart", "stms", om2.MFnNumericData.kFloat, 1.0)
+        nAttr.setMin(0.001)
+        INPUT_ATTR(nAttr)
+
+        IKVChainSolver.inEndStretchMult = nAttr.create("stretchMultEnd", "stme", om2.MFnNumericData.kFloat, 1.0)
+        nAttr.setMin(0.001)
+        INPUT_ATTR(nAttr)
+
+        IKVChainSolver.inSquash = nAttr.create("squash", "sq", om2.MFnNumericData.kDouble, 0.0)
+        nAttr.setMin(0.0)
+        nAttr.setMax(1.0)
+        INPUT_ATTR(nAttr)
+
+        startSqX = nAttr.create("squashMultStartX", "sqmsx", om2.MFnNumericData.kFloat, 1.0)
+        startSqY = nAttr.create("squashMultStartY", "sqmsy", om2.MFnNumericData.kFloat, 1.0)
+        IKVChainSolver.inStartSquashMult = nAttr.create("squashMultStart", "sqms", startSqX, startSqY)
+        nAttr.setMin([0.001, 0.001])
+        INPUT_ATTR(nAttr)
+
+        endSqX = nAttr.create("squashMultEndX", "sqmex", om2.MFnNumericData.kFloat, 1.0)
+        endSqY = nAttr.create("squashMultEndY", "sqmey", om2.MFnNumericData.kFloat, 1.0)
+        IKVChainSolver.inEndSquashMult = nAttr.create("squashMultEnd", "sqme", endSqX, endSqY)
+        nAttr.setMin([0.001, 0.001])
         INPUT_ATTR(nAttr)
 
         IKVChainSolver.outChain = mAttr.create("outChain", "oc", om2.MFnMatrixAttribute.kDouble)
@@ -189,9 +248,20 @@ class IKVChainSolver(om2.MPxNode):
         IKVChainSolver.addAttribute(IKVChainSolver.inOffset)
         IKVChainSolver.addAttribute(IKVChainSolver.inParInvMtx)
         IKVChainSolver.addAttribute(IKVChainSolver.inJntOrient)
+        IKVChainSolver.addAttribute(IKVChainSolver.inSnapUpVector)
+        IKVChainSolver.addAttribute(IKVChainSolver.inSnap)
         IKVChainSolver.addAttribute(IKVChainSolver.inRestLengthStart)
         IKVChainSolver.addAttribute(IKVChainSolver.inRestLengthEnd)
         IKVChainSolver.addAttribute(IKVChainSolver.inCompressionLimit)
+        IKVChainSolver.addAttribute(IKVChainSolver.inSoftness)
+        IKVChainSolver.addAttribute(IKVChainSolver.inStretch)
+        IKVChainSolver.addAttribute(IKVChainSolver.inClampStretch)
+        IKVChainSolver.addAttribute(IKVChainSolver.inClampValue)
+        IKVChainSolver.addAttribute(IKVChainSolver.inStartStretchMult)
+        IKVChainSolver.addAttribute(IKVChainSolver.inEndStretchMult)
+        IKVChainSolver.addAttribute(IKVChainSolver.inSquash)
+        IKVChainSolver.addAttribute(IKVChainSolver.inStartSquashMult)
+        IKVChainSolver.addAttribute(IKVChainSolver.inEndSquashMult)
         IKVChainSolver.addAttribute(IKVChainSolver.outChain)
         IKVChainSolver.attributeAffects(IKVChainSolver.inRoot, IKVChainSolver.outChain)
         IKVChainSolver.attributeAffects(IKVChainSolver.inHandle, IKVChainSolver.outChain)
@@ -199,9 +269,20 @@ class IKVChainSolver(om2.MPxNode):
         IKVChainSolver.attributeAffects(IKVChainSolver.inOffset, IKVChainSolver.outChain)
         IKVChainSolver.attributeAffects(IKVChainSolver.inParInvMtx, IKVChainSolver.outChain)
         IKVChainSolver.attributeAffects(IKVChainSolver.inJntOrient, IKVChainSolver.outChain)
+        IKVChainSolver.attributeAffects(IKVChainSolver.inSnapUpVector, IKVChainSolver.outChain)
+        IKVChainSolver.attributeAffects(IKVChainSolver.inSnap, IKVChainSolver.outChain)
         IKVChainSolver.attributeAffects(IKVChainSolver.inRestLengthStart, IKVChainSolver.outChain)
         IKVChainSolver.attributeAffects(IKVChainSolver.inRestLengthEnd, IKVChainSolver.outChain)
         IKVChainSolver.attributeAffects(IKVChainSolver.inCompressionLimit, IKVChainSolver.outChain)
+        IKVChainSolver.attributeAffects(IKVChainSolver.inSoftness, IKVChainSolver.outChain)
+        IKVChainSolver.attributeAffects(IKVChainSolver.inStretch, IKVChainSolver.outChain)
+        IKVChainSolver.attributeAffects(IKVChainSolver.inClampStretch, IKVChainSolver.outChain)
+        IKVChainSolver.attributeAffects(IKVChainSolver.inClampValue, IKVChainSolver.outChain)
+        IKVChainSolver.attributeAffects(IKVChainSolver.inStartStretchMult, IKVChainSolver.outChain)
+        IKVChainSolver.attributeAffects(IKVChainSolver.inEndStretchMult, IKVChainSolver.outChain)
+        IKVChainSolver.attributeAffects(IKVChainSolver.inSquash, IKVChainSolver.outChain)
+        IKVChainSolver.attributeAffects(IKVChainSolver.inStartSquashMult, IKVChainSolver.outChain)
+        IKVChainSolver.attributeAffects(IKVChainSolver.inEndSquashMult, IKVChainSolver.outChain)
 
     @staticmethod
     def negateOrientation(mtx, orient):
@@ -239,16 +320,29 @@ class IKVChainSolver(om2.MPxNode):
         mRoot = dataBlock.inputValue(IKVChainSolver.inRoot).asMatrix()
         mHandle = dataBlock.inputValue(IKVChainSolver.inHandle).asMatrix()
         mPoleVector = dataBlock.inputValue(IKVChainSolver.inPoleVector).asMatrix()
+        snap = dataBlock.inputValue(IKVChainSolver.inSnapUpVector).asFloat()
+        mSnap = dataBlock.inputValue(IKVChainSolver.inSnap).asMatrix()
 
         vRoot = om2.MVector(mRoot[12], mRoot[13], mRoot[14])
         vHandle = om2.MVector(mHandle[12], mHandle[13], mHandle[14])
         vPoleVector = om2.MVector(mPoleVector[12], mPoleVector[13], mPoleVector[14])
+        vSnap = om2.MVector(mSnap[12], mSnap[13], mSnap[14])
 
         vAim = vHandle - vRoot
         nAim = vAim.normal()
-        vUp = vPoleVector - vRoot
-        nNormal = vUp - ((vUp * nAim) * nAim)
-        nNormal.normalize()
+
+        vUpLen = vPoleVector - vRoot
+        nUpPole = vUpLen - ((vUpLen * nAim) * nAim)
+        nUpPole.normalize()
+        if snap > 0.0:
+            vStartLenSnap = vSnap - vRoot
+            vEndLenSnap = vSnap - vHandle
+            nUpSnap = vStartLenSnap - ((vStartLenSnap * nAim) * nAim)
+            nUpSnap.normalize()
+            nNormal = (1.0 - snap) * nUpPole + snap * nUpSnap
+        else:
+            nNormal = nUpPole
+
         nBinormal = nAim ^ nNormal
         nBinormal.normalize()
         basis = [
@@ -264,14 +358,34 @@ class IKVChainSolver(om2.MPxNode):
         startRestLength = dataBlock.inputValue(IKVChainSolver.inRestLengthStart).asFloat()
         endRestLength = dataBlock.inputValue(IKVChainSolver.inRestLengthEnd).asFloat()
         compressionLimit = dataBlock.inputValue(IKVChainSolver.inCompressionLimit).asFloat()
+        softValue = dataBlock.inputValue(IKVChainSolver.inSoftness).asFloat()
+        # startStretchMult = dataBlock.inputValue(IKVChainSolver.inStartStretchMult).asFloat()
+        # endStretchMult = dataBlock.inputValue(IKVChainSolver.inEndStretchMult).asFloat()
 
-        startLen = startRestLength
-        endLen = endRestLength
+        startLenPole = startRestLength # * startStretchMult
+        endLenPole = endRestLength # * endStretchMult
+        if snap > 0.0:
+            startLenSnap = vStartLenSnap.length()
+            endLenSnap = vEndLenSnap.length()
+            startLen = (1.0 - snap) * startLenPole + snap * startLenSnap
+            endLen = (1.0 - snap) * endLenPole + snap * endLenSnap
+            chainLen = (1.0 - snap) * (startLenPole + endLenPole) + snap * (startLenSnap + endLenSnap)
+        else:
+            startLen = startLenPole
+            endLen = endLenPole
+            chainLen = startLenPole + endLenPole
         handleLen = vAim.length()
-        chainLen = startLen + endLen
 
         rigidLen = max(min(handleLen, chainLen), chainLen * compressionLimit)
-        solverLen = rigidLen
+        dc = chainLen
+        da = (1.0 - softValue) * dc
+        if handleLen > da and softValue > 0:
+            ds = dc - da
+            softLenPole = ds * (1.0 - math.pow(math.e, (da - handleLen) / ds)) + da
+            softLenSnap = (1.0 - snap) * softLenPole + snap * rigidLen
+            solverLen = softLenSnap
+        else:
+            solverLen = rigidLen
 
 
         # Angle mesurement
@@ -286,15 +400,36 @@ class IKVChainSolver(om2.MPxNode):
         gammaCosPure = (startLenSquared + endLenSquared - solverLenSquared) / (2.0 * startLen * endLen)
         gammaCos = min(max(gammaCosPure, -1.0), 1.0)
         gamma = math.acos(gammaCos)
-        gammaComplement = gamma - math.pi
+        gammaComplement = gamma + beta - math.pi
         gammaComplementCos = math.cos(gammaComplement)
         gammaComplementSin = math.sin(gammaComplement)
-        alpha = math.pi - beta - gamma
-        alphaCos = math.cos(alpha)
-        alphaSin = math.sin(alpha)
+
+
+        # Cartoony features
+        stretch = dataBlock.inputValue(IKVChainSolver.inStretch).asDouble()
+        squash = dataBlock.inputValue(IKVChainSolver.inSquash).asDouble()
+        if stretch > 0.0:
+            clampStretch = dataBlock.inputValue(IKVChainSolver.inClampStretch).asDouble()
+            clampValue = dataBlock.inputValue(IKVChainSolver.inClampValue).asDouble()
+            if handleLen > da and softValue > 0:
+                scaleFactor = handleLen / softLenPole
+            else:
+                scaleFactor = handleLen / chainLen
+            if handleLen >= da:
+                clampFactor = (1.0 - clampStretch) * scaleFactor + clampStretch * min(scaleFactor, clampValue)
+                stretchFactor = (1.0 - stretch) + stretch * clampFactor
+            else:
+                stretchFactor = 1.0
+            squashFactor = (1.0 - squash) + squash * (1.0 / math.sqrt(stretchFactor))
+        else:
+            stretchFactor = 1.0
+            squashFactor = 1.0
 
 
         # Output transforms
+        startSquashMult = dataBlock.inputValue(IKVChainSolver.inStartSquashMult).asFloat2()
+        endSquashMult = dataBlock.inputValue(IKVChainSolver.inEndSquashMult).asFloat2()
+        mParInv = dataBlock.inputValue(IKVChainSolver.inParInvMtx).asMatrix()
         offsetHandle = dataBlock.inputArrayValue(IKVChainSolver.inOffset)
         jntOriHandle = dataBlock.inputArrayValue(IKVChainSolver.inJntOrient)
         outChainHandle = dataBlock.outputArrayValue(IKVChainSolver.outChain)
@@ -316,37 +451,52 @@ class IKVChainSolver(om2.MPxNode):
         offsetLen = len(offsetList)
         orientLen = len(jntOriList)
 
-        mLocal = om2.MMatrix()
-        mLocal[0] = betaCos
-        mLocal[1] = betaSin
-        mLocal[4] = -betaSin
-        mLocal[5] = betaCos
-        mResult = mLocal * mBasis
+        mFirstSca = om2.MMatrix()
+        mFirstSca[0] = stretchFactor
+        mFirstSca[5] = squashFactor * startSquashMult[0]
+        mFirstSca[10] = squashFactor * startSquashMult[1]
+        mFirstOri = om2.MMatrix()
+        mFirstOri[0] = betaCos
+        mFirstOri[1] = betaSin
+        mFirstOri[4] = -betaSin
+        mFirstOri[5] = betaCos
         if offsetLen >= 1:
-            mResult = offsetList[0] * mLocal * mBasis
+            mFirstWorld = offsetList[0] * mFirstOri * mBasis
+        else:
+            mFirstWorld = mFirstOri * mBasis
         if orientLen >= 1:
-            mResult = IKVChainSolver.negateOrientation(mResult, jntOriList[0])
-        srtList.append(mResult)
-        mLocal = om2.MMatrix()
-        mLocal[0] = gammaComplementCos
-        mLocal[1] = gammaComplementSin
-        mLocal[4] = -gammaComplementSin
-        mLocal[5] = gammaComplementCos
-        mLocal[12] = startLen
-        mResult = mLocal
+            mFirstLocal = IKVChainSolver.negateOrientation(mFirstSca * (mFirstWorld * mParInv), jntOriList[0])
+        else:
+            mFirstLocal = mFirstSca * mFirstWorld * mParInv
+        srtList.append(mFirstLocal)
+
+        mSecondSca = om2.MMatrix()
+        mSecondSca[0] = stretchFactor
+        mSecondSca[5] = squashFactor * endSquashMult[0]
+        mSecondSca[10] = squashFactor * endSquashMult[1]
+        mSecondOri = om2.MMatrix()
+        mSecondOri[0] = gammaComplementCos
+        mSecondOri[1] = gammaComplementSin
+        mSecondOri[4] = -gammaComplementSin
+        mSecondOri[5] = gammaComplementCos
+        mSecondOri[12] = betaCos * startLen # * stretchFactor
+        mSecondOri[13] = betaSin * startLen # * stretchFactor
         if offsetLen >= 2:
-            mResult = offsetList[1] * mLocal
+            mSecondWorld = offsetList[1] * mSecondOri * mBasis
+        else:
+            mSecondWorld = mSecondOri * mBasis
         if orientLen >= 2:
-            mResult = IKVChainSolver.negateOrientation(mResult, jntOriList[1])
-        srtList.append(mResult)
-        mLocal = om2.MMatrix()
-        mLocal[0] = alphaCos
-        mLocal[1] = alphaSin
-        mLocal[4] = -alphaSin
-        mLocal[5] = alphaCos
-        mLocal[12] = endLen
-        mResult = mLocal
-        srtList.append(mResult)
+            mSecondLocal = IKVChainSolver.negateOrientation(mSecondSca * (mSecondWorld * mFirstWorld.inverse()), jntOriList[1])
+        else:
+            mSecondLocal = mSecondWorld * mFirstWorld.inverse()
+        srtList.append(mSecondLocal)
+
+        mThirdWorld = mHandle
+        mThirdWorld[12] = mBasis[12] + mBasis[0] * solverLen
+        mThirdWorld[13] = mBasis[13] + mBasis[1] * solverLen
+        mThirdWorld[14] = mBasis[14] + mBasis[2] * solverLen
+        mThirdLocal = mThirdWorld * mSecondWorld.inverse()
+        srtList.append(mThirdLocal)
 
         for i in range(len(outChainHandle)):
             outChainHandle.jumpToLogicalElement(i)
