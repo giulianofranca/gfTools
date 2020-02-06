@@ -5,10 +5,10 @@ global proc AEgfParentConstraintTemplate(string $nodeName){
                 editorTemplate -addControl "constraintRotateOrder";
                 editorTemplate -addControl "constraintJointOrient";
                 editorTemplate -addControl "constraintParentScale";
-                editorTemplate -addControl "constraintParentInverseMatrix";
             editorTemplate -endLayout;
             editorTemplate -addControl "targetList";
         editorTemplate -endLayout;
+        editorTemplate -suppress "constraintParentInverseMatrix";
         AEdependNodeTemplate $nodeName;
     editorTemplate -addExtraControls;
     editorTemplate -endScrollLayout;
