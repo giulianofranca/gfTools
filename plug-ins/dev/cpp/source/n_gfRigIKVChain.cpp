@@ -23,25 +23,29 @@ IKVChainSolver::~IKVChainSolver() {}
 
 MObject IKVChainSolver::inRoot;
 MObject IKVChainSolver::inHandle;
-MObject IKVChainSolver::inUpVector;
+MObject IKVChainSolver::inPoleVector;
+MObject IKVChainSolver::inOffset;
+MObject IKVChainSolver::inJntOri;
 MObject IKVChainSolver::inParInvMtx;
-MObject IKVChainSolver::inJointOrient;
+MObject IKVChainSolver::inRestLenStart;
+MObject IKVChainSolver::inRestLenEnd;
 MObject IKVChainSolver::inPreferredAngle;
-MObject IKVChainSolver::inPvMode;
 MObject IKVChainSolver::inTwist;
+MObject IKVChainSolver::inPvMode;
 MObject IKVChainSolver::inHierarchyMode;
-MObject IKVChainSolver::inRestLength1;
-MObject IKVChainSolver::inRestLength2;
+MObject IKVChainSolver::inUseScale;
 MObject IKVChainSolver::inCompressionLimit;
-MObject IKVChainSolver::inSoftness;
 MObject IKVChainSolver::inSnapUpVector;
-MObject IKVChainSolver::inSnapObj;
+MObject IKVChainSolver::inSnap;
+MObject IKVChainSolver::inSoftness;
 MObject IKVChainSolver::inStretch;
 MObject IKVChainSolver::inClampStretch;
 MObject IKVChainSolver::inClampValue;
 MObject IKVChainSolver::inSquash;
-MObject IKVChainSolver::inFlipOri;
+MObject IKVChainSolver::inSquashMultStart;
+MObject IKVChainSolver::inSquashMultEnd;
 MObject IKVChainSolver::outChain;
+
 
 void* IKVChainSolver::creator(){
     // Maya creator function.
@@ -57,79 +61,94 @@ MStatus IKVChainSolver::initialize(){
     MStatus status;
     MFnMatrixAttribute mAttr;
     MFnNumericAttribute nAttr;
-    MFnUnitAttribute uAttr;
     MFnEnumAttribute eAttr;
+    MFnUnitAttribute uAttr;
 
     inRoot = mAttr.create("root", "root", MFnMatrixAttribute::kDouble, &status);
-    INPUT_ATTR(mAttr);
+    INPUT_ATTR(mAttr)
 
     inHandle = mAttr.create("handle", "handle", MFnMatrixAttribute::kDouble, &status);
     INPUT_ATTR(mAttr);
 
-    inUpVector = mAttr.create("upVector", "up", MFnMatrixAttribute::kDouble, &status);
+    inPoleVector = mAttr.create("poleVector", "pole", MFnMatrixAttribute::kDouble, &status);
     INPUT_ATTR(mAttr);
 
-    inParInvMtx = mAttr.create("parentInverseMatrix", "pim", MFnMatrixAttribute::kDouble, &status);
-    INPUT_ATTR(mAttr);
+    MObject offX = uAttr.create("offsetX", "offx", MFnUnitAttribute::kAngle, 0.0, &status);
+    MObject offY = uAttr.create("offsetY", "offy", MFnUnitAttribute::kAngle, 0.0, &status);
+    MObject offZ = uAttr.create("offsetZ", "offz", MFnUnitAttribute::kAngle, 0.0, &status);
+    inOffset = nAttr.create("offset", "off", offX, offY, offZ, &status);
+    nAttr.setArray(true);
+    INPUT_ATTR(nAttr);
 
     MObject jntOriX = uAttr.create("jointOrientX", "jox", MFnUnitAttribute::kAngle, 0.0, &status);
     MObject jntOriY = uAttr.create("jointOrientY", "joy", MFnUnitAttribute::kAngle, 0.0, &status);
     MObject jntOriZ = uAttr.create("jointOrientZ", "joz", MFnUnitAttribute::kAngle, 0.0, &status);
-    inJointOrient = nAttr.create("jointOrient", "jo", jntOriX, jntOriY, jntOriZ, &status);
+    inJntOri = nAttr.create("jointOrient", "jo", jntOriX, jntOriY, jntOriZ, &status);
     nAttr.setArray(true);
     INPUT_ATTR(nAttr);
+
+    inParInvMtx = mAttr.create("parentInverseMatrix", "pim", MFnMatrixAttribute::kDouble, &status);
+    INPUT_ATTR(mAttr);
+
+    inRestLenStart = nAttr.create("restLengthStart", "rls", MFnNumericData::kFloat, 1.0f, &status);
+    nAttr.setMin(0.001f);
+    INPUT_ATTR(nAttr);
+    nAttr.setChannelBox(true);
+
+    inRestLenEnd = nAttr.create("restLengthEnd", "rle", MFnNumericData::kFloat, 1.0f, &status);
+    nAttr.setMin(0.001f);
+    INPUT_ATTR(nAttr);
+    nAttr.setChannelBox(true);
 
     inPreferredAngle = uAttr.create("preferredAngle", "pa", MFnUnitAttribute::kAngle, 0.0, &status);
     uAttr.setMin(0.0);
     uAttr.setMax(2.0 * M_PI);
     INPUT_ATTR(uAttr);
+    uAttr.setChannelBox(true);
 
-    inPvMode = eAttr.create("pvMode", "pvm", 0, &status);
+    inTwist = uAttr.create("twist", "twist", MFnUnitAttribute::kAngle, 0.0, &status);
+    INPUT_ATTR(uAttr);
+
+    inPvMode = eAttr.create("pvMode", "pvm", 0);
     eAttr.addField("Manual", 0);
     eAttr.addField("Auto", 1);
     INPUT_ATTR(eAttr);
 
-    inTwist = uAttr.create("twist", "tw", MFnUnitAttribute::kAngle, 0.0, &status);
-    INPUT_ATTR(uAttr);
-
     inHierarchyMode = nAttr.create("hierarchyMode", "hm", MFnNumericData::kBoolean, true, &status);
     INPUT_ATTR(nAttr);
+    nAttr.setChannelBox(true);
 
-    inRestLength1 = nAttr.create("restLength1", "rl1", MFnNumericData::kFloat, 1.0f, &status);
-    nAttr.setMin(0.001f);
+    inUseScale = nAttr.create("useStretchAsScale", "usca", MFnNumericData::kBoolean, false, &status);
     INPUT_ATTR(nAttr);
-
-    inRestLength2 = nAttr.create("restLength2", "rl2", MFnNumericData::kFloat, 1.0f, &status);
-    nAttr.setMin(0.001f);
-    INPUT_ATTR(nAttr);
+    nAttr.setChannelBox(true);
 
     inCompressionLimit = nAttr.create("compressionLimit", "cl", MFnNumericData::kFloat, 0.1f, &status);
     nAttr.setMin(0.001f);
     nAttr.setMax(0.4f);
     INPUT_ATTR(nAttr);
 
-    inSoftness = nAttr.create("softness", "soft", MFnNumericData::kFloat, 0.0f, &status);
-    nAttr.setMin(0.0f);
-    nAttr.setSoftMax(0.4f);
-    nAttr.setMax(1.0f);
-    INPUT_ATTR(nAttr);
-
-    inSnapUpVector = nAttr.create("snapPoleVector", "snap", MFnNumericData::kFloat, 0.0, &status);
+    inSnapUpVector = nAttr.create("snapUpVector", "supv", MFnNumericData::kFloat, 0.0f, &status);
     nAttr.setMin(0.0f);
     nAttr.setMax(1.0f);
     INPUT_ATTR(nAttr);
 
-    inSnapObj = mAttr.create("snapObject", "sobj", MFnMatrixAttribute::kDouble, &status);
+    inSnap = mAttr.create("snap", "snap", MFnMatrixAttribute::kDouble, &status);
     INPUT_ATTR(mAttr);
 
-    inStretch = nAttr.create("stretch", "st", MFnNumericData::kDouble, 0.0, &status);
-    nAttr.setMin(0.0);
-    nAttr.setMax(1.0);
+    inSoftness = nAttr.create("softness", "soft", MFnNumericData::kFloat, 0.0f, &status);
+    nAttr.setMin(0.0f);
+    nAttr.setSoftMax(0.2f);
+    nAttr.setMax(1.0f);
     INPUT_ATTR(nAttr);
 
-    inClampStretch = nAttr.create("clampStretch", "cst", MFnNumericData::kDouble, 0.0, &status);
-    nAttr.setMin(0.0);
-    nAttr.setMax(1.0);
+    inStretch = nAttr.create("stretch", "st", MFnNumericData::kFloat, 0.0f, &status);
+    nAttr.setMin(0.0f);
+    nAttr.setMax(1.0f);
+    INPUT_ATTR(nAttr);
+
+    inClampStretch = nAttr.create("clampStretch", "cst", MFnNumericData::kFloat, 0.0f, &status);
+    nAttr.setMin(0.0f);
+    nAttr.setMax(1.0f);
     INPUT_ATTR(nAttr);
 
     inClampValue = nAttr.create("clampValue", "cstv", MFnNumericData::kDouble, 1.5, &status);
@@ -137,12 +156,21 @@ MStatus IKVChainSolver::initialize(){
     nAttr.setSoftMax(1.8);
     INPUT_ATTR(nAttr);
 
-    inSquash = nAttr.create("squash", "sq", MFnNumericData::kDouble, 0.0, &status);
-    nAttr.setMin(0.0);
-    nAttr.setMax(1.0);
+    inSquash = nAttr.create("squash", "sq", MFnNumericData::kFloat, 0.0f, &status);
+    nAttr.setMin(0.0f);
+    nAttr.setMax(1.0f);
     INPUT_ATTR(nAttr);
 
-    inFlipOri = nAttr.create("flipOrientation", "flip", MFnNumericData::kBoolean, false, &status);
+    MObject startSqX = nAttr.create("squashMultStartX", "sqmsx", MFnNumericData::kDouble, 1.0, &status);
+    MObject startSqY = nAttr.create("squashMultStartY", "sqmsy", MFnNumericData::kDouble, 1.0, &status);
+    inSquashMultStart = nAttr.create("squashMultStart", "sqms", startSqX, startSqY, MObject::kNullObj, &status);
+    nAttr.setMin(0.001, 0.001);
+    INPUT_ATTR(nAttr);
+
+    MObject endSqX = nAttr.create("squashMultEndX", "sqmex", MFnNumericData::kDouble, 1.0, &status);
+    MObject endSqY = nAttr.create("squashMultEndY", "sqmey", MFnNumericData::kDouble, 1.0, &status);
+    inSquashMultEnd = nAttr.create("squashMultEnd", "sqme", endSqX, endSqY, MObject::kNullObj, &status);
+    nAttr.setMin(0.001, 0.001);
     INPUT_ATTR(nAttr);
 
     outChain = mAttr.create("outChain", "oc", MFnMatrixAttribute::kDouble, &status);
@@ -151,45 +179,51 @@ MStatus IKVChainSolver::initialize(){
 
     addAttribute(inRoot);
     addAttribute(inHandle);
-    addAttribute(inUpVector);
+    addAttribute(inPoleVector);
+    addAttribute(inOffset);
+    addAttribute(inJntOri);
     addAttribute(inParInvMtx);
-    addAttribute(inJointOrient);
+    addAttribute(inRestLenStart);
+    addAttribute(inRestLenEnd);
     addAttribute(inPreferredAngle);
-    addAttribute(inPvMode);
     addAttribute(inTwist);
+    addAttribute(inPvMode);
     addAttribute(inHierarchyMode);
-    addAttribute(inRestLength1);
-    addAttribute(inRestLength2);
+    addAttribute(inUseScale);
     addAttribute(inCompressionLimit);
-    addAttribute(inSoftness);
     addAttribute(inSnapUpVector);
-    addAttribute(inSnapObj);
+    addAttribute(inSnap);
+    addAttribute(inSoftness);
     addAttribute(inStretch);
     addAttribute(inClampStretch);
     addAttribute(inClampValue);
     addAttribute(inSquash);
-    addAttribute(inFlipOri);
+    addAttribute(inSquashMultStart);
+    addAttribute(inSquashMultEnd);
     addAttribute(outChain);
     attributeAffects(inRoot, outChain);
     attributeAffects(inHandle, outChain);
-    attributeAffects(inUpVector, outChain);
+    attributeAffects(inPoleVector, outChain);
+    attributeAffects(inOffset, outChain);
+    attributeAffects(inJntOri, outChain);
     attributeAffects(inParInvMtx, outChain);
-    attributeAffects(inJointOrient, outChain);
+    attributeAffects(inRestLenStart, outChain);
+    attributeAffects(inRestLenEnd, outChain);
     attributeAffects(inPreferredAngle, outChain);
-    attributeAffects(inPvMode, outChain);
     attributeAffects(inTwist, outChain);
+    attributeAffects(inPvMode, outChain);
     attributeAffects(inHierarchyMode, outChain);
-    attributeAffects(inRestLength1, outChain);
-    attributeAffects(inRestLength2, outChain);
+    attributeAffects(inUseScale, outChain);
     attributeAffects(inCompressionLimit, outChain);
-    attributeAffects(inSoftness, outChain);
     attributeAffects(inSnapUpVector, outChain);
-    attributeAffects(inSnapObj, outChain);
+    attributeAffects(inSnap, outChain);
+    attributeAffects(inSoftness, outChain);
     attributeAffects(inStretch, outChain);
     attributeAffects(inClampStretch, outChain);
     attributeAffects(inClampValue, outChain);
     attributeAffects(inSquash, outChain);
-    attributeAffects(inFlipOri, outChain);
+    attributeAffects(inSquashMultStart, outChain);
+    attributeAffects(inSquashMultEnd, outChain);
 
     return status;
 }
@@ -203,236 +237,269 @@ MStatus IKVChainSolver::compute(const MPlug& plug, MDataBlock& dataBlock){
     if (plug != outChain)
         return MStatus::kUnknownParameter;
 
-    // Get basis matrix
-    float snap = dataBlock.inputValue(inSnapUpVector).asFloat();
-    short pvMode = dataBlock.inputValue(inPvMode).asShort();
+    // Get Basis Transformation
     MMatrix mRoot = dataBlock.inputValue(inRoot).asMatrix();
     MMatrix mHandle = dataBlock.inputValue(inHandle).asMatrix();
-    MMatrix mUpVector = dataBlock.inputValue(inUpVector).asMatrix();
-    MMatrix mSnap = dataBlock.inputValue(inSnapObj).asMatrix();
+    MMatrix mPoleVector = dataBlock.inputValue(inPoleVector).asMatrix();
+    short pvMode = dataBlock.inputValue(inPvMode).asShort();
     double prefAngle = dataBlock.inputValue(inPreferredAngle).asAngle().asRadians();
     double twist = dataBlock.inputValue(inTwist).asAngle().asRadians();
-    bool flip = dataBlock.inputValue(inFlipOri).asBool();
+    float snap = dataBlock.inputValue(inSnapUpVector).asFloat();
+    MMatrix mSnap = dataBlock.inputValue(inSnap).asMatrix();
+
     MVector vRoot = MVector(mRoot[3][0], mRoot[3][1], mRoot[3][2]);
     MVector vHandle = MVector(mHandle[3][0], mHandle[3][1], mHandle[3][2]);
-    MVector vUpVector = MVector(mUpVector[3][0], mUpVector[3][1], mUpVector[3][2]);
+    MVector vPoleVector = MVector(mPoleVector[3][0], mPoleVector[3][1], mPoleVector[3][2]);
     MVector vSnap = MVector(mSnap[3][0], mSnap[3][1], mSnap[3][2]);
-    MVector vXDirection = vHandle - vRoot;
-    double xDist = vXDirection.length();
-    MVector nXAxis = vXDirection.normal();
-    MVector vL1Snap = vSnap - vRoot;
-    MVector vL2Snap = vSnap - vHandle;
-    MVector nYAxis, nYAxisSnap, vYDirection;
-    if (pvMode == 0){
-        MVector vUpDirection = vUpVector - vRoot;
-        vYDirection = vUpDirection - ((vUpDirection * nXAxis) * nXAxis);
-        nYAxis = vYDirection.normal();
-    }
+
+    MQuaternion qBasis = MQuaternion();
+
+    MVector vAim = vHandle - vRoot;
+    MVector nAim = vAim.normal();
+    MQuaternion qAim = MQuaternion(MVector::xAxis, nAim);
+    qBasis *= qAim;
+
+    MVector vStartSnap = vSnap - vRoot;
+    MVector vEndSnap = vSnap - vHandle;
+
+    MVector vUp;
+    if (pvMode == 0)
+        vUp = vPoleVector - vRoot;
     else{
-        MVector vAutoPosWorld = vRoot + MVector(cos(twist + prefAngle), 0.0, sin(twist + prefAngle));
-        MVector vAutoPosLocal = vAutoPosWorld - vRoot;
-        vYDirection = vAutoPosLocal - ((vAutoPosLocal * nXAxis) * nXAxis);
-        nYAxis = vYDirection.normal();
+        MQuaternion qTwist = MQuaternion(prefAngle + twist, nAim);
+        vUp = MVector::yAxis.rotateBy(qTwist);
     }
+    MVector nNormalPole = vUp - ((vUp * nAim) * nAim);
+    nNormalPole.normalize();
+    MVector nNormalSnap;
+    MVector nNormal;
     if (snap > 0.0f){
-        MVector vSnapDirection = vL1Snap - ((vL1Snap * nXAxis) * nXAxis);
-        MVector nSnapDirection = vSnapDirection.normal();
-        nYAxisSnap = (1.0f - snap) * nYAxis + snap * nSnapDirection;
+        nNormalSnap = vStartSnap - ((vStartSnap * nAim) * nAim);
+        nNormalSnap.normalize();
+        nNormal = (1.0f - snap) * nNormalPole + snap * nNormalSnap;
     }
     else
-        nYAxisSnap = nYAxis;
-    MVector nZAxis = nXAxis ^ nYAxisSnap;
-    double basis[4][4] = {
-        {nXAxis.x, nXAxis.y, nXAxis.z, 0.0},
-        {nYAxisSnap.x, nYAxisSnap.y, nYAxisSnap.z, 0.0},
-        {nZAxis.x, nZAxis.y, nZAxis.z, 0.0},
-        {vRoot.x, vRoot.y, vRoot.z, 1.0}
-    };
-    MMatrix mBasis = MMatrix(basis);
+        nNormal = nNormalPole;
+    MVector nUp = MVector::yAxis.rotateBy(qAim);
+    double angle = nUp.angle(nNormal);
+    MQuaternion qNormal = MQuaternion(angle, nAim);
+    if (!nNormal.isEquivalent(nUp.rotateBy(qNormal), 1.0e-5)){
+        angle = 2.0 * M_PI - angle;
+        qNormal = MQuaternion(angle, nAim);
+    }
+    qBasis *= qNormal;
 
-    // Solve triangle
-    float l1 = dataBlock.inputValue(inRestLength1).asFloat();
-    float l2 = dataBlock.inputValue(inRestLength2).asFloat();
+
+    // Solve Triangle
+    float restStartLen = dataBlock.inputValue(inRestLenStart).asFloat();
+    float restEndLen = dataBlock.inputValue(inRestLenEnd).asFloat();
     float compressionLimit = dataBlock.inputValue(inCompressionLimit).asFloat();
-    float softValue = dataBlock.inputValue(inSoftness).asFloat();
-    double l1m = l1;
-    double l2m = l2;
-    double l1Snap = vL1Snap.length();
-    double l2Snap = vL2Snap.length();
-    double length1 = (1.0f - snap) * l1m + snap * l1Snap;
-    double length2 = (1.0f - snap) * l2m + snap * l2Snap;
-    double chainLength = (1.0f - snap) * (l1m + l2m) + snap * (l1Snap + l2Snap);
-    double l3rigid = max(min(xDist, chainLength), chainLength * compressionLimit);
-    double dc = chainLength;
-    double da = (1.0f - softValue) * dc;
-    double l3;
-    double l3soft = 1.0f;
-    double l3SnapSoft = l3soft;
-    if ((xDist > da) && (softValue > 0.0f)){
+    float softVal = dataBlock.inputValue(inSoftness).asFloat();
+
+    double startLen = (1.0f - snap) * restStartLen + snap * vStartSnap.length();
+    double endLen = (1.0f - snap) * restEndLen + snap * vEndSnap.length();
+    double chainLen = (1.0f - snap) * (restStartLen + restEndLen) + snap * (vStartSnap.length() + vEndSnap.length());
+    double handleLen = vAim.length();
+
+    double rigidLen = std::max(std::min(handleLen, chainLen), chainLen * compressionLimit);
+    double dc = chainLen;
+    double da = (1.0f - softVal) * dc;
+    double solverLen;
+    if (handleLen > da && softVal > 0.0f){
         double ds = dc - da;
-        l3soft = ds * (1.0 - pow(M_E, (da - xDist) / ds)) + da;
-        l3SnapSoft = (1.0f - snap) * l3soft + snap * l3rigid;
-        l3 = l3SnapSoft;
+        double softLen = ds * (1.0 - pow(M_E, (da - handleLen) / ds)) + da;
+        solverLen = (1.0f - snap) * softLen + snap * rigidLen;
     }
     else
-        l3 = l3rigid;
+        solverLen = rigidLen;
 
-    // Angle mesurement
-    bool hierarchyMode = dataBlock.inputValue(inHierarchyMode).asBool();
-    double betaCos = (pow(length1, 2.0) + pow(l3, 2.0) - pow(length2, 2.0)) / (2.0 * length1 * l3);
-    if (betaCos < -1.0)
-        betaCos = -1.0;
-    double beta = acos(betaCos);
-    double betaSin = sin(beta);
-    double gammaCos = (pow(length1, 2.0) + pow(length2, 2.0) - pow(l3, 2.0)) / (2.0 * length1 * length2);
-    if (gammaCos > 1.0)
-        gammaCos = 1.0;
-    double gamma = acos(gammaCos);
-    double gammaComplement;
-    if (hierarchyMode == true)
-        gammaComplement = gamma - M_PI;
-    else
-        gammaComplement = gamma + beta - M_PI;
-    double gammaComplementCos = cos(gammaComplement);
-    double gammaComplementSin = sin(gammaComplement);
-    double alpha = M_PI - beta - gamma;
-    double alphaCos = cos(alpha);
-    double alphaSin = sin(alpha);
 
-    // Cartoony features
-    double stretch = dataBlock.inputValue(inStretch).asDouble();
+    // Pre Calculations
+    double startLenSquared = pow(startLen, 2.0);
+    double endLenSquared = pow(endLen, 2.0);
+    double solverLenSquared = pow(solverLen, 2.0);
+    float stretch = dataBlock.inputValue(inStretch).asFloat();
+    double2& squashMultStart = dataBlock.inputValue(inSquashMultStart).asDouble2();
+    double2& squashMultEnd = dataBlock.inputValue(inSquashMultEnd).asDouble2();
     double stretchFactor;
     double squashFactor;
-    if (stretch > 0.0f){
-        double clampStretch = dataBlock.inputValue(inClampStretch).asDouble();
-        double clampStretchValue = dataBlock.inputValue(inClampValue).asDouble();
-        double squash = dataBlock.inputValue(inSquash).asDouble();
+    if (stretch > 0.0){
+        float clampStretch = dataBlock.inputValue(inClampStretch).asFloat();
+        double clampValue = dataBlock.inputValue(inClampValue).asDouble();
+        float squash = dataBlock.inputValue(inSquash).asFloat();
         double scaleFactor;
-        if ((xDist > da) && (softValue > 0.0f))
-            scaleFactor = xDist / l3SnapSoft;
+        if ((handleLen > da) && (softVal > 0.0f))
+            scaleFactor = handleLen / solverLen;
         else
-            scaleFactor = xDist / chainLength;
-        if (xDist >= da){
-            double clampFactor = (1.0 - clampStretch) * scaleFactor + clampStretch * min(scaleFactor, clampStretchValue);
-            stretchFactor = (1.0 - stretch) + stretch * clampFactor;
+            scaleFactor = handleLen / chainLen;
+        if (handleLen >= da){
+            double clampFactor = (1.0f - clampStretch) * scaleFactor + clampStretch * std::min(scaleFactor, clampValue);
+            stretchFactor = (1.0f - stretch) + stretch * clampFactor;
         }
         else
             stretchFactor = 1.0;
-        squashFactor = (1.0 - squash) + squash * (1.0 / sqrt(stretchFactor));
+        squashFactor = (1.0f - squash) + squash * (1.0 / sqrt(stretchFactor));
     }
     else{
         stretchFactor = 1.0;
         squashFactor = 1.0;
     }
 
-    // Output transforms
+    bool hierarchyMode = dataBlock.inputValue(inHierarchyMode).asBool();
+    bool useScale = dataBlock.inputValue(inUseScale).asBool();
     MArrayDataHandle outChainHandle = dataBlock.outputArrayValue(outChain);
-    vector<MMatrix> srtList;
-    vector<MMatrix> jntOriList;
-    MArrayDataHandle jntOriHandle = dataBlock.inputArrayValue(inJointOrient);
-    MTransformationMatrix mtxFn;
-    MMatrix mFlip;
-    if (flip){
-        mtxFn = MTransformationMatrix();
-        mtxFn.rotateBy(MEulerRotation(0.0, 0.0, -M_PI), MSpace::kTransform);
-        mFlip = mtxFn.asMatrix();
+    MArrayDataHandle offsetHandle = dataBlock.inputArrayValue(inOffset);
+    MArrayDataHandle jntOriHandle = dataBlock.inputArrayValue(inJntOri);
+    MMatrix mParInv = dataBlock.inputValue(inParInvMtx).asMatrix();
+    std::vector<MMatrix> srtList;
+    std::vector<MQuaternion> offsetList;
+    std::vector<MQuaternion> jntOriList;
+
+    for (uint32_t i = 0; i < offsetHandle.elementCount(); i++){
+        offsetHandle.jumpToArrayElement(i);
+        MEulerRotation eOff = MEulerRotation(offsetHandle.inputValue().asDouble3());
+        MQuaternion qOff = eOff.asQuaternion();
+        offsetList.push_back(qOff);
     }
+
     for (uint32_t i = 0; i < jntOriHandle.elementCount(); i++){
         jntOriHandle.jumpToArrayElement(i);
         MEulerRotation eOri = MEulerRotation(jntOriHandle.inputValue().asDouble3());
-        mtxFn = MTransformationMatrix();
-        mtxFn.rotateBy(eOri, MSpace::kTransform);
-        MMatrix mOri = mtxFn.asMatrix();
-        jntOriList.push_back(mOri);
-    }
-    if (hierarchyMode){
-        MMatrix mParInv = dataBlock.inputValue(inParInvMtx).asMatrix();
-        MMatrix mScale = MMatrix();
-        MMatrix mLocal = MMatrix();
-        MMatrix mResult = MMatrix();
-        mScale[0][0] = stretchFactor;
-        mScale[1][1] = squashFactor;
-        mScale[2][2] = squashFactor;
-        mLocal = MMatrix();
-        mLocal[0][0] = betaCos;
-        mLocal[0][1] = betaSin;
-        mLocal[1][0] = -betaSin;
-        mLocal[1][1] = betaCos;
-        mResult = MMatrix();
-        if (flip)
-            mLocal *= mFlip;
-        if (jntOriList.size() >= 1)
-            mResult = mScale * mLocal * mBasis * mParInv * jntOriList[0].inverse();
-        else
-            mResult = mScale * mLocal * mBasis * mParInv;
-        srtList.push_back(mResult);
-        mLocal = MMatrix();
-        mLocal[0][0] = gammaComplementCos;
-        mLocal[0][1] = gammaComplementSin;
-        mLocal[1][0] = -gammaComplementSin;
-        mLocal[1][1] = gammaComplementCos;
-        mResult = MMatrix();
-        if (jntOriList.size() >= 2)
-            mResult = mScale * mLocal * jntOriList[1].inverse();
-        else
-            mResult = mScale * mLocal;
-        if (flip)
-            mResult[3][0] = -length1;
-        else
-            mResult[3][0] = length1;
-        srtList.push_back(mResult);
-        mLocal = MMatrix();
-        mLocal[0][0] = alphaCos;
-        mLocal[0][1] = alphaSin;
-        mLocal[1][0] = -alphaSin;
-        mLocal[1][1] = alphaCos;
-        if (flip)
-            mLocal[3][0] = -length2;
-        else
-            mLocal[3][0] = length2;
-        srtList.push_back(mLocal);
-    }
-    else{
-        MMatrix mScale = MMatrix();
-        MMatrix mLocal = MMatrix();
-        MMatrix mResult = MMatrix();
-        mScale[0][0] = stretchFactor;
-        mScale[1][1] = squashFactor;
-        mScale[2][2] = squashFactor;
-        mLocal = MMatrix();
-        mLocal[0][0] = betaCos;
-        mLocal[0][1] = betaSin;
-        mLocal[1][0] = -betaSin;
-        mLocal[1][1] = betaCos;
-        mResult = MMatrix();
-        mResult = mScale * mLocal * mBasis;
-        srtList.push_back(mResult);
-        mLocal = MMatrix();
-        mLocal[0][0] = gammaComplementCos;
-        mLocal[0][1] = gammaComplementSin;
-        mLocal[1][0] = -gammaComplementSin;
-        mLocal[1][1] = gammaComplementCos;
-        mLocal[3][0] = betaCos * l1m * stretchFactor;
-        mLocal[3][1] = betaSin * l1m * stretchFactor;
-        mResult = MMatrix();
-        mResult = mScale * mLocal * mBasis;
-        srtList.push_back(mResult);
-        mLocal = mHandle;
-        mLocal[3][0] = mBasis[3][0] + mBasis[0][0] * l3 * stretchFactor;
-        mLocal[3][1] = mBasis[3][1] + mBasis[0][1] * l3 * stretchFactor;
-        mLocal[3][2] = mBasis[3][2] + mBasis[0][2] * l3 * stretchFactor;
-        mResult = MMatrix();
-        mResult = mScale * mLocal;
-        srtList.push_back(mResult);
+        MQuaternion qOri = eOri.asQuaternion();
+        jntOriList.push_back(qOri);
     }
 
+
+    // First Output
+    // Scale
+    double firstStretch = stretchFactor;
+    double firstScaX = firstStretch;
+    if (!useScale)
+        firstStretch = 1.0;
+    double firstSquash[2] = {squashFactor * squashMultStart[0], squashFactor * squashMultStart[1]};
+    double firstSca[3] = {firstStretch, firstSquash[0], firstSquash[1]};
+    // Rotation
+    double betaCosPure = (startLenSquared + solverLenSquared - endLenSquared) / (2.0 * startLen * solverLen);
+    double betaCos = std::min(std::max(betaCosPure, -1.0), 1.0);
+    #ifdef __linux__
+        double beta = acos(betaCos);
+    #else
+        double beta = std::acos(betaCos);
+    #endif
+    MQuaternion qBeta = MQuaternion(beta, MVector::zAxis);
+    MQuaternion qFirstRot = MQuaternion();
+    MQuaternion qFirstRotW = qBeta * qBasis;
+    if (offsetList.size() >= 1)
+        qFirstRot *= offsetList[0];
+    qFirstRot *= qFirstRotW;
+    if (jntOriList.size() >= 1)
+        qFirstRot *= jntOriList[0].invertIt();
+    // Translation
+    MVector vFirstPos = vRoot;
+    // Matrix Output
+    MTransformationMatrix mtxFn = MTransformationMatrix();
+    mtxFn.setScale(firstSca, MSpace::kTransform);
+    mtxFn.rotateTo(qFirstRot);
+    mtxFn.setTranslation(vFirstPos, MSpace::kTransform);
+    MMatrix mFirstW = mtxFn.asMatrix();
+    MMatrix mFirstL = mFirstW * mParInv;
+    srtList.push_back(mFirstL);
+
+
+    // Second Output
+    // Scale
+    double secondStretch = stretchFactor;
+    double secondScaX = secondStretch;
+    if (!useScale)
+        secondStretch = 1.0;
+    double secondSquash[2] = {squashFactor * squashMultEnd[0], squashFactor * squashMultEnd[1]};
+    double secondSca[3] = {secondStretch, secondSquash[0], secondSquash[1]};
+    // Rotation
+    double gammaCosPure = (startLenSquared + endLenSquared - solverLenSquared) / (2.0 * startLen * endLen);
+    double gammaCos = std::min(std::max(gammaCosPure, -1.0), 1.0);
+    #ifdef __linux__
+        double gamma = acos(gammaCos);
+    #else
+        double gamma = std::acos(gammaCos);
+    #endif
+    double gammaCmp = gamma + beta - M_PI;
+    MQuaternion qGamma = MQuaternion(gammaCmp, MVector::zAxis);
+    MQuaternion qSecondRot = MQuaternion();
+    MQuaternion qSecondRotW = qGamma * qBasis;
+    if (offsetList.size() >= 2)
+        qSecondRot *= offsetList[1];
+    qSecondRot *= qSecondRotW;
+    if (hierarchyMode){
+        qSecondRot *= qFirstRotW.invertIt();
+        if (offsetList.size() >= 1)
+            qSecondRot *= offsetList[0].invertIt();
+    }
+    if (jntOriList.size() >= 2)
+        qSecondRot *= jntOriList[1].invertIt();
+    // Translation
+    MVector vSecondPos;
+    if (hierarchyMode){
+        vSecondPos = MVector::xAxis * startLen;
+        if (!useScale)
+            vSecondPos *= firstScaX;
+    }
+    else{
+        MVector vSecondOri = nAim.rotateBy(MQuaternion(beta, nAim ^ nNormal)) * startLen;
+        if (!useScale)
+            vSecondOri *= firstScaX;
+        vSecondPos = vRoot + vSecondOri;
+    }
+    // Matrix Output
+    mtxFn = MTransformationMatrix();
+    mtxFn.setScale(secondSca, MSpace::kTransform);
+    mtxFn.rotateTo(qSecondRot);
+    mtxFn.setTranslation(vSecondPos, MSpace::kTransform);
+    MMatrix mSecondW = mtxFn.asMatrix();
+    MMatrix mSecondL = mSecondW;
+    if (!hierarchyMode)
+        mSecondL *= mParInv;
+    srtList.push_back(mSecondL);
+
+
+    // Third Output
+    // Rotation
+    MQuaternion qThirdRot = qBasis;
+    if (hierarchyMode){
+        qThirdRot *= qSecondRotW.invertIt();
+        if (offsetList.size() >= 2)
+            qThirdRot *= offsetList[1].invertIt();
+    }
+    // Translation
+    MVector vThirdPos;
+    if (hierarchyMode){
+        vThirdPos = MVector::xAxis * endLen;
+        if (!useScale)
+            vThirdPos *= secondScaX;
+    }
+    else{
+        vThirdPos = vRoot + nAim * solverLen;
+        if (!useScale)
+            vThirdPos = vRoot + nAim * solverLen * stretchFactor;
+    }
+    // Matrix Output
+    mtxFn = MTransformationMatrix();
+    mtxFn.rotateTo(qThirdRot);
+    mtxFn.setTranslation(vThirdPos, MSpace::kTransform);
+    MMatrix mThirdW = mtxFn.asMatrix();
+    MMatrix mThirdL = mThirdW;
+    if (!hierarchyMode)
+        mThirdL *= mParInv;
+    srtList.push_back(mThirdL);
+
+
+    // Set outputs
     for (uint32_t i = 0; i < outChainHandle.elementCount(); i++){
         outChainHandle.jumpToArrayElement(i);
         MDataHandle resultHandle = outChainHandle.outputValue();
-        if ((i < outChainHandle.elementCount()) && (i < srtList.size()))
+        if (i < outChainHandle.elementCount() && i < srtList.size())
             resultHandle.setMMatrix(srtList[i]);
         else
-            resultHandle.setMMatrix(MMatrix());
+            resultHandle.setMMatrix(MMatrix::identity);
     }
 
     outChainHandle.setAllClean();

@@ -84,15 +84,14 @@ Sources:
 
 #include <maya/MFnMatrixAttribute.h>
 #include <maya/MFnNumericAttribute.h>
-#include <maya/MFnUnitAttribute.h>
 #include <maya/MFnEnumAttribute.h>
+#include <maya/MFnUnitAttribute.h>
 #include <maya/MMatrix.h>
-#include <maya/MVector.h>
-#include <maya/MAngle.h>
-#include <maya/MEulerRotation.h>
 #include <maya/MTransformationMatrix.h>
-
-using namespace std;
+#include <maya/MAngle.h>
+#include <maya/MVector.h>
+#include <maya/MQuaternion.h>
+#include <maya/MEulerRotation.h>
 
 
 class IKVChainSolver : public MPxNode{
@@ -115,23 +114,26 @@ public:
 
     static MObject                      inRoot;
     static MObject                      inHandle;
-    static MObject                      inUpVector;
+    static MObject                      inPoleVector;
+    static MObject                      inOffset;
+    static MObject                      inJntOri;
     static MObject                      inParInvMtx;
-    static MObject                      inJointOrient;
+    static MObject                      inRestLenStart;
+    static MObject                      inRestLenEnd;
     static MObject                      inPreferredAngle;
-    static MObject                      inPvMode;
     static MObject                      inTwist;
+    static MObject                      inPvMode;
     static MObject                      inHierarchyMode;
-    static MObject                      inRestLength1;
-    static MObject                      inRestLength2;
+    static MObject                      inUseScale;
     static MObject                      inCompressionLimit;
-    static MObject                      inSoftness;
     static MObject                      inSnapUpVector;
-    static MObject                      inSnapObj;
+    static MObject                      inSnap;
+    static MObject                      inSoftness;
     static MObject                      inStretch;
     static MObject                      inClampStretch;
     static MObject                      inClampValue;
     static MObject                      inSquash;
-    static MObject                      inFlipOri;
+    static MObject                      inSquashMultStart;
+    static MObject                      inSquashMultEnd;
     static MObject                      outChain;
 };
