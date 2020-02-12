@@ -65,6 +65,7 @@ Sources:
 
 This code supports Pylint. Rc file in project.
 """
+import math
 import maya.api._OpenMaya_py2 as om2
 
 
@@ -103,13 +104,13 @@ class AimConstraint(om2.MPxNode):
     inOffset = om2.MObject()
     inWorldUpVector = om2.MObject()
     inWorldUpMtx = om2.MObject()
+    inAngleUp = om2.MObject()
     inTargetWMtx = om2.MObject()
     inTargetWeight = om2.MObject()
     inConstWMtx = om2.MObject()
     inConstParInvMtx = om2.MObject()
     inConstJntOri = om2.MObject()
     inConstRotOrder = om2.MObject()
-    inConstParSca = om2.MObject()
     outConstraint = om2.MObject()
 
     def __init__(self):
@@ -136,7 +137,9 @@ class AimConstraint(om2.MPxNode):
         AimConstraint.inUpVecType = eAttr.create("upVectorType", "upt", 0)
         eAttr.addField("World Up", 0)
         eAttr.addField("Object Up", 1)
+        eAttr.addField("Angle Up", 2)
         INPUT_ATTR(eAttr)
+        eAttr.channelBox = True
 
         offsetX = uAttr.create("offsetX", "offsetX", om2.MFnUnitAttribute.kAngle, 0.0)
         offsetY = uAttr.create("offsetY", "offsetY", om2.MFnUnitAttribute.kAngle, 0.0)
@@ -148,16 +151,21 @@ class AimConstraint(om2.MPxNode):
         nAttr.default = (0.0, 1.0, 0.0)
         INPUT_ATTR(nAttr)
 
-        AimConstraint.inWorldUpMtx = mAttr.create("worldUpMatrix", "wum", om2.MFnMatrixAttribute.kFloat)
+        AimConstraint.inWorldUpMtx = mAttr.create("worldUpMatrix", "wum", om2.MFnMatrixAttribute.kDouble)
         INPUT_ATTR(mAttr)
 
-        AimConstraint.inTargetWMtx = mAttr.create("targetWorldMatrix", "twmtx", om2.MFnMatrixAttribute.kFloat)
+        AimConstraint.inAngleUp = uAttr.create("angleUp", "angle", om2.MFnUnitAttribute.kAngle, 0.0)
+        uAttr.setMin(0.0)
+        uAttr.setMax(2.0 * math.pi)
+        INPUT_ATTR(uAttr)
+
+        AimConstraint.inTargetWMtx = mAttr.create("targetWorldMatrix", "twmtx", om2.MFnMatrixAttribute.kDouble)
         INPUT_ATTR(mAttr)
 
         AimConstraint.inTargetWeight = nAttr.create("targetWeight", "tw", om2.MFnNumericData.kDouble, 1.0)
         INPUT_ATTR(nAttr)
 
-        AimConstraint.inConstWMtx = mAttr.create("constraintWorldMatrix", "cwmtx", om2.MFnMatrixAttribute.kFloat)
+        AimConstraint.inConstWMtx = mAttr.create("constraintWorldMatrix", "cwmtx", om2.MFnMatrixAttribute.kDouble)
         INPUT_ATTR(mAttr)
 
         AimConstraint.inConstParInvMtx = mAttr.create("constraintParentInverseMatrix", "cpim", om2.MFnMatrixAttribute.kDouble)
@@ -178,10 +186,6 @@ class AimConstraint(om2.MPxNode):
         eAttr.addField("zyx", 5)
         INPUT_ATTR(eAttr)
 
-        AimConstraint.inConstParSca = nAttr.createPoint("constraintParentScale", "cps")
-        nAttr.default = (1.0, 1.0, 1.0)
-        INPUT_ATTR(nAttr)
-
         outConstraintX = uAttr.create("constraintX", "cx", om2.MFnUnitAttribute.kAngle, 0.0)
         outConstraintY = uAttr.create("constraintY", "cy", om2.MFnUnitAttribute.kAngle, 0.0)
         outConstraintZ = uAttr.create("constraintZ", "cz", om2.MFnUnitAttribute.kAngle, 0.0)
@@ -192,25 +196,25 @@ class AimConstraint(om2.MPxNode):
         AimConstraint.addAttribute(AimConstraint.inOffset)
         AimConstraint.addAttribute(AimConstraint.inWorldUpVector)
         AimConstraint.addAttribute(AimConstraint.inWorldUpMtx)
+        AimConstraint.addAttribute(AimConstraint.inAngleUp)
         AimConstraint.addAttribute(AimConstraint.inTargetWMtx)
         AimConstraint.addAttribute(AimConstraint.inTargetWeight)
         AimConstraint.addAttribute(AimConstraint.inConstWMtx)
         AimConstraint.addAttribute(AimConstraint.inConstParInvMtx)
         AimConstraint.addAttribute(AimConstraint.inConstJntOri)
         AimConstraint.addAttribute(AimConstraint.inConstRotOrder)
-        AimConstraint.addAttribute(AimConstraint.inConstParSca)
         AimConstraint.addAttribute(AimConstraint.outConstraint)
         AimConstraint.attributeAffects(AimConstraint.inUpVecType, AimConstraint.outConstraint)
         AimConstraint.attributeAffects(AimConstraint.inOffset, AimConstraint.outConstraint)
         AimConstraint.attributeAffects(AimConstraint.inWorldUpVector, AimConstraint.outConstraint)
         AimConstraint.attributeAffects(AimConstraint.inWorldUpMtx, AimConstraint.outConstraint)
+        AimConstraint.attributeAffects(AimConstraint.inAngleUp, AimConstraint.outConstraint)
         AimConstraint.attributeAffects(AimConstraint.inTargetWMtx, AimConstraint.outConstraint)
         AimConstraint.attributeAffects(AimConstraint.inTargetWeight, AimConstraint.outConstraint)
         AimConstraint.attributeAffects(AimConstraint.inConstWMtx, AimConstraint.outConstraint)
         AimConstraint.attributeAffects(AimConstraint.inConstParInvMtx, AimConstraint.outConstraint)
         AimConstraint.attributeAffects(AimConstraint.inConstJntOri, AimConstraint.outConstraint)
         AimConstraint.attributeAffects(AimConstraint.inConstRotOrder, AimConstraint.outConstraint)
-        AimConstraint.attributeAffects(AimConstraint.inConstParSca, AimConstraint.outConstraint)
 
     def compute(self, plug, dataBlock):
         """
@@ -221,55 +225,67 @@ class AimConstraint(om2.MPxNode):
         # pylint: disable=no-self-use
         if plug != AimConstraint.outConstraint:
             return om2.kUnknownParameter
+
         upVecType = dataBlock.inputValue(AimConstraint.inUpVecType).asShort()
         eOffset = om2.MEulerRotation(dataBlock.inputValue(AimConstraint.inOffset).asDouble3())
-        mTargetWorld = dataBlock.inputValue(AimConstraint.inTargetWMtx).asFloatMatrix()
+        qOffset = eOffset.asQuaternion()
+        mTargetW = dataBlock.inputValue(AimConstraint.inTargetWMtx).asMatrix()
         targetWeight = dataBlock.inputValue(AimConstraint.inTargetWeight).asDouble()
-        mConstWorld = dataBlock.inputValue(AimConstraint.inConstWMtx).asFloatMatrix()
+        mConstW = dataBlock.inputValue(AimConstraint.inConstWMtx).asMatrix()
         mConstParInv = dataBlock.inputValue(AimConstraint.inConstParInvMtx).asMatrix()
         eConstJntOri = om2.MEulerRotation(dataBlock.inputValue(AimConstraint.inConstJntOri).asDouble3())
+        qConstJntOri = eConstJntOri.asQuaternion()
         constRotOrder = dataBlock.inputValue(AimConstraint.inConstRotOrder).asShort()
-        constParSca = dataBlock.inputValue(AimConstraint.inConstParSca).asFloat3()
 
-        vTargetPos = om2.MFloatVector(mTargetWorld[12], mTargetWorld[13], mTargetWorld[14])
-        vConstPos = om2.MFloatVector(mConstWorld[12], mConstWorld[13], mConstWorld[14])
-        nAim = vTargetPos - vConstPos
+        vTarget = om2.MVector(mTargetW[12], mTargetW[13], mTargetW[14])
+        vConst = om2.MVector(mConstW[12], mConstW[13], mConstW[14])
+        mtxFn = om2.MTransformationMatrix(mConstParInv)
+        qConstParInv = mtxFn.rotation(asQuaternion=True)
+
+        primAxis = om2.MVector.kXaxisVector
+        secAxis = om2.MVector.kYaxisVector
+        qAimConst = om2.MQuaternion()
+
+        nAim = vTarget - vConst
         nAim.normalize()
+        qAim = om2.MQuaternion(primAxis, nAim)
+        qAimConst *= qAim
+
         if upVecType == 0:
-            nWorldUp = dataBlock.inputValue(AimConstraint.inWorldUpVector).asFloatVector()
+            # World Up
+            nWorldUp = om2.MVector(dataBlock.inputValue(AimConstraint.inWorldUpVector).asFloat3())
             nWorldUp.normalize()
-            nBinormal = nWorldUp ^ nAim
-            nBinormal.normalize()
-            nNormal = nAim ^ nBinormal
-            nNormal.normalize()
+            vUp = nWorldUp
         elif upVecType == 1:
-            mWorldUp = dataBlock.inputValue(AimConstraint.inWorldUpMtx).asFloatMatrix()
-            vWorldUp = om2.MFloatVector(mWorldUp[12], mWorldUp[13], mWorldUp[14])
-            nNormal = vWorldUp - vConstPos
-            nNormal.normalize()
-            nBinormal = nAim ^ nNormal
-            nBinormal.normalize()
-        aim = [
-            nAim.x, nAim.y, nAim.z, 0.0,
-            nNormal.x, nNormal.y, nNormal.z, 0.0,
-            nBinormal.x, nBinormal.y, nBinormal.z, 0.0,
-            0.0, 0.0, 0.0, 1.0
-        ]
-        mAim = om2.MMatrix(aim)
-        mtxFn = om2.MTransformationMatrix()
-        mtxFn.scaleBy(constParSca, om2.MSpace.kTransform)
-        mInvSca = mtxFn.asMatrix()
-        mtxFn = om2.MTransformationMatrix()
-        mtxFn.rotateBy(eConstJntOri, om2.MSpace.kTransform)
-        mConstJntOri = mtxFn.asMatrix()
-        mtxFn = om2.MTransformationMatrix()
-        mtxFn.rotateBy(eOffset.invertIt(), om2.MSpace.kTransform)
-        mOffset = mtxFn.asMatrix()
-        mResult = mOffset * mAim * mConstParInv * mInvSca * mConstJntOri.inverse()
-        eConstraint = om2.MTransformationMatrix(mResult).rotation(asQuaternion=False)
-        eConstraint.reorderIt(constRotOrder)
-        eConstraint *= targetWeight
-        vConstraint = eConstraint.asVector()
+            # Object Up
+            mWorldUp = dataBlock.inputValue(AimConstraint.inWorldUpMtx).asMatrix()
+            vWorldUp = om2.MVector(mWorldUp[12], mWorldUp[13], mWorldUp[14])
+            vUp = vWorldUp - vConst
+        elif upVecType == 2:
+            # Angle Up
+            angleUp = dataBlock.inputValue(AimConstraint.inAngleUp).asAngle().asRadians()
+            qTwist = om2.MQuaternion(angleUp, nAim)
+            vUp = secAxis.rotateBy(qTwist)
+        nNormal = vUp - ((vUp * nAim) * nAim)
+        nNormal.normalize()
+
+        nUp = secAxis.rotateBy(qAim)
+        angle = nUp.angle(nNormal)
+        qNormal = om2.MQuaternion(angle, nAim)
+        if not nNormal.isEquivalent(nUp.rotateBy(qNormal), 1.0e-5):
+            angle = 2.0 * math.pi - angle
+            qNormal = om2.MQuaternion(angle, nAim)
+        qAimConst *= qNormal
+
+        qResult = om2.MQuaternion()
+        qResult *= qOffset.invertIt()
+        qResult *= qAimConst
+        qResult *= qConstParInv.invertIt()
+        qResult *= qConstJntOri.invertIt()
+        eResult = qResult.asEulerRotation()
+        eResult.reorderIt(constRotOrder)
+        eResult *= targetWeight
+        vResult = eResult.asVector()
         outConstraintHandle = dataBlock.outputValue(AimConstraint.outConstraint)
-        outConstraintHandle.setMVector(vConstraint)
+        outConstraintHandle.setMVector(vResult)
         outConstraintHandle.setClean()

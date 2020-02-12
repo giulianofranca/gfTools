@@ -61,19 +61,23 @@ Sources:
 */
 #pragma once
 
+#ifdef _WIN64
+#define _USE_MATH_DEFINES
+#endif
+#include <cmath>
+
 #include <maya/MPxNode.h>
 
 #include <maya/MFnEnumAttribute.h>
 #include <maya/MFnMatrixAttribute.h>
 #include <maya/MFnNumericAttribute.h>
 #include <maya/MFnUnitAttribute.h>
-#include <maya/MFloatMatrix.h>
-#include <maya/MFloatVector.h>
 #include <maya/MMatrix.h>
 #include <maya/MTransformationMatrix.h>
 #include <maya/MVector.h>
 #include <maya/MQuaternion.h>
 #include <maya/MEulerRotation.h>
+#include <maya/MAngle.h>
 #include <maya/MGlobal.h>
 
 
@@ -99,12 +103,12 @@ public:
     static MObject                      inOffset;
     static MObject                      inWorldUpVector;
     static MObject                      inWorldUpMtx;
+    static MObject                      inAngleUp;
     static MObject                      inTargetWMtx;
     static MObject                      inTargetWeight;
     static MObject                      inConstWMtx;
     static MObject                      inConstParInvMtx;
     static MObject                      inConstJntOri;
     static MObject                      inConstRotOrder;
-    static MObject                      inConstParSca;
     static MObject                      outConstraint;
 };

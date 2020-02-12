@@ -24,13 +24,13 @@ MObject AimConstraint::inUpVecType;
 MObject AimConstraint::inOffset;
 MObject AimConstraint::inWorldUpVector;
 MObject AimConstraint::inWorldUpMtx;
+MObject AimConstraint::inAngleUp;
 MObject AimConstraint::inTargetWMtx;
 MObject AimConstraint::inTargetWeight;
 MObject AimConstraint::inConstWMtx;
 MObject AimConstraint::inConstParInvMtx;
 MObject AimConstraint::inConstJntOri;
 MObject AimConstraint::inConstRotOrder;
-MObject AimConstraint::inConstParSca;
 MObject AimConstraint::outConstraint;
 
 void* AimConstraint::creator(){
@@ -53,6 +53,7 @@ MStatus AimConstraint::initialize(){
     inUpVecType = eAttr.create("upVectorType", "upt", 0, &status);
     eAttr.addField("World Up", 0);
     eAttr.addField("Object Up", 1);
+    eAttr.addField("Angle Up", 2);
     INPUT_ATTR(eAttr);
 
     MObject offsetX = uAttr.create("offsetX", "offsetX", MFnUnitAttribute::kAngle, 0.0, &status);
@@ -65,16 +66,21 @@ MStatus AimConstraint::initialize(){
     nAttr.setDefault(0.0f, 1.0f, 0.0f);
     INPUT_ATTR(nAttr);
 
-    inWorldUpMtx = mAttr.create("worldUpMatrix", "wum", MFnMatrixAttribute::kFloat, &status);
+    inAngleUp = uAttr.create("angleUp", "angle", MFnUnitAttribute::kAngle, 0.0, &status);
+    uAttr.setMin(0.0);
+    uAttr.setMax(2.0 * M_PI);
+    INPUT_ATTR(uAttr);
+
+    inWorldUpMtx = mAttr.create("worldUpMatrix", "wum", MFnMatrixAttribute::kDouble, &status);
     INPUT_ATTR(mAttr);
 
-    inTargetWMtx = mAttr.create("targetWorldMatrix", "twmtx", MFnMatrixAttribute::kFloat, &status);
+    inTargetWMtx = mAttr.create("targetWorldMatrix", "twmtx", MFnMatrixAttribute::kDouble, &status);
     INPUT_ATTR(mAttr);
 
     inTargetWeight = nAttr.create("targetWeight", "tw", MFnNumericData::kDouble, 1.0, &status);
     INPUT_ATTR(nAttr);
 
-    inConstWMtx = mAttr.create("constraintWorldMatrix", "cwmtx", MFnMatrixAttribute::kFloat, &status);
+    inConstWMtx = mAttr.create("constraintWorldMatrix", "cwmtx", MFnMatrixAttribute::kDouble, &status);
     INPUT_ATTR(mAttr);
 
     inConstParInvMtx = mAttr.create("constraintParentInverseMatrix", "cpim", MFnMatrixAttribute::kDouble, &status);
@@ -95,10 +101,6 @@ MStatus AimConstraint::initialize(){
     eAttr.addField("zyx", 5);
     INPUT_ATTR(eAttr);
 
-    inConstParSca = nAttr.createPoint("constraintParentScale", "cps");
-    nAttr.setDefault(1.0f, 1.0f, 1.0f);
-    INPUT_ATTR(nAttr);
-
     MObject outConstraintX = uAttr.create("contraintX", "cx", MFnUnitAttribute::kAngle, 0.0, &status);
     MObject outConstraintY = uAttr.create("contraintY", "cy", MFnUnitAttribute::kAngle, 0.0, &status);
     MObject outConstraintZ = uAttr.create("contraintZ", "cz", MFnUnitAttribute::kAngle, 0.0, &status);
@@ -109,25 +111,25 @@ MStatus AimConstraint::initialize(){
     addAttribute(inOffset);
     addAttribute(inWorldUpVector);
     addAttribute(inWorldUpMtx);
+    addAttribute(inAngleUp);
     addAttribute(inTargetWMtx);
     addAttribute(inTargetWeight);
     addAttribute(inConstWMtx);
     addAttribute(inConstParInvMtx);
     addAttribute(inConstJntOri);
     addAttribute(inConstRotOrder);
-    addAttribute(inConstParSca);
     addAttribute(outConstraint);
     attributeAffects(inUpVecType, outConstraint);
     attributeAffects(inOffset, outConstraint);
     attributeAffects(inWorldUpVector, outConstraint);
     attributeAffects(inWorldUpMtx, outConstraint);
+    attributeAffects(inAngleUp, outConstraint);
     attributeAffects(inTargetWMtx, outConstraint);
     attributeAffects(inTargetWeight, outConstraint);
     attributeAffects(inConstWMtx, outConstraint);
     attributeAffects(inConstParInvMtx, outConstraint);
     attributeAffects(inConstJntOri, outConstraint);
     attributeAffects(inConstRotOrder, outConstraint);
-    attributeAffects(inConstParSca, outConstraint);
 
     return status;
 }
@@ -143,60 +145,68 @@ MStatus AimConstraint::compute(const MPlug& plug, MDataBlock& dataBlock){
 
     short upVecType = dataBlock.inputValue(inUpVecType).asShort();
     MEulerRotation eOffset = MEulerRotation(dataBlock.inputValue(inOffset).asDouble3());
-    MFloatMatrix mTargetWorld = dataBlock.inputValue(inTargetWMtx).asFloatMatrix();
+    MQuaternion qOffset = eOffset.asQuaternion();
+    MMatrix mTargetW = dataBlock.inputValue(inTargetWMtx).asMatrix();
     double targetWeight = dataBlock.inputValue(inTargetWeight).asDouble();
-    MFloatMatrix mConstWorld = dataBlock.inputValue(inConstWMtx).asFloatMatrix();
+    MMatrix mConstW = dataBlock.inputValue(inConstWMtx).asMatrix();
     MMatrix mConstParInv = dataBlock.inputValue(inConstParInvMtx).asMatrix();
     MEulerRotation eConstJntOri = MEulerRotation(dataBlock.inputValue(inConstJntOri).asDouble3());
+    MQuaternion qConstJntOri = eConstJntOri.asQuaternion();
     short constRotOrder = dataBlock.inputValue(inConstRotOrder).asShort();
-    MFloatVector vConstParSca = dataBlock.inputValue(inConstParSca).asFloatVector();
 
-    double constParSca[3] = {vConstParSca.x, vConstParSca.y, vConstParSca.z};
+    MVector vTarget = MVector(mTargetW[3][0], mTargetW[3][1], mTargetW[3][2]);
+    MVector vConst = MVector(mConstW[3][0], mConstW[3][1], mConstW[3][2]);
+    MTransformationMatrix mtxFn = MTransformationMatrix(mConstParInv);
+    MQuaternion qConstParInv = mtxFn.rotation();
 
-    MFloatVector vTargetPos = MFloatVector(mTargetWorld[3][0], mTargetWorld[3][1], mTargetWorld[3][2]);
-    MFloatVector vConstPos = MFloatVector(mConstWorld[3][0], mConstWorld[3][1], mConstWorld[3][2]);
-    MFloatVector nAim = vTargetPos - vConstPos;
+    MVector primAxis = MVector::xAxis;
+    MVector secAxis = MVector::yAxis;
+    MQuaternion qAimConst = MQuaternion();
+
+    MVector nAim = vTarget - vConst;
     nAim.normalize();
-    MFloatVector nNormal, nBinormal;
+    MQuaternion qAim = MQuaternion(primAxis, nAim);
+    qAimConst *= qAim;
+
+    MVector vUp;
     if (upVecType == 0){
-        MFloatVector nWorldUp = dataBlock.inputValue(inWorldUpVector).asFloatVector();
+        MVector nWorldUp = MVector(dataBlock.inputValue(inWorldUpVector).asFloat3());
         nWorldUp.normalize();
-        nBinormal = nWorldUp ^ nAim;
-        nBinormal.normalize();
-        nNormal = nAim ^ nBinormal;
-        nNormal.normalize();
+        vUp = nWorldUp;
     }
     else if (upVecType == 1){
-        MFloatMatrix mWorldUp = dataBlock.inputValue(inWorldUpMtx).asFloatMatrix();
-        MFloatVector vWorldUp = MFloatVector(mWorldUp[3][0], mWorldUp[3][1], mWorldUp[3][2]);
-        nNormal = vWorldUp - vConstPos;
-        nNormal.normalize();
-        nBinormal = nAim ^ nNormal;
-        nBinormal.normalize();
+        MMatrix mWorldUp = dataBlock.inputValue(inWorldUpMtx).asMatrix();
+        MVector vWorldUp = MVector(mWorldUp[3][0], mWorldUp[3][1], mWorldUp[3][2]);
+        vUp = vWorldUp - vConst;
     }
-    float aim[4][4] = {
-        {nAim.x, nAim.y, nAim.z, 0.0f},
-        {nNormal.x, nNormal.y, nNormal.z, 0.0f},
-        {nBinormal.x, nBinormal.y, nBinormal.z, 0.0f},
-        {0.0f, 0.0f, 0.0f, 1.0f}
-    };
-    MMatrix mAim = MMatrix(aim);
-    MTransformationMatrix mtxFn = MTransformationMatrix();
-    mtxFn.addScale(constParSca, MSpace::kTransform);
-    MMatrix mInvSca = mtxFn.asMatrix();
-    mtxFn = MTransformationMatrix();
-    mtxFn.rotateBy(eConstJntOri, MSpace::kTransform);
-    MMatrix mConstJntOri = mtxFn.asMatrix();
-    mtxFn = MTransformationMatrix();
-    mtxFn.rotateBy(eOffset.invertIt(), MSpace::kTransform);
-    MMatrix mOffset = mtxFn.asMatrix();
-    MMatrix mResult = mOffset * mAim * mConstParInv * mInvSca * mConstJntOri.inverse();
-    MEulerRotation eConstraint = MTransformationMatrix(mResult).eulerRotation();
-    eConstraint.reorderIt((MEulerRotation::RotationOrder)constRotOrder);
-    eConstraint *= targetWeight;
-    MVector vConstraint = eConstraint.asVector();
+    else if (upVecType == 2){
+        double angleUp = dataBlock.inputValue(inAngleUp).asAngle().asRadians();
+        MQuaternion qTwist = MQuaternion(angleUp, nAim);
+        vUp = secAxis.rotateBy(qTwist);
+    }
+    MVector nNormal = vUp - ((vUp * nAim) * nAim);
+    nNormal.normalize();
+
+    MVector nUp = secAxis.rotateBy(qAim);
+    double angle = nUp.angle(nNormal);
+    MQuaternion qNormal = MQuaternion(angle, nAim);
+    if (!nNormal.isEquivalent(nUp.rotateBy(qNormal), 1.0e-5)){
+        angle = 2.0 * M_PI - angle;
+        qNormal = MQuaternion(angle, nAim);
+    }
+    qAimConst *= qNormal;
+
+    MQuaternion qResult = MQuaternion();
+    qResult *= qOffset.invertIt();
+    qResult *= qAimConst;
+    qResult *= qConstParInv.invertIt();
+    qResult *= qConstJntOri.invertIt();
+    MEulerRotation eResult = qResult.asEulerRotation();
+    eResult.reorderIt((MEulerRotation::RotationOrder)constRotOrder);
+    eResult *= targetWeight;
+    MVector vResult = eResult.asVector();
     MDataHandle outConstraintHandle = dataBlock.outputValue(outConstraint);
-    outConstraintHandle.setMVector(vConstraint);
+    outConstraintHandle.setMVector(vResult);
     outConstraintHandle.setClean();
 
     return MStatus::kSuccess;
