@@ -124,6 +124,7 @@ public:
     static MObject                      inTwist;
     static MObject                      inPvMode;
     static MObject                      inHierarchyMode;
+    static MObject                      inFlip;
     static MObject                      inUseScale;
     static MObject                      inCompressionLimit;
     static MObject                      inSnapUpVector;

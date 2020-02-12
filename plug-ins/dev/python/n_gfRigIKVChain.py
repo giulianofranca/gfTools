@@ -122,6 +122,7 @@ class IKVChainSolver(om2.MPxNode):
     inTwist = om2.MObject()
     inPvMode = om2.MObject()
     inHierarchyMode = om2.MObject()
+    inFlip = om2.MObject()
     inUseScale = om2.MObject()
     inCompressionLimit = om2.MObject()
     inSnapUpVector = om2.MObject()
@@ -185,12 +186,12 @@ class IKVChainSolver(om2.MPxNode):
         INPUT_ATTR(mAttr)
 
         IKVChainSolver.inRestLenStart = nAttr.create("restLengthStart", "rls", om2.MFnNumericData.kFloat, 1.0)
-        nAttr.setMin(0.001)
+        # nAttr.setMin(0.001)
         INPUT_ATTR(nAttr)
         nAttr.channelBox = True
 
         IKVChainSolver.inRestLenEnd = nAttr.create("restLengthEnd", "rle", om2.MFnNumericData.kFloat, 1.0)
-        nAttr.setMin(0.001)
+        # nAttr.setMin(0.001)
         INPUT_ATTR(nAttr)
         nAttr.channelBox = True
 
@@ -210,6 +211,10 @@ class IKVChainSolver(om2.MPxNode):
 
         IKVChainSolver.inHierarchyMode = nAttr.create("hierarchyMode", "hm", om2.MFnNumericData.kBoolean, True)
         INPUT_ATTR(nAttr)
+
+        IKVChainSolver.inFlip = nAttr.create("flipOrientation", "fori", om2.MFnNumericData.kBoolean, False)
+        INPUT_ATTR(nAttr)
+        nAttr.channelBox = True
 
         IKVChainSolver.inUseScale = nAttr.create("useStretchAsScale", "usca", om2.MFnNumericData.kBoolean, False)
         INPUT_ATTR(nAttr)
@@ -289,6 +294,7 @@ class IKVChainSolver(om2.MPxNode):
         IKVChainSolver.addAttribute(IKVChainSolver.inTwist)
         IKVChainSolver.addAttribute(IKVChainSolver.inPvMode)
         IKVChainSolver.addAttribute(IKVChainSolver.inHierarchyMode)
+        IKVChainSolver.addAttribute(IKVChainSolver.inFlip)
         IKVChainSolver.addAttribute(IKVChainSolver.inUseScale)
         IKVChainSolver.addAttribute(IKVChainSolver.inCompressionLimit)
         IKVChainSolver.addAttribute(IKVChainSolver.inSnapUpVector)
@@ -315,6 +321,7 @@ class IKVChainSolver(om2.MPxNode):
         IKVChainSolver.attributeAffects(IKVChainSolver.inTwist, IKVChainSolver.outChain)
         IKVChainSolver.attributeAffects(IKVChainSolver.inPvMode, IKVChainSolver.outChain)
         IKVChainSolver.attributeAffects(IKVChainSolver.inHierarchyMode, IKVChainSolver.outChain)
+        IKVChainSolver.attributeAffects(IKVChainSolver.inFlip, IKVChainSolver.outChain)
         IKVChainSolver.attributeAffects(IKVChainSolver.inUseScale, IKVChainSolver.outChain)
         IKVChainSolver.attributeAffects(IKVChainSolver.inCompressionLimit, IKVChainSolver.outChain)
         IKVChainSolver.attributeAffects(IKVChainSolver.inSnapUpVector, IKVChainSolver.outChain)
@@ -338,7 +345,7 @@ class IKVChainSolver(om2.MPxNode):
         if plug != IKVChainSolver.outChain:
             return om2.kUnknownParameter
 
-        # Get Basis Transformation
+        # Get Basis Quaternion
         mRoot = dataBlock.inputValue(IKVChainSolver.inRoot).asMatrix()
         mHandle = dataBlock.inputValue(IKVChainSolver.inHandle).asMatrix()
         mPoleVector = dataBlock.inputValue(IKVChainSolver.inPoleVector).asMatrix()
@@ -347,17 +354,24 @@ class IKVChainSolver(om2.MPxNode):
         twist = dataBlock.inputValue(IKVChainSolver.inTwist).asAngle().asRadians()
         snap = dataBlock.inputValue(IKVChainSolver.inSnapUpVector).asFloat()
         mSnap = dataBlock.inputValue(IKVChainSolver.inSnap).asMatrix()
+        flip = dataBlock.inputValue(IKVChainSolver.inFlip).asBool()
 
         vRoot = om2.MVector(mRoot[12], mRoot[13], mRoot[14])
         vHandle = om2.MVector(mHandle[12], mHandle[13], mHandle[14])
         vPoleVector = om2.MVector(mPoleVector[12], mPoleVector[13], mPoleVector[14])
         vSnap = om2.MVector(mSnap[12], mSnap[13], mSnap[14])
 
+        primAxis = om2.MVector.kXaxisVector
+        secAxis = om2.MVector.kYaxisVector
+        if flip:
+            primAxis = -om2.MVector.kXaxisVector
+            secAxis = -om2.MVector.kYaxisVector
+        binAxis = primAxis ^ secAxis
         qBasis = om2.MQuaternion()
 
         vAim = vHandle - vRoot
         nAim = vAim.normal()
-        qAim = om2.MQuaternion(om2.MVector.kXaxisVector, nAim)
+        qAim = om2.MQuaternion(primAxis, nAim)
         qBasis *= qAim
 
         vStartSnap = vSnap - vRoot
@@ -367,7 +381,7 @@ class IKVChainSolver(om2.MPxNode):
             vUp = vPoleVector - vRoot
         else:
             qTwist = om2.MQuaternion(prefAngle + twist, nAim)
-            vUp = om2.MVector.kYaxisVector.rotateBy(qTwist)
+            vUp = secAxis.rotateBy(qTwist)
         nNormalPole = vUp - ((vUp * nAim) * nAim)
         nNormalPole.normalize()
         if snap > 0.0:
@@ -376,7 +390,8 @@ class IKVChainSolver(om2.MPxNode):
             nNormal = (1.0 - snap) * nNormalPole + snap * nNormalSnap
         else:
             nNormal = nNormalPole
-        nUp = om2.MVector.kYaxisVector.rotateBy(qAim)
+
+        nUp = secAxis.rotateBy(qAim)
         angle = nUp.angle(nNormal)
         qNormal = om2.MQuaternion(angle, nAim)
         if not nNormal.isEquivalent(nUp.rotateBy(qNormal), 1.0e-5):
@@ -385,15 +400,18 @@ class IKVChainSolver(om2.MPxNode):
         qBasis *= qNormal
 
 
-        # Solve Triangle
+        # Solver Triangle
         restStartLen = dataBlock.inputValue(IKVChainSolver.inRestLenStart).asFloat()
         restEndLen = dataBlock.inputValue(IKVChainSolver.inRestLenEnd).asFloat()
         compressionLimit = dataBlock.inputValue(IKVChainSolver.inCompressionLimit).asFloat()
         softVal = dataBlock.inputValue(IKVChainSolver.inSoftness).asFloat()
 
-        startLen = (1.0 - snap) * restStartLen + snap * vStartSnap.length()
-        endLen = (1.0 - snap) * restEndLen + snap * vEndSnap.length()
-        chainLen = (1.0 - snap) * (restStartLen + restEndLen) + snap * (vStartSnap.length() + vEndSnap.length())
+        startSnapLen = vStartSnap.length()
+        endSnapLen = vEndSnap.length()
+
+        startLen = (1.0 - snap) * restStartLen + snap * startSnapLen
+        endLen = (1.0 - snap) * restEndLen + snap * endSnapLen
+        chainLen = (1.0 - snap) * (restStartLen + restEndLen) + snap * (startSnapLen + endSnapLen)
         handleLen = vAim.length()
 
         rigidLen = max(min(handleLen, chainLen), chainLen * compressionLimit)
@@ -467,11 +485,11 @@ class IKVChainSolver(om2.MPxNode):
         betaCosPure = (startLenSquared + solverLenSquared - endLenSquared) / (2.0 * startLen * solverLen)
         betaCos = min(max(betaCosPure, -1.0), 1.0)
         beta = math.acos(betaCos)
-        qBeta = om2.MQuaternion(beta, om2.MVector.kZaxisVector)
-        qFirstRot = om2.MQuaternion()
+        qBeta = om2.MQuaternion(beta, binAxis)
         qFirstRotW = qBeta * qBasis
+        qFirstRot = om2.MQuaternion()
         if len(offsetList) >= 1:
-            qFirstRot *= offsetList[0]
+            qFirstRot *= offsetList[0].invertIt()
         qFirstRot *= qFirstRotW
         if len(jntOriList) >= 1:
             qFirstRot *= jntOriList[0].invertIt()
@@ -482,9 +500,9 @@ class IKVChainSolver(om2.MPxNode):
         mtxFn.setScale(firstSca, om2.MSpace.kTransform)
         mtxFn.setRotation(qFirstRot)
         mtxFn.setTranslation(vFirstPos, om2.MSpace.kTransform)
-        mFirstW = mtxFn.asMatrix()
-        mFirstL = mFirstW * mParInv
-        srtList.append(mFirstL)
+        mFirst = mtxFn.asMatrix()
+        mFirst *= mParInv
+        srtList.append(mFirst)
 
 
         # Second Output
@@ -500,11 +518,11 @@ class IKVChainSolver(om2.MPxNode):
         gammaCos = min(max(gammaCosPure, -1.0), 1.0)
         gamma = math.acos(gammaCos)
         gammaCmp = gamma + beta - math.pi
-        qGamma = om2.MQuaternion(gammaCmp, om2.MVector.kZaxisVector)
-        qSecondRot = om2.MQuaternion()
+        qGamma = om2.MQuaternion(gammaCmp, binAxis)
         qSecondRotW = qGamma * qBasis
+        qSecondRot = om2.MQuaternion()
         if len(offsetList) >= 2:
-            qSecondRot *= offsetList[1]
+            qSecondRot *= offsetList[1].invertIt()
         qSecondRot *= qSecondRotW
         if hierarchyMode:
             qSecondRot *= qFirstRotW.invertIt()
@@ -514,7 +532,7 @@ class IKVChainSolver(om2.MPxNode):
             qSecondRot *= jntOriList[1].invertIt()
         # Translation
         if hierarchyMode:
-            vSecondPos = om2.MVector.kXaxisVector * startLen
+            vSecondPos = primAxis * startLen
             if not useScale:
                 vSecondPos *= firstScaX
         else:
@@ -527,11 +545,10 @@ class IKVChainSolver(om2.MPxNode):
         mtxFn.setScale(secondSca, om2.MSpace.kTransform)
         mtxFn.setRotation(qSecondRot)
         mtxFn.setTranslation(vSecondPos, om2.MSpace.kTransform)
-        mSecondW = mtxFn.asMatrix()
-        mSecondL = mSecondW
+        mSecond = mtxFn.asMatrix()
         if not hierarchyMode:
-            mSecondL *= mParInv
-        srtList.append(mSecondL)
+            mSecond *= mParInv
+        srtList.append(mSecond)
 
 
         # Third Output
@@ -543,7 +560,7 @@ class IKVChainSolver(om2.MPxNode):
                 qThirdRot *= offsetList[1].invertIt()
         # Translation
         if hierarchyMode:
-            vThirdPos = om2.MVector.kXaxisVector * endLen
+            vThirdPos = primAxis * endLen
             if not useScale:
                 vThirdPos *= secondScaX
         else:
@@ -554,11 +571,10 @@ class IKVChainSolver(om2.MPxNode):
         mtxFn = om2.MTransformationMatrix()
         mtxFn.setRotation(qThirdRot)
         mtxFn.setTranslation(vThirdPos, om2.MSpace.kTransform)
-        mThirdW = mtxFn.asMatrix()
-        mThirdL = mThirdW
+        mThird = mtxFn.asMatrix()
         if not hierarchyMode:
-            mThirdL *= mParInv
-        srtList.append(mThirdL)
+            mThird *= mParInv
+        srtList.append(mThird)
 
 
         # Set outputs

@@ -33,6 +33,7 @@ MObject IKVChainSolver::inPreferredAngle;
 MObject IKVChainSolver::inTwist;
 MObject IKVChainSolver::inPvMode;
 MObject IKVChainSolver::inHierarchyMode;
+MObject IKVChainSolver::inFlip;
 MObject IKVChainSolver::inUseScale;
 MObject IKVChainSolver::inCompressionLimit;
 MObject IKVChainSolver::inSnapUpVector;
@@ -118,6 +119,10 @@ MStatus IKVChainSolver::initialize(){
     INPUT_ATTR(nAttr);
     nAttr.setChannelBox(true);
 
+    inFlip = nAttr.create("flipOrientation", "fori", MFnNumericData::kBoolean, false, &status);
+    INPUT_ATTR(nAttr);
+    nAttr.setChannelBox(true);
+
     inUseScale = nAttr.create("useStretchAsScale", "usca", MFnNumericData::kBoolean, false, &status);
     INPUT_ATTR(nAttr);
     nAttr.setChannelBox(true);
@@ -189,6 +194,7 @@ MStatus IKVChainSolver::initialize(){
     addAttribute(inTwist);
     addAttribute(inPvMode);
     addAttribute(inHierarchyMode);
+    addAttribute(inFlip);
     addAttribute(inUseScale);
     addAttribute(inCompressionLimit);
     addAttribute(inSnapUpVector);
@@ -213,6 +219,7 @@ MStatus IKVChainSolver::initialize(){
     attributeAffects(inTwist, outChain);
     attributeAffects(inPvMode, outChain);
     attributeAffects(inHierarchyMode, outChain);
+    attributeAffects(inFlip, outChain);
     attributeAffects(inUseScale, outChain);
     attributeAffects(inCompressionLimit, outChain);
     attributeAffects(inSnapUpVector, outChain);
@@ -237,7 +244,7 @@ MStatus IKVChainSolver::compute(const MPlug& plug, MDataBlock& dataBlock){
     if (plug != outChain)
         return MStatus::kUnknownParameter;
 
-    // Get Basis Transformation
+    // Get Basis Quaternion
     MMatrix mRoot = dataBlock.inputValue(inRoot).asMatrix();
     MMatrix mHandle = dataBlock.inputValue(inHandle).asMatrix();
     MMatrix mPoleVector = dataBlock.inputValue(inPoleVector).asMatrix();
@@ -246,17 +253,25 @@ MStatus IKVChainSolver::compute(const MPlug& plug, MDataBlock& dataBlock){
     double twist = dataBlock.inputValue(inTwist).asAngle().asRadians();
     float snap = dataBlock.inputValue(inSnapUpVector).asFloat();
     MMatrix mSnap = dataBlock.inputValue(inSnap).asMatrix();
+    bool flip = dataBlock.inputValue(inFlip).asBool();
 
     MVector vRoot = MVector(mRoot[3][0], mRoot[3][1], mRoot[3][2]);
     MVector vHandle = MVector(mHandle[3][0], mHandle[3][1], mHandle[3][2]);
     MVector vPoleVector = MVector(mPoleVector[3][0], mPoleVector[3][1], mPoleVector[3][2]);
     MVector vSnap = MVector(mSnap[3][0], mSnap[3][1], mSnap[3][2]);
 
+    MVector primAxis = MVector::xAxis;
+    MVector secAxis = MVector::yAxis;
+    if (flip){
+        primAxis = -MVector::xAxis;
+        secAxis = -MVector::yAxis;
+    }
+    MVector binAxis = primAxis ^ secAxis;
     MQuaternion qBasis = MQuaternion();
 
     MVector vAim = vHandle - vRoot;
     MVector nAim = vAim.normal();
-    MQuaternion qAim = MQuaternion(MVector::xAxis, nAim);
+    MQuaternion qAim = MQuaternion(primAxis, nAim);
     qBasis *= qAim;
 
     MVector vStartSnap = vSnap - vRoot;
@@ -267,7 +282,7 @@ MStatus IKVChainSolver::compute(const MPlug& plug, MDataBlock& dataBlock){
         vUp = vPoleVector - vRoot;
     else{
         MQuaternion qTwist = MQuaternion(prefAngle + twist, nAim);
-        vUp = MVector::yAxis.rotateBy(qTwist);
+        vUp = secAxis.rotateBy(qTwist);
     }
     MVector nNormalPole = vUp - ((vUp * nAim) * nAim);
     nNormalPole.normalize();
@@ -280,7 +295,7 @@ MStatus IKVChainSolver::compute(const MPlug& plug, MDataBlock& dataBlock){
     }
     else
         nNormal = nNormalPole;
-    MVector nUp = MVector::yAxis.rotateBy(qAim);
+    MVector nUp = secAxis.rotateBy(qAim);
     double angle = nUp.angle(nNormal);
     MQuaternion qNormal = MQuaternion(angle, nAim);
     if (!nNormal.isEquivalent(nUp.rotateBy(qNormal), 1.0e-5)){
@@ -296,9 +311,12 @@ MStatus IKVChainSolver::compute(const MPlug& plug, MDataBlock& dataBlock){
     float compressionLimit = dataBlock.inputValue(inCompressionLimit).asFloat();
     float softVal = dataBlock.inputValue(inSoftness).asFloat();
 
-    double startLen = (1.0f - snap) * restStartLen + snap * vStartSnap.length();
-    double endLen = (1.0f - snap) * restEndLen + snap * vEndSnap.length();
-    double chainLen = (1.0f - snap) * (restStartLen + restEndLen) + snap * (vStartSnap.length() + vEndSnap.length());
+    double startSnapLen = vStartSnap.length();
+    double endSnapLen = vEndSnap.length();
+
+    double startLen = (1.0f - snap) * restStartLen + snap * startSnapLen;
+    double endLen = (1.0f - snap) * restEndLen + snap * endSnapLen;
+    double chainLen = (1.0f - snap) * (restStartLen + restEndLen) + snap * (startSnapLen + endSnapLen);
     double handleLen = vAim.length();
 
     double rigidLen = std::max(std::min(handleLen, chainLen), chainLen * compressionLimit);
@@ -386,11 +404,11 @@ MStatus IKVChainSolver::compute(const MPlug& plug, MDataBlock& dataBlock){
     #else
         double beta = std::acos(betaCos);
     #endif
-    MQuaternion qBeta = MQuaternion(beta, MVector::zAxis);
-    MQuaternion qFirstRot = MQuaternion();
+    MQuaternion qBeta = MQuaternion(beta, binAxis);
     MQuaternion qFirstRotW = qBeta * qBasis;
+    MQuaternion qFirstRot = MQuaternion();
     if (offsetList.size() >= 1)
-        qFirstRot *= offsetList[0];
+        qFirstRot *= offsetList[0].invertIt();
     qFirstRot *= qFirstRotW;
     if (jntOriList.size() >= 1)
         qFirstRot *= jntOriList[0].invertIt();
@@ -401,9 +419,9 @@ MStatus IKVChainSolver::compute(const MPlug& plug, MDataBlock& dataBlock){
     mtxFn.setScale(firstSca, MSpace::kTransform);
     mtxFn.rotateTo(qFirstRot);
     mtxFn.setTranslation(vFirstPos, MSpace::kTransform);
-    MMatrix mFirstW = mtxFn.asMatrix();
-    MMatrix mFirstL = mFirstW * mParInv;
-    srtList.push_back(mFirstL);
+    MMatrix mFirst = mtxFn.asMatrix();
+    mFirst *= mParInv;
+    srtList.push_back(mFirst);
 
 
     // Second Output
@@ -423,11 +441,11 @@ MStatus IKVChainSolver::compute(const MPlug& plug, MDataBlock& dataBlock){
         double gamma = std::acos(gammaCos);
     #endif
     double gammaCmp = gamma + beta - M_PI;
-    MQuaternion qGamma = MQuaternion(gammaCmp, MVector::zAxis);
-    MQuaternion qSecondRot = MQuaternion();
+    MQuaternion qGamma = MQuaternion(gammaCmp, binAxis);
     MQuaternion qSecondRotW = qGamma * qBasis;
+    MQuaternion qSecondRot = MQuaternion();
     if (offsetList.size() >= 2)
-        qSecondRot *= offsetList[1];
+        qSecondRot *= offsetList[1].invertIt();
     qSecondRot *= qSecondRotW;
     if (hierarchyMode){
         qSecondRot *= qFirstRotW.invertIt();
@@ -439,7 +457,7 @@ MStatus IKVChainSolver::compute(const MPlug& plug, MDataBlock& dataBlock){
     // Translation
     MVector vSecondPos;
     if (hierarchyMode){
-        vSecondPos = MVector::xAxis * startLen;
+        vSecondPos = primAxis * startLen;
         if (!useScale)
             vSecondPos *= firstScaX;
     }
@@ -454,11 +472,10 @@ MStatus IKVChainSolver::compute(const MPlug& plug, MDataBlock& dataBlock){
     mtxFn.setScale(secondSca, MSpace::kTransform);
     mtxFn.rotateTo(qSecondRot);
     mtxFn.setTranslation(vSecondPos, MSpace::kTransform);
-    MMatrix mSecondW = mtxFn.asMatrix();
-    MMatrix mSecondL = mSecondW;
+    MMatrix mSecond = mtxFn.asMatrix();
     if (!hierarchyMode)
-        mSecondL *= mParInv;
-    srtList.push_back(mSecondL);
+        mSecond *= mParInv;
+    srtList.push_back(mSecond);
 
 
     // Third Output
@@ -472,7 +489,7 @@ MStatus IKVChainSolver::compute(const MPlug& plug, MDataBlock& dataBlock){
     // Translation
     MVector vThirdPos;
     if (hierarchyMode){
-        vThirdPos = MVector::xAxis * endLen;
+        vThirdPos = primAxis * endLen;
         if (!useScale)
             vThirdPos *= secondScaX;
     }
@@ -485,11 +502,10 @@ MStatus IKVChainSolver::compute(const MPlug& plug, MDataBlock& dataBlock){
     mtxFn = MTransformationMatrix();
     mtxFn.rotateTo(qThirdRot);
     mtxFn.setTranslation(vThirdPos, MSpace::kTransform);
-    MMatrix mThirdW = mtxFn.asMatrix();
-    MMatrix mThirdL = mThirdW;
+    MMatrix mThird = mtxFn.asMatrix();
     if (!hierarchyMode)
-        mThirdL *= mParInv;
-    srtList.push_back(mThirdL);
+        mThird *= mParInv;
+    srtList.push_back(mThird);
 
 
     // Set outputs
