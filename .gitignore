@@ -3,6 +3,8 @@ __pycache__/
 .vs/
 .vscode/
 plug-ins/dev/cpp/build
+core/_studies/testMayaPyExtension
+core/_studies/RigAPI
 
 # Extensions
 *.pyc
