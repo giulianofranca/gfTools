@@ -98,6 +98,7 @@ import n_gfUtilEulerScalarMath as n_EulerScalarMath
 import n_gfUtilEulerToVector as n_EulerToVector
 import n_gfUtilVectorToEuler as n_VectorToEuler
 import n_gfUtilDecompRowMatrix as n_DecomposeRowMatrix
+import n_gfUtilFindParamFromCurveLength as n_FindParamFromLength
 # gfMenu
 reload(m_Menu)
 # gfDebug
@@ -124,6 +125,7 @@ reload(n_EulerScalarMath)
 reload(n_EulerToVector)
 reload(n_VectorToEuler)
 reload(n_DecomposeRowMatrix)
+reload(n_FindParamFromLength)
 
 
 def maya_useNewAPI():
@@ -259,6 +261,9 @@ n_VectorToEuler.VectorToEuler.kNodeID = om2.MTypeId(0x0012f7d3)
 n_DecomposeRowMatrix.DecomposeRowMatrix.kNodeName = "gfDecompRowMtx_P"
 n_DecomposeRowMatrix.DecomposeRowMatrix.kNodeClassify = "utility/general"
 n_DecomposeRowMatrix.DecomposeRowMatrix.kNodeID = om2.MTypeId(0x0012f7d4)
+n_FindParamFromLength.FindParamFromLength.kNodeName = "gfFindParamFromLength_P"
+n_FindParamFromLength.FindParamFromLength.kNodeClassify = "utility/general"
+n_FindParamFromLength.FindParamFromLength.kNodeID = om2.MTypeId(0x0012f7d5)
 
 
 def initializePlugin(mobject):
@@ -286,6 +291,7 @@ def initializePlugin(mobject):
     REGISTER_NODE(n_EulerToVector.EulerToVector, mplugin2)
     REGISTER_NODE(n_VectorToEuler.VectorToEuler, mplugin2)
     REGISTER_NODE(n_DecomposeRowMatrix.DecomposeRowMatrix, mplugin2)
+    REGISTER_NODE(n_FindParamFromLength.FindParamFromLength, mplugin2)
     # m_Menu.MainMenu.loadMenu()
 
 
@@ -314,4 +320,5 @@ def uninitializePlugin(mobject):
     DEREGISTER_NODE(n_EulerToVector.EulerToVector, mplugin2)
     DEREGISTER_NODE(n_VectorToEuler.VectorToEuler, mplugin2)
     DEREGISTER_NODE(n_DecomposeRowMatrix.DecomposeRowMatrix, mplugin2)
+    DEREGISTER_NODE(n_FindParamFromLength.FindParamFromLength, mplugin2)
     # m_Menu.MainMenu.unloadMenu()

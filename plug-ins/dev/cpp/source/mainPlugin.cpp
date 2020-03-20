@@ -82,6 +82,7 @@ Sources:
 #include "headers/n_gfUtilEulerToVector.h"
 #include "headers/n_gfUtilVectorToEuler.h"
 #include "headers/n_gfUtilDecompRowMatrix.h"
+#include "headers/n_gfUtilFindParamFromCurveLength.h"
 
 #include <maya/MFnPlugin.h>
 #include <maya/MDrawRegistry.h>
@@ -201,6 +202,9 @@ const MTypeId VectorToEuler::kNodeID =0x00130d91;
 const MString DecomposeRowMatrix::kNodeName = "gfDecompRowMtx";
 const MString DecomposeRowMatrix::kNodeClassify = "utility/general";
 const MTypeId DecomposeRowMatrix::kNodeID = 0x00130d92;
+const MString FindParamFromLength::kNodeName = "gfFindParamFromLength";
+const MString FindParamFromLength::kNodeClassify = "utility/general";
+const MTypeId FindParamFromLength::kNodeID = 0x00130d93;
 
 
 MStatus initializePlugin(MObject mobject){
@@ -227,6 +231,7 @@ MStatus initializePlugin(MObject mobject){
     REGISTER_NODE(EulerToVector, mPlugin);
     REGISTER_NODE(VectorToEuler, mPlugin);
     REGISTER_NODE(DecomposeRowMatrix, mPlugin);
+    REGISTER_NODE(FindParamFromLength, mPlugin);
 
     return status;
 }
@@ -254,6 +259,7 @@ MStatus uninitializePlugin(MObject mobject){
     DEREGISTER_NODE(EulerToVector, mPlugin);
     DEREGISTER_NODE(VectorToEuler, mPlugin);
     DEREGISTER_NODE(DecomposeRowMatrix, mPlugin);
+    DEREGISTER_NODE(FindParamFromLength, mPlugin);
 
     return status;
 }

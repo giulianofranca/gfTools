@@ -19,6 +19,7 @@ set(SOURCE_FILES
     "n_gfUtilEulerToVector.cpp" "headers/n_gfUtilEulerToVector.h"
     "n_gfUtilVectorToEuler.cpp" "headers/n_gfUtilVectorToEuler.h"
     "n_gfUtilDecompRowMatrix.cpp" "headers/n_gfUtilDecompRowMatrix.h"
+    "n_gfUtilFindParamFromCurveLength.cpp" "headers/n_gfUtilFindParamFromCurveLength.h"
 )
 
 # if(WIN32)

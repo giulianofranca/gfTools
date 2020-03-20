@@ -59,18 +59,25 @@ Sources:
 */
 #pragma once
 
+#include <cstdint>
+#include <vector>
+#include <numeric>
+
 #include <maya/MPxNode.h>
 
-#include <maya/MFnMatrixAttribute.h>
 #include <maya/MFnUnitAttribute.h>
 #include <maya/MFnNumericAttribute.h>
 #include <maya/MFnEnumAttribute.h>
-#include <maya/MMatrix.h>
-#include <maya/MTransformationMatrix.h>
 #include <maya/MEulerRotation.h>
+#include <maya/MTransformationMatrix.h>
+#include <maya/MMatrix.h>
 #include <maya/MQuaternion.h>
 #include <maya/MVector.h>
 #include <maya/MAngle.h>
+
+#ifndef M_PI
+#define M_PI 3.1415926535897932384626433832795
+#endif
 
 
 class TwistExtractor : public MPxNode{
@@ -91,11 +98,12 @@ public:
     const static MString                kNodeClassify;
     const static MTypeId                kNodeID;
     
-    static MObject                      inTargetWorldMatrix;
-    static MObject                      inTargetParInvMtx;
-    static MObject                      inTargetJointOrient;
-    static MObject                      inUseAxisAsAim;
-    static MObject                      inAimWorldMatrix;
-    static MObject                      inAimAxis;
-    static MObject                      outTwistAngle;
+    static MObject                      inRotation;
+    static MObject                      inRotationOrder;
+    static MObject                      inUseUpVec;
+    static MObject                      inUpVec;
+    static MObject                      inInvTwist;
+    static MObject                      inRevDist;
+    static MObject                      outTwist;
+    static MObject                      outTwistDist;
 };

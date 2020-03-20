@@ -61,10 +61,15 @@ Sources:
     * https://math.stackexchange.com/questions/162863/how-to-get-a-part-of-a-quaternion-e-g-get-half-of-the-rotation-of-a-quaternion
     * https://math.stackexchange.com/questions/939229/unit-quaternion-to-a-scalar-power
     * https://github.com/Kent-H/blue3D/blob/master/Blue3D/src/blue3D/type/QuaternionF.java
+    * https://en.wikipedia.org/wiki/Quaternion
+    * https://learn.foundry.com/modo/content/help/pages/animation/modifiers/matrix_modifiers.html
+    * https://bindpose.com/maya-matrix-nodes-part-2-node-based-matrix-twist-calculator/
 
 This code supports Pylint. Rc file in project.
 """
 import maya.api._OpenMaya_py2 as om2
+
+kPI = 3.1415926535897932384626433832795
 
 
 def maya_useNewAPI():
@@ -98,14 +103,14 @@ class TwistExtractor(om2.MPxNode):
     kNodeClassify = ""
     kNodeID = ""
 
-    inTargetWorldMtx = om2.MObject()
-    inTargetParInvMtx = om2.MObject()
-    inTargetJointOrient = om2.MObject()
-    inUseAxisAsAim = om2.MObject()
-    inAimWorldMatrix = om2.MObject()
-    inAimAxis = om2.MObject()
-    # inAllow360Deg = om2.MObject()
-    outTwistAngle = om2.MObject()
+    inRotation = om2.MObject()
+    inRotationOrder = om2.MObject()
+    inUseUpVec = om2.MObject()
+    inUpVec = om2.MObject()
+    inInvTwist = om2.MObject()
+    inRevDist = om2.MObject()
+    outTwist = om2.MObject()
+    outTwistDist = om2.MObject()
 
     def __init__(self):
         """ Constructor. """
@@ -123,59 +128,71 @@ class TwistExtractor(om2.MPxNode):
         as static members to TwistExtractor class. Instances of TwistExtractor will use these attributes to create plugs
         for use in the compute() method.
         """
-        mAttr = om2.MFnMatrixAttribute()
         uAttr = om2.MFnUnitAttribute()
         nAttr = om2.MFnNumericAttribute()
         eAttr = om2.MFnEnumAttribute()
 
-        TwistExtractor.inTargetWorldMtx = mAttr.create("targetWorldMatrix", "twmtx", om2.MFnMatrixAttribute.kDouble)
-        INPUT_ATTR(mAttr)
-
-        TwistExtractor.inTargetParInvMtx = mAttr.create("targetParentInverseMatrix", "tpim", om2.MFnMatrixAttribute.kDouble)
-        INPUT_ATTR(mAttr)
-
-        tarJntOriX = uAttr.create("targetJointOrientX", "tjox", om2.MFnUnitAttribute.kAngle, 0.0)
-        tarJntOriY = uAttr.create("targetJointOrientY", "tjoy", om2.MFnUnitAttribute.kAngle, 0.0)
-        tarJntOriZ = uAttr.create("targetJointOrientZ", "tjoz", om2.MFnUnitAttribute.kAngle, 0.0)
-        TwistExtractor.inTargetJointOrient = nAttr.create("targetJointOrient", "tjo", tarJntOriX, tarJntOriY, tarJntOriZ)
+        rotX = uAttr.create("rotationX", "rotx", om2.MFnUnitAttribute.kAngle, 0.0)
+        rotY = uAttr.create("rotationY", "roty", om2.MFnUnitAttribute.kAngle, 0.0)
+        rotZ = uAttr.create("rotationZ", "rotz", om2.MFnUnitAttribute.kAngle, 0.0)
+        TwistExtractor.inRotation = nAttr.create("rotation", "rot", rotX, rotY, rotZ)
         INPUT_ATTR(nAttr)
 
-        TwistExtractor.inUseAxisAsAim = nAttr.create("useAxisAsAim", "useAA", om2.MFnNumericData.kBoolean, False)
-        INPUT_ATTR(nAttr)
-
-        TwistExtractor.inAimWorldMatrix = mAttr.create("aimWorldMatrix", "awmtx", om2.MFnMatrixAttribute.kDouble)
-        INPUT_ATTR(mAttr)
-
-        TwistExtractor.inAimAxis = eAttr.create("aimAxis", "aaxis", 0)
-        eAttr.addField("Positive X", 0)
-        eAttr.addField("Negative X", 1)
-        eAttr.addField("Positive Y", 2)
-        eAttr.addField("Negative X", 3)
-        eAttr.addField("Positive Z", 4)
-        eAttr.addField("Negative X", 5)
+        TwistExtractor.inRotationOrder = eAttr.create("rotationOrder", "roo", 0)
+        # eAttr.addField("Twist First (zyx)", 5)
+        # eAttr.addField("Twist Last (xyz)", 0)
+        # INPUT_ATTR(eAttr)
+        eAttr.addField("xyz", 0)
+        eAttr.addField("yzx", 1)
+        eAttr.addField("zxy", 2)
+        eAttr.addField("xzy", 3)
+        eAttr.addField("yxz", 4)
+        eAttr.addField("zyx", 5)
         INPUT_ATTR(eAttr)
 
-        # TwistExtractor.inAllow360Deg = nAttr.create("allow360Degrees", "a360", om2.MFnNumericData.kBoolean, False)
-        # INPUT_ATTR(nAttr)
+        TwistExtractor.inUseUpVec = nAttr.create("useUpVector", "useup", om2.MFnNumericData.kBoolean, False)
+        INPUT_ATTR(nAttr)
 
-        TwistExtractor.outTwistAngle = uAttr.create("outTwist", "twist", om2.MFnUnitAttribute.kAngle, 0.0)
+        TwistExtractor.inUpVec = nAttr.createPoint("upVector", "upVector")
+        nAttr.default = (0.0, 1.0, 0.0)
+        INPUT_ATTR(nAttr)
+
+        TwistExtractor.inInvTwist = nAttr.create("inverseTwist", "itwist", om2.MFnNumericData.kBoolean, False)
+        INPUT_ATTR(nAttr)
+
+        TwistExtractor.inRevDist = nAttr.create("reverseDistribution", "rdist", om2.MFnNumericData.kBoolean, False)
+        INPUT_ATTR(nAttr)
+
+        TwistExtractor.outTwist = uAttr.create("twist", "twist", om2.MFnUnitAttribute.kAngle, 0.0)
         OUTPUT_ATTR(uAttr)
 
-        TwistExtractor.addAttribute(TwistExtractor.inTargetWorldMtx)
-        TwistExtractor.addAttribute(TwistExtractor.inTargetParInvMtx)
-        TwistExtractor.addAttribute(TwistExtractor.inTargetJointOrient)
-        TwistExtractor.addAttribute(TwistExtractor.inUseAxisAsAim)
-        TwistExtractor.addAttribute(TwistExtractor.inAimWorldMatrix)
-        TwistExtractor.addAttribute(TwistExtractor.inAimAxis)
-        # TwistExtractor.addAttribute(TwistExtractor.inAllow360Deg)
-        TwistExtractor.addAttribute(TwistExtractor.outTwistAngle)
-        TwistExtractor.attributeAffects(TwistExtractor.inTargetWorldMtx, TwistExtractor.outTwistAngle)
-        TwistExtractor.attributeAffects(TwistExtractor.inTargetParInvMtx, TwistExtractor.outTwistAngle)
-        TwistExtractor.attributeAffects(TwistExtractor.inTargetJointOrient, TwistExtractor.outTwistAngle)
-        TwistExtractor.attributeAffects(TwistExtractor.inUseAxisAsAim, TwistExtractor.outTwistAngle)
-        TwistExtractor.attributeAffects(TwistExtractor.inAimWorldMatrix, TwistExtractor.outTwistAngle)
-        TwistExtractor.attributeAffects(TwistExtractor.inAimAxis, TwistExtractor.outTwistAngle)
-        # TwistExtractor.attributeAffects(TwistExtractor.inAllow360Deg, TwistExtractor.outTwistAngle)
+        TwistExtractor.outTwistDist = uAttr.create("twistDistribution", "twistd", om2.MFnUnitAttribute.kAngle, 0.0)
+        uAttr.array = True
+        OUTPUT_ATTR(uAttr)
+
+        TwistExtractor.addAttribute(TwistExtractor.inRotation)
+        TwistExtractor.addAttribute(TwistExtractor.inRotationOrder)
+        TwistExtractor.addAttribute(TwistExtractor.inUseUpVec)
+        TwistExtractor.addAttribute(TwistExtractor.inUpVec)
+        TwistExtractor.addAttribute(TwistExtractor.inInvTwist)
+        TwistExtractor.addAttribute(TwistExtractor.inRevDist)
+        TwistExtractor.addAttribute(TwistExtractor.outTwist)
+        TwistExtractor.addAttribute(TwistExtractor.outTwistDist)
+        TwistExtractor.attributeAffects(rotX, TwistExtractor.outTwist)
+        TwistExtractor.attributeAffects(rotY, TwistExtractor.outTwist)
+        TwistExtractor.attributeAffects(rotZ, TwistExtractor.outTwist)
+        TwistExtractor.attributeAffects(TwistExtractor.inRotationOrder, TwistExtractor.outTwist)
+        TwistExtractor.attributeAffects(TwistExtractor.inUseUpVec, TwistExtractor.outTwist)
+        TwistExtractor.attributeAffects(TwistExtractor.inUpVec, TwistExtractor.outTwist)
+        TwistExtractor.attributeAffects(TwistExtractor.inInvTwist, TwistExtractor.outTwist)
+        TwistExtractor.attributeAffects(rotX, TwistExtractor.outTwistDist)
+        TwistExtractor.attributeAffects(rotY, TwistExtractor.outTwistDist)
+        TwistExtractor.attributeAffects(rotZ, TwistExtractor.outTwistDist)
+        TwistExtractor.attributeAffects(TwistExtractor.inRotationOrder, TwistExtractor.outTwistDist)
+        TwistExtractor.attributeAffects(TwistExtractor.inUseUpVec, TwistExtractor.outTwistDist)
+        TwistExtractor.attributeAffects(TwistExtractor.inUpVec, TwistExtractor.outTwistDist)
+        TwistExtractor.attributeAffects(TwistExtractor.inInvTwist, TwistExtractor.outTwistDist)
+        TwistExtractor.attributeAffects(TwistExtractor.inRevDist, TwistExtractor.outTwistDist)
 
     def compute(self, plug, dataBlock):
         """
@@ -183,53 +200,94 @@ class TwistExtractor(om2.MPxNode):
             * plug is a connection point related to one of our node attributes (either an input or an output).
             * dataBlock contains the data on which we will base our computations.
         """
-        if plug != TwistExtractor.outTwistAngle:
-            return om2.kUnknownParameter
+        rotation = dataBlock.inputValue(TwistExtractor.inRotation).asDouble3()
+        rotOrder = dataBlock.inputValue(TwistExtractor.inRotationOrder).asShort()
+        eRoll = om2.MEulerRotation(rotation, rotOrder)
+        useUpObj = dataBlock.inputValue(TwistExtractor.inUseUpVec).asBool()
+        revTwist = dataBlock.inputValue(TwistExtractor.inInvTwist).asBool()
 
-        mTargetW = dataBlock.inputValue(TwistExtractor.inTargetWorldMtx).asMatrix()
-        mParentInv = dataBlock.inputValue(TwistExtractor.inTargetParInvMtx).asMatrix()
-        eTargetJntOri = om2.MEulerRotation(dataBlock.inputValue(TwistExtractor.inTargetJointOrient).asDouble3())
-        useAxis = dataBlock.inputValue(TwistExtractor.inUseAxisAsAim).asBool()
-        # allow360 = dataBlock.inputValue(TwistExtractor.inAllow360Deg).asBool()
-        outTwistHandle = dataBlock.outputValue(TwistExtractor.outTwistAngle)
+        # Non flip ROO = XYZ
+        # Not working = XZY
+        twistOrder = om2.MEulerRotation.kXYZ
+        eRoll.reorderIt(twistOrder)
 
-        mTargetL = mTargetW * mParentInv
-        qTargetJntOri = eTargetJntOri.asQuaternion()
+        # Non-Roll orientation
+        mtxFn = om2.MTransformationMatrix()
+        mtxFn.rotateBy(eRoll, om2.MSpace.kWorld)
+        mRoll = mtxFn.asMatrix()
 
-        vTargetPos = om2.MVector(mTargetW[12], mTargetW[13], mTargetW[14])
-        if useAxis:
-            axis = dataBlock.inputValue(TwistExtractor.inAimAxis).asShort()
-            if axis == 0:
-                nAim = om2.MVector(mTargetW[0], mTargetW[1], mTargetW[2]).normalize()
-            elif axis == 1:
-                nAim = -om2.MVector(mTargetW[0], mTargetW[1], mTargetW[2]).normalize()
-            elif axis == 2:
-                nAim = om2.MVector(mTargetW[4], mTargetW[5], mTargetW[6]).normalize()
-            elif axis == 3:
-                nAim = -om2.MVector(mTargetW[4], mTargetW[5], mTargetW[6]).normalize()
-            elif axis == 4:
-                nAim = om2.MVector(mTargetW[8], mTargetW[9], mTargetW[10]).normalize()
-            else:
-                nAim = -om2.MVector(mTargetW[8], mTargetW[9], mTargetW[10]).normalize()
-        else:
-            mAimW = dataBlock.inputValue(TwistExtractor.inAimWorldMatrix).asMatrix()
-            vAimPos = om2.MVector(mAimW[12], mAimW[13], mAimW[14])
-            nAim = vAimPos - vTargetPos
-            nAim.normalize()
-        nAimAxis = om2.MVector(1.0, 0.0, 0.0)
-        nRotAxis = nAimAxis ^ nAim
-        angle = nAimAxis.angle(nAim)
-        qAim = om2.MQuaternion(angle, nRotAxis)
+        qNonRoll = om2.MQuaternion()
 
-        mtxFn = om2.MTransformationMatrix(mTargetL)
-        qTarget = mtxFn.rotation(asQuaternion=True)
-        qTarget *= qTargetJntOri.invertIt()
-        qExtract = qAim * qTarget.invertIt()
-        # if allow360:
-        #     qExtract = om2.MQuaternion.slerp(qAim, qTarget, 0.5)
+        nAim = om2.MVector(mRoll[0], mRoll[1], mRoll[2])
+        nAim.normalize()
+        nAimAxis = om2.MVector.kXaxisVector
+        qAim = om2.MQuaternion(nAimAxis, nAim)
+        qNonRoll *= qAim
 
-        eExtract = qExtract.asEulerRotation()
-        # twist = om2.MAngle(eExtract.x * 2.0) if allow360 else om2.MAngle(eExtract.x)
-        twist = om2.MAngle(eExtract.x)
-        outTwistHandle.setMAngle(twist)
-        outTwistHandle.setClean()
+        if useUpObj:
+            vUp = om2.MVector(dataBlock.inputValue(TwistExtractor.inUpVec).asFloat3())
+            nNormal = vUp - ((vUp * nAim) * nAim)
+            nNormal.normalize()
+            nUp = om2.MVector.kYaxisVector.rotateBy(qAim)
+            angle = nUp.angle(nNormal)
+            qNormal = om2.MQuaternion(angle, nAim)
+            if not nNormal.isEquivalent(nUp.rotateBy(qNormal), 1.0e-5):
+                angle = 2.0 * kPI - angle
+                qNormal = om2.MQuaternion(angle, nAim)
+            qNonRoll *= qNormal
+        eNonRoll = qNonRoll.asEulerRotation()
+        eNonRoll = om2.MEulerRotation(eNonRoll.x, eNonRoll.y, eNonRoll.z, twistOrder)
+
+        # Extract Twist from orientations
+        qRoll = eRoll.asQuaternion()
+        qExtract180 = qNonRoll * qRoll.inverse()
+        eExtract180 = qExtract180.asEulerRotation()
+        twist = -eExtract180.x
+        if revTwist:
+            twist *= -1.0
+
+        # Output Twist
+        if plug == TwistExtractor.outTwist:
+            outTwistHdle = dataBlock.outputValue(TwistExtractor.outTwist)
+            outTwistHdle.setMAngle(om2.MAngle(twist))
+            outTwistHdle.setClean()
+
+        # Output Twist Distribution
+        if plug == TwistExtractor.outTwistDist:
+            invDist = dataBlock.inputValue(TwistExtractor.inRevDist).asBool()
+            outTwistDistHdle = dataBlock.outputArrayValue(TwistExtractor.outTwistDist)
+            outputs = len(outTwistDistHdle)
+            step = twist / (outputs - 1) if outputs > 1 else twist
+            outList = []
+            outList.extend(range(outputs))
+            if not invDist:
+                outList.reverse()
+            # pylint: disable=consider-using-enumerate
+            for i in range(len(outList)):
+                outTwistDistHdle.jumpToLogicalElement(i)
+                resultHdle = outTwistDistHdle.outputValue()
+                result = step * outList[i] if outputs > 1 else twist
+                resultHdle.setMAngle(om2.MAngle(result))
+            outTwistDistHdle.setAllClean()
+
+        return
+
+
+# # Working! To be revised later
+# qRollHalf = (eRoll * 0.5).asQuaternion()
+# qNonRollHalf = (eNonRoll * 0.5).asQuaternion()
+# qExtract360 = (qNonRollHalf * qRollHalf) # * qRoll.inverse()
+# eExtract360 = qExtract360.asEulerRotation()
+# twist = eExtract360.x * 2.0
+
+# mRollHalf = mRoll * 0.5
+# mNonRollHalf = mNonRoll * 0.5
+# mExtract360 = mNonRollHalf + mRollHalf
+# mExtract360 *= mRoll
+
+# qIdentity = om2.MQuaternion()
+# qRollHalf = om2.MQuaternion.slerp(qIdentity, qRoll, 0.5)
+# qNonRollHalf = om2.MQuaternion.slerp(qIdentity, qNonRoll, 0.5)
+# qExtract360 = (qNonRollHalf * qRollHalf) * qRoll.inverse()
+# eExtract360 = qExtract360.asEulerRotation()
+# twist = -eExtract360.x * 2.0
