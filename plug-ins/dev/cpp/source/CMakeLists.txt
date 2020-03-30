@@ -1,6 +1,7 @@
 set(SOURCE_FILES
     "mainPlugin.cpp"
     "n_gfDebugVector.cpp" "headers/n_gfDebugVector.h"
+    "n_gfRigMeshController.cpp" "headers/n_gfRigMeshController.h"
     "n_gfRigPSDVectorAngle.cpp" "headers/n_gfRigPSDVectorAngle.h"
     "n_gfRigIKVChain.cpp" "headers/n_gfRigIKVChain.h"
     "n_gfRigHelperJoint.cpp" "headers/n_gfRigHelperJoint.h"

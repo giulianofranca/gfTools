@@ -78,6 +78,7 @@ import m_gfToolsMenu as m_Menu
 import n_gfDebugVector as n_DebugVector
 import n_gfDebugMatrix as n_DebugMatrix
 # gfRig
+import n_gfRigMeshController2 as n_MeshController
 import n_gfRigPSDVectorAngle as n_VectorAnglePSD
 import n_gfRigIKVChain as n_IKVChainSolver
 import n_gfRigHelperJoint as n_HelperJoint
@@ -105,6 +106,7 @@ reload(m_Menu)
 reload(n_DebugVector)
 reload(n_DebugMatrix)
 # gfRig
+reload(n_MeshController)
 reload(n_VectorAnglePSD)
 reload(n_IKVChainSolver)
 reload(n_HelperJoint)
@@ -163,12 +165,13 @@ def REGISTER_LOCATOR_NODE(NODE, PLUGIN, DRAWOVERRIDE):
         sys.stderr.write("Failed to register node: %s" % NODE.kNodeName)
         raise
 
-    try:
-        omr2.MDrawRegistry.registerDrawOverrideCreator(NODE.kNodeClassify, NODE.kNodeRegistrantID,
-                                                       DRAWOVERRIDE.creator)
-    except BaseException:
-        sys.stderr.write("Failed to register override: %s" % NODE.kNodeName)
-        raise
+    if DRAWOVERRIDE is not None:
+        try:
+            omr2.MDrawRegistry.registerDrawOverrideCreator(NODE.kNodeClassify, NODE.kNodeRegistrantID,
+                                                           DRAWOVERRIDE.creator)
+        except BaseException:
+            sys.stderr.write("Failed to register override: %s" % NODE.kNodeName)
+            raise
 
 def DEREGISTER_LOCATOR_NODE(NODE, PLUGIN):
     """ Deregister a MPxLocatorNode. """
@@ -203,67 +206,71 @@ n_DebugMatrix.DebugMatrix.kNodeClassify = "drawdb/geometry/locator"
 n_DebugMatrix.DebugMatrix.kNodeRegistrantID = "gfDebugMatrix_PNodePlugin"
 n_DebugMatrix.DebugMatrix.kNodeID = om2.MTypeId(0x0012f7c1)
 # gfRig
+n_MeshController.MeshController.kNodeName = "gfMeshController_P"
+n_MeshController.MeshController.kNodeClassify = "drawdb/geometry/locator"
+n_MeshController.MeshController.kNodeRegistrantID = "gfMeshController_PNodePlugin"
+n_MeshController.MeshController.kNodeID = om2.MTypeId(0x0012f7c2)
 n_VectorAnglePSD.VectorAnglePSD.kNodeName = "gfPSDVectorAngle_P"
 n_VectorAnglePSD.VectorAnglePSD.kNodeClassify = "utility/general"
-n_VectorAnglePSD.VectorAnglePSD.kNodeID = om2.MTypeId(0x0012f7c2)
+n_VectorAnglePSD.VectorAnglePSD.kNodeID = om2.MTypeId(0x0012f7c3)
 n_IKVChainSolver.IKVChainSolver.kNodeName = "gfIKVChain_P"
 n_IKVChainSolver.IKVChainSolver.kNodeClassify = "utility/general"
-n_IKVChainSolver.IKVChainSolver.kNodeID = om2.MTypeId(0x0012f7c3)
+n_IKVChainSolver.IKVChainSolver.kNodeID = om2.MTypeId(0x0012f7c4)
 n_HelperJoint.HelperJoint.kNodeName = "gfHelperJoint_P"
 n_HelperJoint.HelperJoint.kNodeClassify = "utility/general"
-n_HelperJoint.HelperJoint.kNodeID = om2.MTypeId(0x0012f7c4)
+n_HelperJoint.HelperJoint.kNodeID = om2.MTypeId(0x0012f7c5)
 n_DistributeAlongSurface.DistributeAlongSurface.kNodeName = "gfDistributeAlongSurface_P" # gfSurfaceDistribute_P
 n_DistributeAlongSurface.DistributeAlongSurface.kNodeClassify = "utility/general"
-n_DistributeAlongSurface.DistributeAlongSurface.kNodeID = om2.MTypeId(0x0012f7c5)
+n_DistributeAlongSurface.DistributeAlongSurface.kNodeID = om2.MTypeId(0x0012f7c6)
 n_TwistExtractor.TwistExtractor.kNodeName = "gfTwistExtractor_P"
 n_TwistExtractor.TwistExtractor.kNodeClassify = "utility/general"
-n_TwistExtractor.TwistExtractor.kNodeID = om2.MTypeId(0x0012f7c6)
+n_TwistExtractor.TwistExtractor.kNodeID = om2.MTypeId(0x0012f7c7)
 n_QuadraticCurve.QuadraticCurve.kNodeName = "gfQuadraticCurve_P"
 n_QuadraticCurve.QuadraticCurve.kNodeClassify = "utility/general"
-n_QuadraticCurve.QuadraticCurve.kNodeID = om2.MTypeId(0x0012f7c7)
+n_QuadraticCurve.QuadraticCurve.kNodeID = om2.MTypeId(0x0012f7c8)
 # gfUtil
 n_BlendTransform.BlendTransform.kNodeName = "gfBlendTransforn_P"
 n_BlendTransform.BlendTransform.kNodeClassify = "utility/general"
-n_BlendTransform.BlendTransform.kNodeID = om2.MTypeId(0x0012f7c8)
+n_BlendTransform.BlendTransform.kNodeID = om2.MTypeId(0x0012f7c9)
 n_AimConstraint.AimConstraint.kNodeName = "gfAimConstraint_P"
 n_AimConstraint.AimConstraint.kNodeClassify = "utility/general"
-n_AimConstraint.AimConstraint.kNodeID = om2.MTypeId(0x0012f7c9)
+n_AimConstraint.AimConstraint.kNodeID = om2.MTypeId(0x0012f7ca)
 n_ParentConstraint.ParentConstraint.kNodeName = "gfParentConstraint_P"
 n_ParentConstraint.ParentConstraint.kNodeClassify = "utility/general"
-n_ParentConstraint.ParentConstraint.kNodeID = om2.MTypeId(0x0012f7ca)
+n_ParentConstraint.ParentConstraint.kNodeID = om2.MTypeId(0x0012f7cb)
 n_AngularMath.AngularMath.kNodeName = "gfAngleMath_P"
 n_AngularMath.AngularMath.kNodeClassify = "utility/general"
-n_AngularMath.AngularMath.kNodeID = om2.MTypeId(0x0012f7cb)
+n_AngularMath.AngularMath.kNodeID = om2.MTypeId(0x0012f7cc)
 n_AngularScalarMath.AngularScalarMath.kNodeName = "gfAngleScalarMath_P"
 n_AngularScalarMath.AngularScalarMath.kNodeClassify = "utility/general"
-n_AngularScalarMath.AngularScalarMath.kNodeID = om2.MTypeId(0x0012f7cc)
+n_AngularScalarMath.AngularScalarMath.kNodeID = om2.MTypeId(0x0012f7cd)
 n_AngularTrigMath.AngularTrigMath.kNodeName = "gfAngleTrigMath_P"
 n_AngularTrigMath.AngularTrigMath.kNodeClassify = "utility/general"
-n_AngularTrigMath.AngularTrigMath.kNodeID = om2.MTypeId(0x0012f7cd)
+n_AngularTrigMath.AngularTrigMath.kNodeID = om2.MTypeId(0x0012f7ce)
 n_AngleToDouble.AngleToDouble.kNodeName = "gfAngleToDouble_P"
 n_AngleToDouble.AngleToDouble.kNodeClassify = "utility/general"
-n_AngleToDouble.AngleToDouble.kNodeID = om2.MTypeId(0x0012f7ce)
+n_AngleToDouble.AngleToDouble.kNodeID = om2.MTypeId(0x0012f7cf)
 n_DoubleToAngle.DoubleToAngle.kNodeName = "gfDoubleToAngle_P"
 n_DoubleToAngle.DoubleToAngle.kNodeClassify = "utility/general"
-n_DoubleToAngle.DoubleToAngle.kNodeID = om2.MTypeId(0x0012f7cf)
+n_DoubleToAngle.DoubleToAngle.kNodeID = om2.MTypeId(0x0012f7d0)
 n_EulerMath.EulerMath.kNodeName = "gfEulerMath_P"
 n_EulerMath.EulerMath.kNodeClassify = "utility/general"
-n_EulerMath.EulerMath.kNodeID = om2.MTypeId(0x0012f7d0)
+n_EulerMath.EulerMath.kNodeID = om2.MTypeId(0x0012f7d1)
 n_EulerScalarMath.EulerScalarMath.kNodeName = "gfEulerScalarMath_P"
 n_EulerScalarMath.EulerScalarMath.kNodeClassify = "utility/general"
-n_EulerScalarMath.EulerScalarMath.kNodeID = om2.MTypeId(0x0012f7d1)
+n_EulerScalarMath.EulerScalarMath.kNodeID = om2.MTypeId(0x0012f7d2)
 n_EulerToVector.EulerToVector.kNodeName = "gfEulerToVector_P"
 n_EulerToVector.EulerToVector.kNodeClassify = "utility/general"
-n_EulerToVector.EulerToVector.kNodeID = om2.MTypeId(0x0012f7d2)
+n_EulerToVector.EulerToVector.kNodeID = om2.MTypeId(0x0012f7d3)
 n_VectorToEuler.VectorToEuler.kNodeName = "gfVectorToEuler_P"
 n_VectorToEuler.VectorToEuler.kNodeClassify = "utility/general"
-n_VectorToEuler.VectorToEuler.kNodeID = om2.MTypeId(0x0012f7d3)
+n_VectorToEuler.VectorToEuler.kNodeID = om2.MTypeId(0x0012f7d4)
 n_DecomposeRowMatrix.DecomposeRowMatrix.kNodeName = "gfDecompRowMtx_P"
 n_DecomposeRowMatrix.DecomposeRowMatrix.kNodeClassify = "utility/general"
-n_DecomposeRowMatrix.DecomposeRowMatrix.kNodeID = om2.MTypeId(0x0012f7d4)
+n_DecomposeRowMatrix.DecomposeRowMatrix.kNodeID = om2.MTypeId(0x0012f7d5)
 n_FindParamFromLength.FindParamFromLength.kNodeName = "gfFindParamFromLength_P"
 n_FindParamFromLength.FindParamFromLength.kNodeClassify = "utility/general"
-n_FindParamFromLength.FindParamFromLength.kNodeID = om2.MTypeId(0x0012f7d5)
+n_FindParamFromLength.FindParamFromLength.kNodeID = om2.MTypeId(0x0012f7d6)
 
 
 def initializePlugin(mobject):
@@ -272,6 +279,7 @@ def initializePlugin(mobject):
 
     REGISTER_LOCATOR_NODE(n_DebugVector.DebugVector, mplugin2, n_DebugVector.DebugVectorDrawOverride)
     REGISTER_LOCATOR_NODE(n_DebugMatrix.DebugMatrix, mplugin2, n_DebugMatrix.DebugMatrixDrawOverride)
+    REGISTER_LOCATOR_NODE(n_MeshController.MeshController, mplugin2, n_MeshController.MeshControllerDrawOverride)
     REGISTER_NODE(n_VectorAnglePSD.VectorAnglePSD, mplugin2)
     REGISTER_NODE(n_IKVChainSolver.IKVChainSolver, mplugin2)
     REGISTER_NODE(n_HelperJoint.HelperJoint, mplugin2)
@@ -301,6 +309,7 @@ def uninitializePlugin(mobject):
 
     DEREGISTER_LOCATOR_NODE(n_DebugVector.DebugVector, mplugin2)
     DEREGISTER_LOCATOR_NODE(n_DebugMatrix.DebugMatrix, mplugin2)
+    DEREGISTER_LOCATOR_NODE(n_MeshController.MeshController, mplugin2)
     DEREGISTER_NODE(n_VectorAnglePSD.VectorAnglePSD, mplugin2)
     DEREGISTER_NODE(n_IKVChainSolver.IKVChainSolver, mplugin2)
     DEREGISTER_NODE(n_HelperJoint.HelperJoint, mplugin2)
