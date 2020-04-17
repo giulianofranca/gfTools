@@ -73,6 +73,8 @@ Sources:
 #include "headers/n_gfUtilBlendTransform.h"
 #include "headers/n_gfUtilAimConstraint.h"
 #include "headers/n_gfUtilParentConstraint.h"
+#include "headers/n_gfUtilPoleVectorConstraint.h"
+#include "headers/n_gfUtilSpaceConstraint.h"
 #include "headers/n_gfUtilAngleMath.h"
 #include "headers/n_gfUtilAngleScalarMath.h"
 #include "headers/n_gfUtilAngleTrigMath.h"
@@ -90,6 +92,7 @@ Sources:
 #include <maya/MString.h>
 #include <maya/MStringArray.h>
 #include <maya/MTypeId.h>
+#include <maya/MGlobal.h>
 
 
 #define REGISTER_NODE(NODE, PLUGIN)         \
@@ -177,39 +180,45 @@ const MTypeId AimConstraint::kNodeID = 0x00130d88;
 const MString ParentConstraint::kNodeName = "gfParentConstraint";
 const MString ParentConstraint::kNodeClassify = "utility/general";
 const MTypeId ParentConstraint::kNodeID = 0x00130d89;
+const MString PoleVectorConstraint::kNodeName = "gfPoleVectorConstraint";
+const MString PoleVectorConstraint::kNodeClassify = "utility/general";
+const MTypeId PoleVectorConstraint::kNodeID = 0x00130d8a;
+const MString SpaceConstraint::kNodeName = "gfSpaceConstraint";
+const MString SpaceConstraint::kNodeClassify = "utility/general";
+const MTypeId SpaceConstraint::kNodeID = 0x00130d8b;
 const MString AngularMath::kNodeName = "gfAngleMath";
 const MString AngularMath::kNodeClassify = "utility/general";
-const MTypeId AngularMath::kNodeID = 0x00130d8a;
+const MTypeId AngularMath::kNodeID = 0x00130d8c;
 const MString AngularScalarMath::kNodeName = "gfAngleScalarMath";
 const MString AngularScalarMath::kNodeClassify = "utility/general";
-const MTypeId AngularScalarMath::kNodeID = 0x00130d8b;
+const MTypeId AngularScalarMath::kNodeID = 0x00130d8d;
 const MString AngularTrigMath::kNodeName = "gfAngleTrigMath";
 const MString AngularTrigMath::kNodeClassify = "utility/general";
-const MTypeId AngularTrigMath::kNodeID = 0x00130d8c;
+const MTypeId AngularTrigMath::kNodeID = 0x00130d8e;
 const MString AngleToDouble::kNodeName = "gfAngleToDouble";
 const MString AngleToDouble::kNodeClassify = "utility/general";
-const MTypeId AngleToDouble::kNodeID = 0x00130d8d;
+const MTypeId AngleToDouble::kNodeID = 0x00130d8f;
 const MString DoubleToAngle::kNodeName = "gfDoubleToAngle";
 const MString DoubleToAngle::kNodeClassify = "utility/general";
-const MTypeId DoubleToAngle::kNodeID = 0x00130d8e;
+const MTypeId DoubleToAngle::kNodeID = 0x00130d90;
 const MString EulerMath::kNodeName = "gfEulerMath";
 const MString EulerMath::kNodeClassify = "utility/general";
-const MTypeId EulerMath::kNodeID = 0x00130d8f;
+const MTypeId EulerMath::kNodeID = 0x00130d91;
 const MString EulerScalarMath::kNodeName = "gfEulerScalarMath";
 const MString EulerScalarMath::kNodeClassify = "utility/general";
-const MTypeId EulerScalarMath::kNodeID = 0x00130d90;
+const MTypeId EulerScalarMath::kNodeID = 0x00130d92;
 const MString EulerToVector::kNodeName = "gfEulerToVector";
 const MString EulerToVector::kNodeClassify = "utility/general";
-const MTypeId EulerToVector::kNodeID = 0x00130d91;
+const MTypeId EulerToVector::kNodeID = 0x00130d93;
 const MString VectorToEuler::kNodeName = "gfVectorToEuler";
 const MString VectorToEuler::kNodeClassify = "utility/general";
-const MTypeId VectorToEuler::kNodeID =0x00130d92;
+const MTypeId VectorToEuler::kNodeID =0x00130d94;
 const MString DecomposeRowMatrix::kNodeName = "gfDecompRowMtx";
 const MString DecomposeRowMatrix::kNodeClassify = "utility/general";
-const MTypeId DecomposeRowMatrix::kNodeID = 0x00130d93;
+const MTypeId DecomposeRowMatrix::kNodeID = 0x00130d95;
 const MString FindParamFromLength::kNodeName = "gfFindParamFromLength";
 const MString FindParamFromLength::kNodeClassify = "utility/general";
-const MTypeId FindParamFromLength::kNodeID = 0x00130d94;
+const MTypeId FindParamFromLength::kNodeID = 0x00130d96;
 
 
 MStatus initializePlugin(MObject mobject){
@@ -227,6 +236,8 @@ MStatus initializePlugin(MObject mobject){
     REGISTER_NODE(BlendTransform, mPlugin);
     REGISTER_NODE(AimConstraint, mPlugin);
     REGISTER_NODE(ParentConstraint, mPlugin);
+    REGISTER_NODE(PoleVectorConstraint, mPlugin);
+    REGISTER_NODE(SpaceConstraint, mPlugin);
     REGISTER_NODE(AngularMath, mPlugin);
     REGISTER_NODE(AngularScalarMath, mPlugin);
     REGISTER_NODE(AngularTrigMath, mPlugin);
@@ -238,6 +249,7 @@ MStatus initializePlugin(MObject mobject){
     REGISTER_NODE(VectorToEuler, mPlugin);
     REGISTER_NODE(DecomposeRowMatrix, mPlugin);
     REGISTER_NODE(FindParamFromLength, mPlugin);
+    MGlobal::displayInfo("[gfTools] Plugin loaded successfully.");
 
     return status;
 }
@@ -256,6 +268,8 @@ MStatus uninitializePlugin(MObject mobject){
     DEREGISTER_NODE(BlendTransform, mPlugin);
     DEREGISTER_NODE(AimConstraint, mPlugin);
     DEREGISTER_NODE(ParentConstraint, mPlugin);
+    DEREGISTER_NODE(PoleVectorConstraint, mPlugin);
+    DEREGISTER_NODE(SpaceConstraint, mPlugin);
     DEREGISTER_NODE(AngularMath, mPlugin);
     DEREGISTER_NODE(AngularScalarMath, mPlugin);
     DEREGISTER_NODE(AngularTrigMath, mPlugin);
@@ -267,6 +281,7 @@ MStatus uninitializePlugin(MObject mobject){
     DEREGISTER_NODE(VectorToEuler, mPlugin);
     DEREGISTER_NODE(DecomposeRowMatrix, mPlugin);
     DEREGISTER_NODE(FindParamFromLength, mPlugin);
+    MGlobal::displayInfo("[gfTools] Plugin unloaded successfully.");
 
     return status;
 }

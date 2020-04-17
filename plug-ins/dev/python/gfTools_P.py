@@ -89,6 +89,8 @@ import n_gfRigQuadraticCurve as n_QuadraticCurve
 import n_gfUtilBlendTransform as n_BlendTransform
 import n_gfUtilAimConstraint as n_AimConstraint
 import n_gfUtilParentConstraint as n_ParentConstraint
+import n_gfUtilPoleVectorConstraint as n_PoleVectorConstraint
+import n_gfUtilSpaceConstraint as n_SpaceConstraint
 import n_gfUtilAngleMath as n_AngularMath
 import n_gfUtilAngleScalarMath as n_AngularScalarMath
 import n_gfUtilAngleTrigMath as n_AngularTrigMath
@@ -117,6 +119,8 @@ reload(n_QuadraticCurve)
 reload(n_BlendTransform)
 reload(n_AimConstraint)
 reload(n_ParentConstraint)
+reload(n_PoleVectorConstraint)
+reload(n_SpaceConstraint)
 reload(n_AngularMath)
 reload(n_AngularScalarMath)
 reload(n_AngularTrigMath)
@@ -146,9 +150,20 @@ def REGISTER_NODE(NODE, PLUGIN):
         sys.stderr.write("Failed to register node: %s" % NODE.kNodeName)
         raise
 
-def DEREGISTER_NODE(NODE, PLUGIN):
+def DEREGISTER_NODE(NODE, PLUGIN, CALLBACKS=None):
     """ Deregister a MPxNode. """
     # pylint: disable=invalid-name
+    if CALLBACKS:
+        om2.MGlobal.displayInfo("[gfTools] Removing callbacks from %s." % NODE.kNodeName)
+        numCallbacks = len(CALLBACKS)
+        for i, eachCB in enumerate(CALLBACKS):
+            try:
+                om2.MNodeMessage.removeCallback(eachCB)
+            except RuntimeError:
+                pass
+        if om2.MUserEventMessage.isUserEvent("preCompute"):
+            om2.MUserEventMessage.deregisterUserEvent("preCompute")
+        om2.MGlobal.displayInfo("[gfTools] %s Callbacks removed." % str(numCallbacks))
     try:
         PLUGIN.deregisterNode(NODE.kNodeID)
     except BaseException:
@@ -238,39 +253,45 @@ n_AimConstraint.AimConstraint.kNodeID = om2.MTypeId(0x0012f7ca)
 n_ParentConstraint.ParentConstraint.kNodeName = "gfParentConstraint_P"
 n_ParentConstraint.ParentConstraint.kNodeClassify = "utility/general"
 n_ParentConstraint.ParentConstraint.kNodeID = om2.MTypeId(0x0012f7cb)
+n_PoleVectorConstraint.PoleVectorConstraint.kNodeName = "gfPoleVectorConstraint_P"
+n_PoleVectorConstraint.PoleVectorConstraint.kNodeClassify = "utility/general"
+n_PoleVectorConstraint.PoleVectorConstraint.kNodeID = om2.MTypeId(0x0012f7cc)
+n_SpaceConstraint.SpaceConstraint.kNodeName = "gfSpaceConstraint_P"
+n_SpaceConstraint.SpaceConstraint.kNodeClassify = "utility/general"
+n_SpaceConstraint.SpaceConstraint.kNodeID = om2.MTypeId(0x0012f7cd)
 n_AngularMath.AngularMath.kNodeName = "gfAngleMath_P"
 n_AngularMath.AngularMath.kNodeClassify = "utility/general"
-n_AngularMath.AngularMath.kNodeID = om2.MTypeId(0x0012f7cc)
+n_AngularMath.AngularMath.kNodeID = om2.MTypeId(0x0012f7ce)
 n_AngularScalarMath.AngularScalarMath.kNodeName = "gfAngleScalarMath_P"
 n_AngularScalarMath.AngularScalarMath.kNodeClassify = "utility/general"
-n_AngularScalarMath.AngularScalarMath.kNodeID = om2.MTypeId(0x0012f7cd)
+n_AngularScalarMath.AngularScalarMath.kNodeID = om2.MTypeId(0x0012f7cf)
 n_AngularTrigMath.AngularTrigMath.kNodeName = "gfAngleTrigMath_P"
 n_AngularTrigMath.AngularTrigMath.kNodeClassify = "utility/general"
-n_AngularTrigMath.AngularTrigMath.kNodeID = om2.MTypeId(0x0012f7ce)
+n_AngularTrigMath.AngularTrigMath.kNodeID = om2.MTypeId(0x0012f7d0)
 n_AngleToDouble.AngleToDouble.kNodeName = "gfAngleToDouble_P"
 n_AngleToDouble.AngleToDouble.kNodeClassify = "utility/general"
-n_AngleToDouble.AngleToDouble.kNodeID = om2.MTypeId(0x0012f7cf)
+n_AngleToDouble.AngleToDouble.kNodeID = om2.MTypeId(0x0012f7d1)
 n_DoubleToAngle.DoubleToAngle.kNodeName = "gfDoubleToAngle_P"
 n_DoubleToAngle.DoubleToAngle.kNodeClassify = "utility/general"
-n_DoubleToAngle.DoubleToAngle.kNodeID = om2.MTypeId(0x0012f7d0)
+n_DoubleToAngle.DoubleToAngle.kNodeID = om2.MTypeId(0x0012f7d2)
 n_EulerMath.EulerMath.kNodeName = "gfEulerMath_P"
 n_EulerMath.EulerMath.kNodeClassify = "utility/general"
-n_EulerMath.EulerMath.kNodeID = om2.MTypeId(0x0012f7d1)
+n_EulerMath.EulerMath.kNodeID = om2.MTypeId(0x0012f7d3)
 n_EulerScalarMath.EulerScalarMath.kNodeName = "gfEulerScalarMath_P"
 n_EulerScalarMath.EulerScalarMath.kNodeClassify = "utility/general"
-n_EulerScalarMath.EulerScalarMath.kNodeID = om2.MTypeId(0x0012f7d2)
+n_EulerScalarMath.EulerScalarMath.kNodeID = om2.MTypeId(0x0012f7d4)
 n_EulerToVector.EulerToVector.kNodeName = "gfEulerToVector_P"
 n_EulerToVector.EulerToVector.kNodeClassify = "utility/general"
-n_EulerToVector.EulerToVector.kNodeID = om2.MTypeId(0x0012f7d3)
+n_EulerToVector.EulerToVector.kNodeID = om2.MTypeId(0x0012f7d5)
 n_VectorToEuler.VectorToEuler.kNodeName = "gfVectorToEuler_P"
 n_VectorToEuler.VectorToEuler.kNodeClassify = "utility/general"
-n_VectorToEuler.VectorToEuler.kNodeID = om2.MTypeId(0x0012f7d4)
+n_VectorToEuler.VectorToEuler.kNodeID = om2.MTypeId(0x0012f7d6)
 n_DecomposeRowMatrix.DecomposeRowMatrix.kNodeName = "gfDecompRowMtx_P"
 n_DecomposeRowMatrix.DecomposeRowMatrix.kNodeClassify = "utility/general"
-n_DecomposeRowMatrix.DecomposeRowMatrix.kNodeID = om2.MTypeId(0x0012f7d5)
+n_DecomposeRowMatrix.DecomposeRowMatrix.kNodeID = om2.MTypeId(0x0012f7d7)
 n_FindParamFromLength.FindParamFromLength.kNodeName = "gfFindParamFromLength_P"
 n_FindParamFromLength.FindParamFromLength.kNodeClassify = "utility/general"
-n_FindParamFromLength.FindParamFromLength.kNodeID = om2.MTypeId(0x0012f7d6)
+n_FindParamFromLength.FindParamFromLength.kNodeID = om2.MTypeId(0x0012f7d8)
 
 
 def initializePlugin(mobject):
@@ -289,6 +310,8 @@ def initializePlugin(mobject):
     REGISTER_NODE(n_BlendTransform.BlendTransform, mplugin2)
     REGISTER_NODE(n_AimConstraint.AimConstraint, mplugin2)
     REGISTER_NODE(n_ParentConstraint.ParentConstraint, mplugin2)
+    REGISTER_NODE(n_PoleVectorConstraint.PoleVectorConstraint, mplugin2)
+    REGISTER_NODE(n_SpaceConstraint.SpaceConstraint, mplugin2)
     REGISTER_NODE(n_AngularMath.AngularMath, mplugin2)
     REGISTER_NODE(n_AngularScalarMath.AngularScalarMath, mplugin2)
     REGISTER_NODE(n_AngularTrigMath.AngularTrigMath, mplugin2)
@@ -300,6 +323,7 @@ def initializePlugin(mobject):
     REGISTER_NODE(n_VectorToEuler.VectorToEuler, mplugin2)
     REGISTER_NODE(n_DecomposeRowMatrix.DecomposeRowMatrix, mplugin2)
     REGISTER_NODE(n_FindParamFromLength.FindParamFromLength, mplugin2)
+    om2.MGlobal.displayInfo("[gfTools_P] Plugin loaded successfully.")
     # m_Menu.MainMenu.loadMenu()
 
 
@@ -319,6 +343,8 @@ def uninitializePlugin(mobject):
     DEREGISTER_NODE(n_BlendTransform.BlendTransform, mplugin2)
     DEREGISTER_NODE(n_AimConstraint.AimConstraint, mplugin2)
     DEREGISTER_NODE(n_ParentConstraint.ParentConstraint, mplugin2)
+    DEREGISTER_NODE(n_PoleVectorConstraint.PoleVectorConstraint, mplugin2)
+    DEREGISTER_NODE(n_SpaceConstraint.SpaceConstraint, mplugin2, n_SpaceConstraint.SpaceConstraint.kCallbackIDs)
     DEREGISTER_NODE(n_AngularMath.AngularMath, mplugin2)
     DEREGISTER_NODE(n_AngularScalarMath.AngularScalarMath, mplugin2)
     DEREGISTER_NODE(n_AngularTrigMath.AngularTrigMath, mplugin2)
@@ -330,4 +356,5 @@ def uninitializePlugin(mobject):
     DEREGISTER_NODE(n_VectorToEuler.VectorToEuler, mplugin2)
     DEREGISTER_NODE(n_DecomposeRowMatrix.DecomposeRowMatrix, mplugin2)
     DEREGISTER_NODE(n_FindParamFromLength.FindParamFromLength, mplugin2)
+    om2.MGlobal.displayInfo("[gfTools_P] Plugin unloaded successfully.")
     # m_Menu.MainMenu.unloadMenu()

@@ -66,6 +66,7 @@ Sources:
 This code supports Pylint. Rc file in project.
 """
 import maya.api._OpenMaya_py2 as om2
+import maya.api._OpenMayaAnim_py2 as oma2
 
 
 def maya_useNewAPI():
@@ -144,7 +145,6 @@ class SpaceConstraint(om2.MPxNode):
         SpaceConstraint.inOffsetMatches = mAttr.create("offsetMatch", "offm", om2.MFnMatrixAttribute.kDouble)
         mAttr.array = True
         INPUT_ATTR(mAttr)
-        mAttr.keyable = False
 
         SpaceConstraint.inTarget = mAttr.create("target", "target", om2.MFnMatrixAttribute.kDouble)
         mAttr.array = True
@@ -207,12 +207,141 @@ class SpaceConstraint(om2.MPxNode):
         """ Post Constructor. """
         thisMob = self.thisMObject()
 
-        # Add space match callback
-        callback = om2.MNodeMessage.addAttributeChangedCallback(thisMob, SpaceConstraint.spaceMatchCallback, self)
-        SpaceConstraint.kCallbackIDs.append(callback)
+        # # Add space match callback
+        # callback = om2.MNodeMessage.addAttributeChangedCallback(thisMob, SpaceConstraint.spaceMatchCallback, self)
+        # SpaceConstraint.kCallbackIDs.append(callback)
+        # SpaceConstraint.kCallbackNodes.append(thisMob)
+
+        # spacePlug = om2.MPlug(thisMob, SpaceConstraint.inSpace)
+        # callback = om2.MNodeMessage.addKeyableChangeOverride(spacePlug, SpaceConstraint.spaceMatchCallback2, self)
+        # SpaceConstraint.kCallbackIDs.append(callback)
+        # SpaceConstraint.kCallbackNodes.append(thisMob)
+        # om2.MGlobal.displayInfo("Node callback: %s" % str(callback))
+        # om2.MGlobal.displayInfo("All callbacks: %s" % str(SpaceConstraint.kCallbackIDs))
+
+        # callback = om2.MNodeMessage.addNodeDirtyPlugCallback(thisMob, SpaceConstraint.spaceMatchCallback2, self)
+        # SpaceConstraint.kCallbackIDs.append(callback)
+        # SpaceConstraint.kCallbackNodes.append(thisMob)
+        # om2.MGlobal.displayInfo("Node callback: %s" % str(callback))
+        # om2.MGlobal.displayInfo("All callbacks: %s" % str(SpaceConstraint.kCallbackIDs))
+
+        # om2.MUserEventMessage.registerUserEvent("preCompute")
+        # callback1 = om2.MUserEventMessage.addUserEventCallback("preCompute", SpaceConstraint.spaceMatchCallback3, self)
+        # callback1 = om2.MDGMessage.addTimeChangeCallback(SpaceConstraint.spaceMatchCallback3, self)
+        # callback2 = om2.MNodeMessage.addAttributeChangedCallback(thisMob, SpaceConstraint.spaceMatchCallback4, self)
+        # SpaceConstraint.kCallbackIDs.append(callback1)
+        # SpaceConstraint.kCallbackIDs.append(callback2)
+        # SpaceConstraint.kCallbackNodes.append(thisMob)
+        # om2.MGlobal.displayInfo("All callbacks: %s" % str(SpaceConstraint.kCallbackIDs))
+        callback1 = oma2.MAnimMessage.addAnimKeyframeEditedCallback(SpaceConstraint.spaceMatchCallback5, self)
+        callback2 = om2.MDGMessage.addTimeChangeCallback(SpaceConstraint.spaceMatchCallback3, self)
+        SpaceConstraint.kCallbackIDs.append(callback1)
+        SpaceConstraint.kCallbackIDs.append(callback2)
         SpaceConstraint.kCallbackNodes.append(thisMob)
-        om2.MGlobal.displayInfo("Node callback: %s" % str(callback))
         om2.MGlobal.displayInfo("All callbacks: %s" % str(SpaceConstraint.kCallbackIDs))
+
+        # TODO: Using MDGMessage.timeChanged won't work because of jump in time. Instead use MAnimMessage to track keyframes.
+        # TODO: If the time in a animation curve change, and the plug is animated, read the anim curve and set the space match.
+
+    @staticmethod
+    def spaceMatchCallback3(time, clientData):
+        """Test"""
+        om2.MGlobal.displayInfo("Updating animation...")
+        oma2.MAnimMessage.flushAnimKeyframeEditedCallbacks()
+        # thisMob = clientData.thisMObject()
+        # spacePlug = om2.MPlug(thisMob, SpaceConstraint.inSpace)
+        # oldSpaceValue = str(spacePlug.asShort())
+        # clientData.setDependentsDirty()
+        # spacePlug = om2.MPlug(thisMob, SpaceConstraint.inSpace)
+        # newSpaceValue = str(spacePlug.asShort())
+        # om2.MGlobal.displayInfo("[timeChanged] Old space value: %s | Current space value: %s" % (oldSpaceValue, newSpaceValue))
+
+    @staticmethod
+    def spaceMatchCallback5(editedKeys, clientData):
+        """Test"""
+        om2.MGlobal.displayInfo("Hello ma friend!")
+        return True
+
+    @staticmethod
+    def spaceMatchCallback4(msg, plug, otherPlug, clientData):
+        """Test"""
+        thisMob = clientData.thisMObject()
+        if msg == 2056:
+            if plug == SpaceConstraint.inSpace:
+                spacePlug = om2.MPlug(thisMob, SpaceConstraint.inSpace)
+                om2.MGlobal.displayInfo("[attributeChanged] Current space value: %s" % str(spacePlug.asShort()))
+
+    @staticmethod
+    def spaceMatchCallback2(node, plug, clientData):
+        """Node dirty callback. Works, but not quite. """
+        # 1- Check if space plug is dirty.
+        if plug == SpaceConstraint.inSpace:
+            # 2- Check if clientData is valid.
+            thisMob = clientData.thisMObject()
+            if not isinstance(clientData, SpaceConstraint):
+                om2.MGlobal.displayError("[gfTools] gfSpaceConstraint don't recognize the clientData for space matching. Callback functionality skipped.")
+                return
+            # 3- Check if automatic space matching is enable.
+            match = om2.MPlug(thisMob, SpaceConstraint.inSpaceMatch).asBool()
+            if not match:
+                return
+            # 4- Check if space attribute changed.
+            lastValue = clientData.lastSpace
+            curValue = plug.asShort()
+            spacePlug = om2.MPlug(thisMob, SpaceConstraint.inSpace)
+            om2.MGlobal.displayInfo("Current space value: %s" % str(spacePlug.asShort()))
+            if curValue == lastValue:
+                return
+            # 5- Check if any output is been used and get the output object.
+            allClear = clientData.checkOutputConnections(thisMob)
+            # 6- Check the inputs.
+            targetPlug = om2.MPlug(thisMob, SpaceConstraint.inTarget)
+            offsetPlug = om2.MPlug(thisMob, SpaceConstraint.inOffset)
+            offsetMatchPlug = om2.MPlug(thisMob, SpaceConstraint.inOffsetMatches)
+            numTarget = targetPlug.numElements() - 1
+            if curValue > numTarget:
+                curValue = numTarget
+            # 7- If the node have necessary connections...
+            if not allClear and (numTarget + 1) > 0:
+                outObj = clientData.constraintObject
+                if outObj.hasFn(om2.MFn.kDagNode):
+                    # 8- Get the last world matrix of the target.
+                    lastOffsetMatchPlug = offsetMatchPlug.elementByLogicalIndex(lastValue)
+                    lastOffsetMatchObj = lastOffsetMatchPlug.asMObject()
+                    mtxDataFn = om2.MFnMatrixData(lastOffsetMatchObj)
+                    mOffsetMatch = mtxDataFn.matrix()
+                    lastOffsetPlug = offsetPlug.elementByLogicalIndex(lastValue)
+                    lastOffsetObj = lastOffsetPlug.asMObject()
+                    mtxDataFn = om2.MFnMatrixData(lastOffsetObj)
+                    mOffset = mtxDataFn.matrix()
+                    lastTargetPlug = targetPlug.elementByLogicalIndex(lastValue)
+                    lastTargetObj = lastTargetPlug.asMObject()
+                    mtxDataFn = om2.MFnMatrixData(lastTargetObj)
+                    mTarget = mtxDataFn.matrix()
+                    mLastOutputW = mOffsetMatch * mOffset * mTarget
+                    # 9- Get the current world matrix of the target.
+                    curTargetPlug = targetPlug.elementByLogicalIndex(curValue)
+                    curTargetObj = curTargetPlug.asMObject()
+                    mtxDataFn = om2.MFnMatrixData(curTargetObj)
+                    mTarget = mtxDataFn.matrix()
+                    curOffsetPlug = offsetPlug.elementByLogicalIndex(curValue)
+                    curOffsetObj = curOffsetPlug.asMObject()
+                    mtxDataFn = om2.MFnMatrixData(curOffsetObj)
+                    mOffset = mtxDataFn.matrix()
+                    mCurOutputW = mOffset * mTarget
+                    # 10- Get the result of the match and set it into the plug.
+                    mResult = mLastOutputW * mCurOutputW.inverse()
+                    curOffsetMatchPlug = offsetMatchPlug.elementByLogicalIndex(curValue)
+                    curOffsetMatchHdle = curOffsetMatchPlug.asMDataHandle()
+                    curOffsetMatchHdle.setMMatrix(mResult)
+                    curOffsetMatchPlug.setMDataHandle(curOffsetMatchHdle)
+                    # 11- Clean the offset match plug from last value.
+                    lastOffsetMatchHdle = lastOffsetMatchPlug.asMDataHandle()
+                    lastOffsetMatchHdle.setMMatrix(om2.MMatrix())
+                    lastOffsetMatchPlug.setMDataHandle(lastOffsetMatchHdle)
+                    om2.MGlobal.displayInfo("Performing space matching...")
+            # 12- Store the current space value in class to be accessed later on.
+            clientData.lastSpace = curValue
 
     @staticmethod
     def spaceMatchCallback(msg, plug, otherPlug, clientData):
@@ -400,6 +529,10 @@ class SpaceConstraint(om2.MPxNode):
             * dataBlock contains the data on which we will base our computations.
         """
         # pylint: disable=no-self-use
+        # if not dataBlock.isClean(SpaceConstraint.inSpace):
+        #     om2.MGlobal.displayInfo("\tSpace attribute is dirty.")
+        #     om2.MUserEventMessage.postUserEvent("preCompute", self)
+
         curSpace = dataBlock.inputValue(SpaceConstraint.inSpace).asShort()
 
         offsetMatchHdle = dataBlock.inputArrayValue(SpaceConstraint.inOffsetMatches)
