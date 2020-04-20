@@ -51,10 +51,12 @@ MStatus AimConstraint::initialize(){
     MFnUnitAttribute uAttr;
 
     inUpVecType = eAttr.create("upVectorType", "upt", 0, &status);
-    eAttr.addField("World Up", 0);
-    eAttr.addField("Object Up", 1);
-    eAttr.addField("Angle Up", 2);
+    eAttr.addField("None", 0);
+    eAttr.addField("World Up", 1);
+    eAttr.addField("Object Up", 2);
+    eAttr.addField("Angle Up", 3);
     INPUT_ATTR(eAttr);
+    eAttr.setChannelBox(true);
 
     MObject offsetX = uAttr.create("offsetX", "offsetX", MFnUnitAttribute::kAngle, 0.0, &status);
     MObject offsetY = uAttr.create("offsetY", "offsetY", MFnUnitAttribute::kAngle, 0.0, &status);
@@ -168,33 +170,35 @@ MStatus AimConstraint::compute(const MPlug& plug, MDataBlock& dataBlock){
     MQuaternion qAim = MQuaternion(primAxis, nAim);
     qAimConst *= qAim;
 
-    MVector vUp;
-    if (upVecType == 0){
-        MVector nWorldUp = MVector(dataBlock.inputValue(inWorldUpVector).asFloat3());
-        nWorldUp.normalize();
-        vUp = nWorldUp;
-    }
-    else if (upVecType == 1){
-        MMatrix mWorldUp = dataBlock.inputValue(inWorldUpMtx).asMatrix();
-        MVector vWorldUp = MVector(mWorldUp[3][0], mWorldUp[3][1], mWorldUp[3][2]);
-        vUp = vWorldUp - vConst;
-    }
-    else if (upVecType == 2){
-        double angleUp = dataBlock.inputValue(inAngleUp).asAngle().asRadians();
-        MQuaternion qTwist = MQuaternion(angleUp, nAim);
-        vUp = secAxis.rotateBy(qTwist);
-    }
-    MVector nNormal = vUp - ((vUp * nAim) * nAim);
-    nNormal.normalize();
+    if (upVecType != 0){
+        MVector vUp;
+        if (upVecType == 1){
+            MVector nWorldUp = MVector(dataBlock.inputValue(inWorldUpVector).asFloat3());
+            nWorldUp.normalize();
+            vUp = nWorldUp;
+        }
+        else if (upVecType == 2){
+            MMatrix mWorldUp = dataBlock.inputValue(inWorldUpMtx).asMatrix();
+            MVector vWorldUp = MVector(mWorldUp[3][0], mWorldUp[3][1], mWorldUp[3][2]);
+            vUp = vWorldUp - vConst;
+        }
+        else if (upVecType == 3){
+            double angleUp = dataBlock.inputValue(inAngleUp).asAngle().asRadians();
+            MQuaternion qTwist = MQuaternion(angleUp, nAim);
+            vUp = secAxis.rotateBy(qTwist);
+        }
+        MVector nNormal = vUp - ((vUp * nAim) * nAim);
+        nNormal.normalize();
 
-    MVector nUp = secAxis.rotateBy(qAim);
-    double angle = nUp.angle(nNormal);
-    MQuaternion qNormal = MQuaternion(angle, nAim);
-    if (!nNormal.isEquivalent(nUp.rotateBy(qNormal), 1.0e-5)){
-        angle = 2.0 * M_PI - angle;
-        qNormal = MQuaternion(angle, nAim);
+        MVector nUp = secAxis.rotateBy(qAim);
+        double angle = nUp.angle(nNormal);
+        MQuaternion qNormal = MQuaternion(angle, nAim);
+        if (!nNormal.isEquivalent(nUp.rotateBy(qNormal), 1.0e-5)){
+            angle = 2.0 * M_PI - angle;
+            qNormal = MQuaternion(angle, nAim);
+        }
+        qAimConst *= qNormal;
     }
-    qAimConst *= qNormal;
 
     MQuaternion qResult = MQuaternion();
     qResult *= qOffset.invertIt();

@@ -135,9 +135,10 @@ class AimConstraint(om2.MPxNode):
         uAttr = om2.MFnUnitAttribute()
 
         AimConstraint.inUpVecType = eAttr.create("upVectorType", "upt", 0)
-        eAttr.addField("World Up", 0)
-        eAttr.addField("Object Up", 1)
-        eAttr.addField("Angle Up", 2)
+        eAttr.addField("None", 0)
+        eAttr.addField("World Up", 1)
+        eAttr.addField("Object Up", 2)
+        eAttr.addField("Angle Up", 3)
         INPUT_ATTR(eAttr)
         eAttr.channelBox = True
 
@@ -251,31 +252,32 @@ class AimConstraint(om2.MPxNode):
         qAim = om2.MQuaternion(primAxis, nAim)
         qAimConst *= qAim
 
-        if upVecType == 0:
-            # World Up
-            nWorldUp = om2.MVector(dataBlock.inputValue(AimConstraint.inWorldUpVector).asFloat3())
-            nWorldUp.normalize()
-            vUp = nWorldUp
-        elif upVecType == 1:
-            # Object Up
-            mWorldUp = dataBlock.inputValue(AimConstraint.inWorldUpMtx).asMatrix()
-            vWorldUp = om2.MVector(mWorldUp[12], mWorldUp[13], mWorldUp[14])
-            vUp = vWorldUp - vConst
-        elif upVecType == 2:
-            # Angle Up
-            angleUp = dataBlock.inputValue(AimConstraint.inAngleUp).asAngle().asRadians()
-            qTwist = om2.MQuaternion(angleUp, nAim)
-            vUp = secAxis.rotateBy(qTwist)
-        nNormal = vUp - ((vUp * nAim) * nAim)
-        nNormal.normalize()
+        if upVecType != 0:
+            if upVecType == 1:
+                # World Up
+                nWorldUp = om2.MVector(dataBlock.inputValue(AimConstraint.inWorldUpVector).asFloat3())
+                nWorldUp.normalize()
+                vUp = nWorldUp
+            elif upVecType == 2:
+                # Object Up
+                mWorldUp = dataBlock.inputValue(AimConstraint.inWorldUpMtx).asMatrix()
+                vWorldUp = om2.MVector(mWorldUp[12], mWorldUp[13], mWorldUp[14])
+                vUp = vWorldUp - vConst
+            elif upVecType == 3:
+                # Angle Up
+                angleUp = dataBlock.inputValue(AimConstraint.inAngleUp).asAngle().asRadians()
+                qTwist = om2.MQuaternion(angleUp, nAim)
+                vUp = secAxis.rotateBy(qTwist)
+            nNormal = vUp - ((vUp * nAim) * nAim)
+            nNormal.normalize()
 
-        nUp = secAxis.rotateBy(qAim)
-        angle = nUp.angle(nNormal)
-        qNormal = om2.MQuaternion(angle, nAim)
-        if not nNormal.isEquivalent(nUp.rotateBy(qNormal), 1.0e-5):
-            angle = 2.0 * math.pi - angle
+            nUp = secAxis.rotateBy(qAim)
+            angle = nUp.angle(nNormal)
             qNormal = om2.MQuaternion(angle, nAim)
-        qAimConst *= qNormal
+            if not nNormal.isEquivalent(nUp.rotateBy(qNormal), 1.0e-5):
+                angle = 2.0 * math.pi - angle
+                qNormal = om2.MQuaternion(angle, nAim)
+            qAimConst *= qNormal
 
         qResult = om2.MQuaternion()
         qResult *= qOffset.invertIt()

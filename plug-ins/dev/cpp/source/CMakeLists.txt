@@ -10,6 +10,8 @@ set(SOURCE_FILES
     "n_gfUtilBlendTransform.cpp" "headers/n_gfUtilBlendTransform.h"
     "n_gfUtilAimConstraint.cpp" "headers/n_gfUtilAimConstraint.h"
     "n_gfUtilParentConstraint.cpp" "headers/n_gfUtilParentConstraint.h"
+    "n_gfUtilPoleVectorConstraint.cpp" "headers/n_gfUtilPoleVectorConstraint.h"
+    "n_gfUtilSpaceConstraint.cpp" "headers/n_gfUtilSpaceConstraint.h"
     "n_gfUtilAngleMath.cpp" "headers/n_gfUtilAngleMath.h"
     "n_gfUtilAngleScalarMath.cpp" "headers/n_gfUtilAngleScalarMath.h"
     "n_gfUtilAngleTrigMath.cpp" "headers/n_gfUtilAngleTrigMath.h"
