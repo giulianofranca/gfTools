@@ -282,7 +282,7 @@ class AimConstraint(om2.MPxNode):
         qResult = om2.MQuaternion()
         qResult *= qOffset.invertIt()
         qResult *= qAimConst
-        qResult *= qConstParInv.invertIt()
+        qResult *= qConstParInv
         qResult *= qConstJntOri.invertIt()
         eResult = qResult.asEulerRotation()
         eResult.reorderIt(constRotOrder)

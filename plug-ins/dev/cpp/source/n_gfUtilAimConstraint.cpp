@@ -203,7 +203,7 @@ MStatus AimConstraint::compute(const MPlug& plug, MDataBlock& dataBlock){
     MQuaternion qResult = MQuaternion();
     qResult *= qOffset.invertIt();
     qResult *= qAimConst;
-    qResult *= qConstParInv.invertIt();
+    qResult *= qConstParInv;
     qResult *= qConstJntOri.invertIt();
     MEulerRotation eResult = qResult.asEulerRotation();
     eResult.reorderIt((MEulerRotation::RotationOrder)constRotOrder);
