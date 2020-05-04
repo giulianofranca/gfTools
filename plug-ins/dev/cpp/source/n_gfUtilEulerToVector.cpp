@@ -23,6 +23,10 @@ EulerToVector::EulerToVector() {}
 EulerToVector::~EulerToVector() {}
 
 MObject EulerToVector::inEuler;
+MObject EulerToVector::inEulerX;
+MObject EulerToVector::inEulerY;
+MObject EulerToVector::inEulerZ;
+MObject EulerToVector::inToDegrees;
 MObject EulerToVector::outVector;
 
 
@@ -41,21 +45,23 @@ MStatus EulerToVector::initialize(){
     MFnUnitAttribute uAttr;
     MFnNumericAttribute nAttr;
 
-    MObject eulerX = uAttr.create("eulerX", "ex", MFnUnitAttribute::kAngle, 0.0, &status);
-    MObject eulerY = uAttr.create("eulerY", "ey", MFnUnitAttribute::kAngle, 0.0, &status);
-    MObject eulerZ = uAttr.create("eulerZ", "ez", MFnUnitAttribute::kAngle, 0.0, &status);
-    inEuler = nAttr.create("euler", "e", eulerX, eulerY, eulerZ, &status);
+    inEulerX = uAttr.create("eulerX", "ex", MFnUnitAttribute::kAngle, 0.0, &status);
+    inEulerY = uAttr.create("eulerY", "ey", MFnUnitAttribute::kAngle, 0.0, &status);
+    inEulerZ = uAttr.create("eulerZ", "ez", MFnUnitAttribute::kAngle, 0.0, &status);
+    inEuler = nAttr.create("euler", "e", inEulerX, inEulerY, inEulerZ, &status);
     INPUT_ATTR(nAttr);
 
-    MObject outVectorX = nAttr.create("outVectorX", "ovx", MFnNumericData::kDouble, 0.0, &status);
-    MObject outVectorY = nAttr.create("outVectorY", "ovy", MFnNumericData::kDouble, 0.0, &status);
-    MObject outVectorZ = nAttr.create("outVectorZ", "ovz", MFnNumericData::kDouble, 0.0, &status);
-    outVector = nAttr.create("outVector", "ov", outVectorX, outVectorY, outVectorZ, &status);
+    inToDegrees = nAttr.create("convertToDegrees", "todeg", MFnNumericData::kBoolean, true, &status);
+    INPUT_ATTR(nAttr);
+
+    outVector = nAttr.createPoint("outVector", "ov", &status);
     OUTPUT_ATTR(nAttr);
 
     addAttribute(inEuler);
+    addAttribute(inToDegrees);
     addAttribute(outVector);
     attributeAffects(inEuler, outVector);
+    attributeAffects(inToDegrees, outVector);
 
     return status;
 }
@@ -66,18 +72,24 @@ MStatus EulerToVector::compute(const MPlug& plug, MDataBlock& dataBlock){
         * plug is a connection point related to one of our node attributes (either an input or an output).
         * dataBlock contains the data on which we will base our computations.
     */
-    if (plug != outVector)
-        return MStatus::kUnknownParameter;
-    
-    MVector vEuler = dataBlock.inputValue(inEuler).asVector();
-    MEulerRotation eEuler = MEulerRotation(
-        MAngle(vEuler.x, MAngle::kRadians).asDegrees(),
-        MAngle(vEuler.y, MAngle::kRadians).asDegrees(),
-        MAngle(vEuler.z, MAngle::kRadians).asDegrees()
-    );
+    double3 &rot = dataBlock.inputValue(inEuler).asDouble3();
+    bool toDegrees = dataBlock.inputValue(inToDegrees).asBool();
+    double euler[3];
+
+    if (toDegrees){
+        for (unsigned int i = 0; i < 3; i++){
+            euler[i] = rot[i] * (180.0 / M_PI);
+        }
+    }
+    else{
+        for (unsigned int i = 0; i < 3; i++){
+            euler[i] = rot[i];
+        }
+    }
+    MFloatVector vVector = MFloatVector(euler);
 
     MDataHandle outVectorHandle = dataBlock.outputValue(outVector);
-    outVectorHandle.setMVector(eEuler.asVector());
+    outVectorHandle.setMFloatVector(vVector);
     outVectorHandle.setClean();
 
     return MStatus::kSuccess;

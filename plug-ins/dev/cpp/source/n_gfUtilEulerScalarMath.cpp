@@ -24,10 +24,16 @@ EulerScalarMath::~EulerScalarMath() {}
 
 MObject EulerScalarMath::inOperation;
 MObject EulerScalarMath::inEuler;
+MObject EulerScalarMath::inEulerX;
+MObject EulerScalarMath::inEulerY;
+MObject EulerScalarMath::inEulerZ;
 MObject EulerScalarMath::inEulerRotOrder;
 MObject EulerScalarMath::inScalar;
 MObject EulerScalarMath::inResRotOrder;
 MObject EulerScalarMath::outEuler;
+MObject EulerScalarMath::outEulerX;
+MObject EulerScalarMath::outEulerY;
+MObject EulerScalarMath::outEulerZ;
 
 
 void* EulerScalarMath::creator(){
@@ -53,10 +59,10 @@ MStatus EulerScalarMath::initialize(){
     eAttr.addField("Multiply", 3);
     INPUT_ATTR(eAttr);
 
-    MObject eulerX = uAttr.create("eulerX", "ex", MFnUnitAttribute::kAngle, 0.0, &status);
-    MObject eulerY = uAttr.create("eulerY", "ey", MFnUnitAttribute::kAngle, 0.0, &status);
-    MObject eulerZ = uAttr.create("eulerZ", "ez", MFnUnitAttribute::kAngle, 0.0, &status);
-    inEuler = nAttr.create("euler", "e", eulerX, eulerY, eulerZ, &status);
+    inEulerX = uAttr.create("eulerX", "ex", MFnUnitAttribute::kAngle, 0.0, &status);
+    inEulerY = uAttr.create("eulerY", "ey", MFnUnitAttribute::kAngle, 0.0, &status);
+    inEulerZ = uAttr.create("eulerZ", "ez", MFnUnitAttribute::kAngle, 0.0, &status);
+    inEuler = nAttr.create("euler", "e", inEulerX, inEulerY, inEulerZ, &status);
     INPUT_ATTR(nAttr);
 
     inEulerRotOrder = eAttr.create("rotateOrderEuler", "roe", 0, &status);
@@ -80,9 +86,9 @@ MStatus EulerScalarMath::initialize(){
     eAttr.addField("zyx", 5);
     INPUT_ATTR(eAttr);
 
-    MObject outEulerX = uAttr.create("outEulerX", "oex", MFnUnitAttribute::kAngle, 0.0, &status);
-    MObject outEulerY = uAttr.create("outEulerY", "oey", MFnUnitAttribute::kAngle, 0.0, &status);
-    MObject outEulerZ = uAttr.create("outEulerZ", "oez", MFnUnitAttribute::kAngle, 0.0, &status);
+    outEulerX = uAttr.create("outEulerX", "oex", MFnUnitAttribute::kAngle, 0.0, &status);
+    outEulerY = uAttr.create("outEulerY", "oey", MFnUnitAttribute::kAngle, 0.0, &status);
+    outEulerZ = uAttr.create("outEulerZ", "oez", MFnUnitAttribute::kAngle, 0.0, &status);
     outEuler = nAttr.create("outEuler", "oe", outEulerX, outEulerY, outEulerZ, &status);
     OUTPUT_ATTR(nAttr);
 
@@ -107,56 +113,65 @@ MStatus EulerScalarMath::compute(const MPlug& plug, MDataBlock& dataBlock){
         * plug is a connection point related to one of our node attributes (either an input or an output).
         * dataBlock contains the data on which we will base our computations.
     */
-    if (plug != outEuler)
+    if ((plug != outEuler) &&
+        (plug != outEulerX) &&
+        (plug != outEulerY) &&
+        (plug != outEulerZ)){
         return MStatus::kUnknownParameter;
+    }
+
     short operation = dataBlock.inputValue(inOperation).asShort();
-    MVector vEuler = dataBlock.inputValue(inEuler).asVector();
+    double3 &euler = dataBlock.inputValue(inEuler).asDouble3();
     double scalar = dataBlock.inputValue(inScalar).asDouble();
     short eulerRotOrder = dataBlock.inputValue(inEulerRotOrder).asShort();
     short outRotOrder = dataBlock.inputValue(inResRotOrder).asShort();
 
-    MEulerRotation eEuler = MEulerRotation(vEuler, (MEulerRotation::RotationOrder)eulerRotOrder);
+    MEulerRotation eEuler = MEulerRotation(
+        euler[0], 
+        euler[1],
+        euler[2],
+        (MEulerRotation::RotationOrder) eulerRotOrder
+    );
 
-    MDataHandle outEulerHandle = dataBlock.outputValue(outEuler);
-    MVector vResult, vScalar;
-    MEulerRotation eOutEuler;
+    MDataHandle outEulerHdle = dataBlock.outputValue(outEuler);
+    MEulerRotation eScalar, eOutEuler;
 
     switch (operation)
     {
     case 0:
-        eEuler.reorderIt((MEulerRotation::RotationOrder)outRotOrder);
-        vResult = eEuler.asVector();
-        outEulerHandle.setMVector(vResult);
+        eEuler.reorderIt((MEulerRotation::RotationOrder) outRotOrder);
+        outEulerHdle.set3Double(eEuler.x, eEuler.y, eEuler.z);
         break;
     case 1:
-        eEuler.reorderIt((MEulerRotation::RotationOrder)outRotOrder);
-        vScalar = MVector(
+        eEuler.reorderIt((MEulerRotation::RotationOrder) outRotOrder);
+        eScalar = MEulerRotation(
             MAngle(scalar, MAngle::kDegrees).asRadians(),
             MAngle(scalar, MAngle::kDegrees).asRadians(),
-            MAngle(scalar, MAngle::kDegrees).asRadians()
+            MAngle(scalar, MAngle::kDegrees).asRadians(),
+            (MEulerRotation::RotationOrder) outRotOrder
         );
-        vResult = eEuler.asVector() + vScalar;
-        outEulerHandle.setMVector(vResult);
+        eOutEuler = eEuler + eScalar;
+        outEulerHdle.set3Double(eOutEuler.x, eOutEuler.y, eOutEuler.z);
         break;
     case 2:
-        eEuler.reorderIt((MEulerRotation::RotationOrder)outRotOrder);
-        vScalar = MVector(
+        eEuler.reorderIt((MEulerRotation::RotationOrder) outRotOrder);
+        eScalar = MEulerRotation(
             MAngle(scalar, MAngle::kDegrees).asRadians(),
             MAngle(scalar, MAngle::kDegrees).asRadians(),
-            MAngle(scalar, MAngle::kDegrees).asRadians()
+            MAngle(scalar, MAngle::kDegrees).asRadians(),
+            (MEulerRotation::RotationOrder) outRotOrder
         );
-        vResult = eEuler.asVector() - vScalar;
-        outEulerHandle.setMVector(vResult);
+        eOutEuler = eEuler - eScalar;
+        outEulerHdle.set3Double(eOutEuler.x, eOutEuler.y, eOutEuler.z);
         break;
     case 3:
-        eEuler.reorderIt((MEulerRotation::RotationOrder)outRotOrder);
+        eEuler.reorderIt((MEulerRotation::RotationOrder) outRotOrder);
         eOutEuler = eEuler * scalar;
-        vResult = eOutEuler.asVector();
-        outEulerHandle.setMVector(vResult);
+        outEulerHdle.set3Double(eOutEuler.x, eOutEuler.y, eOutEuler.z);
         break;
     }
 
-    outEulerHandle.setClean();
+    outEulerHdle.setClean();
 
     return MStatus::kSuccess;
 }

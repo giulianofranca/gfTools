@@ -55,6 +55,7 @@ Sources:
 
 This code supports Pylint. Rc file in project.
 """
+import math
 import maya.api._OpenMaya_py2 as om2
 
 
@@ -90,6 +91,10 @@ class EulerToVector(om2.MPxNode):
     kNodeID = ""
 
     inEuler = om2.MObject()
+    inEulerX = om2.MObject()
+    inEulerY = om2.MObject()
+    inEulerZ = om2.MObject()
+    inToDegrees = om2.MObject()
     outVector = om2.MObject()
 
     def __init__(self):
@@ -111,21 +116,23 @@ class EulerToVector(om2.MPxNode):
         uAttr = om2.MFnUnitAttribute()
         nAttr = om2.MFnNumericAttribute()
 
-        eulerX = uAttr.create("eulerX", "ex", om2.MFnUnitAttribute.kAngle, 0.0)
-        eulerY = uAttr.create("eulerY", "ey", om2.MFnUnitAttribute.kAngle, 0.0)
-        eulerZ = uAttr.create("eulerZ", "ez", om2.MFnUnitAttribute.kAngle, 0.0)
-        EulerToVector.inEuler = nAttr.create("euler", "e", eulerX, eulerY, eulerZ)
+        EulerToVector.inEulerX = uAttr.create("eulerX", "ex", om2.MFnUnitAttribute.kAngle, 0.0)
+        EulerToVector.inEulerY = uAttr.create("eulerY", "ey", om2.MFnUnitAttribute.kAngle, 0.0)
+        EulerToVector.inEulerZ = uAttr.create("eulerZ", "ez", om2.MFnUnitAttribute.kAngle, 0.0)
+        EulerToVector.inEuler = nAttr.create("euler", "e", EulerToVector.inEulerX, EulerToVector.inEulerY, EulerToVector.inEulerZ)
         INPUT_ATTR(nAttr)
 
-        outVectorX = nAttr.create("outVectorX", "ovx", om2.MFnNumericData.kDouble, 0.0)
-        outVectorY = nAttr.create("outVectorY", "ovy", om2.MFnNumericData.kDouble, 0.0)
-        outVectorZ = nAttr.create("outVectorZ", "ovz", om2.MFnNumericData.kDouble, 0.0)
-        EulerToVector.outVector = nAttr.create("outVector", "ov", outVectorX, outVectorY, outVectorZ)
+        EulerToVector.inToDegrees = nAttr.create("convertToDegrees", "todeg", om2.MFnNumericData.kBoolean, True)
+        INPUT_ATTR(nAttr)
+
+        EulerToVector.outVector = nAttr.createPoint("outVector", "ov")
         OUTPUT_ATTR(nAttr)
 
         EulerToVector.addAttribute(EulerToVector.inEuler)
+        EulerToVector.addAttribute(EulerToVector.inToDegrees)
         EulerToVector.addAttribute(EulerToVector.outVector)
         EulerToVector.attributeAffects(EulerToVector.inEuler, EulerToVector.outVector)
+        EulerToVector.attributeAffects(EulerToVector.inToDegrees, EulerToVector.outVector)
 
     def compute(self, plug, dataBlock):
         """
@@ -134,17 +141,13 @@ class EulerToVector(om2.MPxNode):
             * dataBlock contains the data on which we will base our computations.
         """
         # pylint: disable=no-self-use
-        if plug != EulerToVector.outVector:
-            return om2.kUnknownParameter
+        euler = dataBlock.inputValue(EulerToVector.inEuler).asDouble3()
+        toDegrees = dataBlock.inputValue(EulerToVector.inToDegrees).asBool()
 
-        vEuler = dataBlock.inputValue(EulerToVector.inEuler).asVector()
-        eEuler = om2.MEulerRotation(
-            om2.MAngle(vEuler.x, om2.MAngle.kRadians).asDegrees(),
-            om2.MAngle(vEuler.y, om2.MAngle.kRadians).asDegrees(),
-            om2.MAngle(vEuler.z, om2.MAngle.kRadians).asDegrees(),
-            om2.MEulerRotation.kXYZ
-        )
+        if toDegrees:
+            euler = [angle * (180.0 / math.pi) for angle in euler]
+        vVector = om2.MFloatVector(euler)
 
         outVectorHandle = dataBlock.outputValue(EulerToVector.outVector)
-        outVectorHandle.setMVector(eEuler.asVector())
+        outVectorHandle.setMFloatVector(vVector)
         outVectorHandle.setClean()

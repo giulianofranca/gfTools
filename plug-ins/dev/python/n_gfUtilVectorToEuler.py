@@ -55,6 +55,7 @@ Sources:
 
 This code supports Pylint. Rc file in project.
 """
+import math
 import maya.api._OpenMaya_py2 as om2
 
 
@@ -91,6 +92,9 @@ class VectorToEuler(om2.MPxNode):
 
     inVector = om2.MObject()
     outEuler = om2.MObject()
+    outEulerX = om2.MObject()
+    outEulerY = om2.MObject()
+    outEulerZ = om2.MObject()
 
     def __init__(self):
         """ Constructor. """
@@ -111,16 +115,13 @@ class VectorToEuler(om2.MPxNode):
         uAttr = om2.MFnUnitAttribute()
         nAttr = om2.MFnNumericAttribute()
 
-        vectorX = nAttr.create("vectorX", "vecx", om2.MFnNumericData.kDouble, 0.0)
-        vectorY = nAttr.create("vectorY", "vecy", om2.MFnNumericData.kDouble, 0.0)
-        vectorZ = nAttr.create("vectorZ", "vecz", om2.MFnNumericData.kDouble, 0.0)
-        VectorToEuler.inVector = nAttr.create("vector", "vec", vectorX, vectorY, vectorZ)
+        VectorToEuler.inVector = nAttr.createPoint("vector", "vec")
         INPUT_ATTR(nAttr)
 
-        outEulerX = uAttr.create("outEulerX", "oex", om2.MFnUnitAttribute.kAngle, 0.0)
-        outEulerY = uAttr.create("outEulerY", "oey", om2.MFnUnitAttribute.kAngle, 0.0)
-        outEulerZ = uAttr.create("outEulerZ", "oez", om2.MFnUnitAttribute.kAngle, 0.0)
-        VectorToEuler.outEuler = nAttr.create("outEuler", "oe", outEulerX, outEulerY, outEulerZ)
+        VectorToEuler.outEulerX = uAttr.create("outEulerX", "oex", om2.MFnUnitAttribute.kAngle, 0.0)
+        VectorToEuler.outEulerY = uAttr.create("outEulerY", "oey", om2.MFnUnitAttribute.kAngle, 0.0)
+        VectorToEuler.outEulerZ = uAttr.create("outEulerZ", "oez", om2.MFnUnitAttribute.kAngle, 0.0)
+        VectorToEuler.outEuler = nAttr.create("outEuler", "oe", VectorToEuler.outEulerX, VectorToEuler.outEulerY, VectorToEuler.outEulerZ)
         OUTPUT_ATTR(nAttr)
 
         VectorToEuler.addAttribute(VectorToEuler.inVector)
@@ -134,17 +135,11 @@ class VectorToEuler(om2.MPxNode):
             * dataBlock contains the data on which we will base our computations.
         """
         # pylint: disable=no-self-use
-        if plug != VectorToEuler.outEuler:
-            return om2.kUnknownParameter
+        vector = dataBlock.inputValue(VectorToEuler.inVector).asFloat3()
+        vVector = om2.MVector([unit * (math.pi / 180.0) for unit in vector])
 
-        vVector = dataBlock.inputValue(VectorToEuler.inVector).asVector()
-        eEuler = om2.MEulerRotation(
-            om2.MAngle(vVector.x, om2.MAngle.kDegrees).asRadians(),
-            om2.MAngle(vVector.y, om2.MAngle.kDegrees).asRadians(),
-            om2.MAngle(vVector.z, om2.MAngle.kDegrees).asRadians(),
-            om2.MEulerRotation.kXYZ
-        )
+        eEuler = om2.MEulerRotation(vVector)
 
         outEulerHandle = dataBlock.outputValue(VectorToEuler.outEuler)
-        outEulerHandle.setMVector(eEuler.asVector())
+        outEulerHandle.set3Double(eEuler.x, eEuler.y, eEuler.z)
         outEulerHandle.setClean()

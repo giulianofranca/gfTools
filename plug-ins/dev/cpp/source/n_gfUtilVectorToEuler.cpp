@@ -24,6 +24,9 @@ VectorToEuler::~VectorToEuler() {}
 
 MObject VectorToEuler::inVector;
 MObject VectorToEuler::outEuler;
+MObject VectorToEuler::outEulerX;
+MObject VectorToEuler::outEulerY;
+MObject VectorToEuler::outEulerZ;
 
 
 void* VectorToEuler::creator(){
@@ -41,15 +44,12 @@ MStatus VectorToEuler::initialize(){
     MFnUnitAttribute uAttr;
     MFnNumericAttribute nAttr;
 
-    MObject vectorX = nAttr.create("vectorX", "vecx", MFnNumericData::kDouble, 0.0, &status);
-    MObject vectorY = nAttr.create("vectorY", "vecy", MFnNumericData::kDouble, 0.0, &status);
-    MObject vectorZ = nAttr.create("vectorZ", "vecz", MFnNumericData::kDouble, 0.0, &status);
-    inVector = nAttr.create("vector", "vec", vectorX, vectorY, vectorZ, &status);
+    inVector = nAttr.createPoint("vector", "vec", &status);
     INPUT_ATTR(nAttr);
 
-    MObject outEulerX = uAttr.create("outEulerX", "oex", MFnUnitAttribute::kAngle, 0.0, &status);
-    MObject outEulerY = uAttr.create("outEulerY", "oey", MFnUnitAttribute::kAngle, 0.0, &status);
-    MObject outEulerZ = uAttr.create("outEulerZ", "oez", MFnUnitAttribute::kAngle, 0.0, &status);
+    outEulerX = uAttr.create("outEulerX", "oex", MFnUnitAttribute::kAngle, 0.0, &status);
+    outEulerY = uAttr.create("outEulerY", "oey", MFnUnitAttribute::kAngle, 0.0, &status);
+    outEulerZ = uAttr.create("outEulerZ", "oez", MFnUnitAttribute::kAngle, 0.0, &status);
     outEuler = nAttr.create("outEuler", "oe", outEulerX, outEulerY, outEulerZ, &status);
     OUTPUT_ATTR(nAttr);
 
@@ -66,18 +66,14 @@ MStatus VectorToEuler::compute(const MPlug& plug, MDataBlock& dataBlock){
         * plug is a connection point related to one of our node attributes (either an input or an output).
         * dataBlock contains the data on which we will base our computations.
     */
-    if (plug != outEuler)
-        return MStatus::kUnknownParameter;
-    
-    MVector vVector = dataBlock.inputValue(inVector).asVector();
-    MEulerRotation eEuler = MEulerRotation(
-        MAngle(vVector.x, MAngle::kDegrees).asRadians(),
-        MAngle(vVector.y, MAngle::kDegrees).asRadians(),
-        MAngle(vVector.z, MAngle::kDegrees).asRadians()
-    );
+    float3 &pos = dataBlock.inputValue(inVector).asFloat3();
+    double euler[3];
+    for (unsigned int i = 0; i < 3; i++){
+        euler[i] = pos[i] * (M_PI / 180.0);
+    }
 
     MDataHandle outEulerHandle = dataBlock.outputValue(outEuler);
-    outEulerHandle.setMVector(eEuler.asVector());
+    outEulerHandle.set3Double(euler[0], euler[1], euler[2]);
     outEulerHandle.setClean();
 
     return MStatus::kSuccess;

@@ -63,7 +63,6 @@ Sources:
 #include <maya/MFnUnitAttribute.h>
 #include <maya/MFnNumericAttribute.h>
 
-#include <maya/MVector.h>
 #include <maya/MEulerRotation.h>
 
 
@@ -87,9 +86,18 @@ public:
 
     static MObject                      inOperation;
     static MObject                      inEuler1;
+    static MObject                      inEuler1X;
+    static MObject                      inEuler1Y;
+    static MObject                      inEuler1Z;
     static MObject                      inEuler1RotOrder;
     static MObject                      inEuler2;
+    static MObject                      inEuler2X;
+    static MObject                      inEuler2Y;
+    static MObject                      inEuler2Z;
     static MObject                      inEuler2RotOrder;
     static MObject                      inResRotOrder;
     static MObject                      outEuler;
+    static MObject                      outEulerX;
+    static MObject                      outEulerY;
+    static MObject                      outEulerZ;
 };

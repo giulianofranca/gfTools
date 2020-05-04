@@ -56,9 +56,11 @@ Sources:
 #include <maya/MFnUnitAttribute.h>
 #include <maya/MFnNumericAttribute.h>
 
-#include <maya/MVector.h>
 #include <maya/MEulerRotation.h>
-#include <maya/MAngle.h>
+
+#ifndef M_PI
+#define M_PI 3.1415926535897932384626433832795
+#endif
 
 
 class VectorToEuler : public MPxNode{
@@ -81,4 +83,7 @@ public:
 
     static MObject                      inVector;
     static MObject                      outEuler;
+    static MObject                      outEulerX;
+    static MObject                      outEulerY;
+    static MObject                      outEulerZ;
 };

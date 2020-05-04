@@ -96,10 +96,16 @@ class EulerScalarMath(om2.MPxNode):
 
     inOperation = om2.MObject()
     inEuler = om2.MObject()
+    inEulerX = om2.MObject()
+    inEulerY = om2.MObject()
+    inEulerZ = om2.MObject()
     inEulerRotOrder = om2.MObject()
     inScalar = om2.MObject()
     inResRotOrder = om2.MObject()
     outEuler = om2.MObject()
+    outEulerX = om2.MObject()
+    outEulerY = om2.MObject()
+    outEulerZ = om2.MObject()
 
     def __init__(self):
         """ Constructor. """
@@ -128,10 +134,10 @@ class EulerScalarMath(om2.MPxNode):
         eAttr.addField("Multiply", 3)
         INPUT_ATTR(eAttr)
 
-        eulerX = uAttr.create("eulerX", "ex", om2.MFnUnitAttribute.kAngle, 0.0)
-        eulerY = uAttr.create("eulerY", "ey", om2.MFnUnitAttribute.kAngle, 0.0)
-        eulerZ = uAttr.create("eulerZ", "ez", om2.MFnUnitAttribute.kAngle, 0.0)
-        EulerScalarMath.inEuler = nAttr.create("euler", "e", eulerX, eulerY, eulerZ)
+        EulerScalarMath.inEulerX = uAttr.create("eulerX", "ex", om2.MFnUnitAttribute.kAngle, 0.0)
+        EulerScalarMath.inEulerY = uAttr.create("eulerY", "ey", om2.MFnUnitAttribute.kAngle, 0.0)
+        EulerScalarMath.inEulerZ = uAttr.create("eulerZ", "ez", om2.MFnUnitAttribute.kAngle, 0.0)
+        EulerScalarMath.inEuler = nAttr.create("euler", "e", EulerScalarMath.inEulerX, EulerScalarMath.inEulerY, EulerScalarMath.inEulerZ)
         INPUT_ATTR(nAttr)
 
         EulerScalarMath.inEulerRotOrder = eAttr.create("rotateOrderEuler", "roe", 0)
@@ -155,10 +161,10 @@ class EulerScalarMath(om2.MPxNode):
         eAttr.addField("zyx", 5)
         INPUT_ATTR(eAttr)
 
-        outEulerX = uAttr.create("outEulerX", "oex", om2.MFnUnitAttribute.kAngle, 0.0)
-        outEulerY = uAttr.create("outEulerY", "oey", om2.MFnUnitAttribute.kAngle, 0.0)
-        outEulerZ = uAttr.create("outEulerZ", "oez", om2.MFnUnitAttribute.kAngle, 0.0)
-        EulerScalarMath.outEuler = nAttr.create("outEuler", "oe", outEulerX, outEulerY, outEulerZ)
+        EulerScalarMath.outEulerX = uAttr.create("outEulerX", "oex", om2.MFnUnitAttribute.kAngle, 0.0)
+        EulerScalarMath.outEulerY = uAttr.create("outEulerY", "oey", om2.MFnUnitAttribute.kAngle, 0.0)
+        EulerScalarMath.outEulerZ = uAttr.create("outEulerZ", "oez", om2.MFnUnitAttribute.kAngle, 0.0)
+        EulerScalarMath.outEuler = nAttr.create("outEuler", "oe", EulerScalarMath.outEulerX, EulerScalarMath.outEulerY, EulerScalarMath.outEulerZ)
         OUTPUT_ATTR(nAttr)
 
         EulerScalarMath.addAttribute(EulerScalarMath.inOperation)
@@ -180,45 +186,48 @@ class EulerScalarMath(om2.MPxNode):
             * dataBlock contains the data on which we will base our computations.
         """
         # pylint: disable=no-self-use
-        if plug != EulerScalarMath.outEuler:
+        if (plug != EulerScalarMath.outEuler and
+            plug != EulerScalarMath.outEulerX and
+            plug != EulerScalarMath.outEulerY and
+            plug != EulerScalarMath.outEulerZ):
             return om2.kUnknownParameter
 
         operation = dataBlock.inputValue(EulerScalarMath.inOperation).asShort()
-        vEuler = dataBlock.inputValue(EulerScalarMath.inEuler).asVector()
+        euler = dataBlock.inputValue(EulerScalarMath.inEuler).asDouble3()
         scalar = dataBlock.inputValue(EulerScalarMath.inScalar).asDouble()
         eulerRotOder = dataBlock.inputValue(EulerScalarMath.inEulerRotOrder).asShort()
         outRotOrder = dataBlock.inputValue(EulerScalarMath.inResRotOrder).asShort()
 
-        eEuler = om2.MEulerRotation(vEuler, eulerRotOder)
+        eEuler = om2.MEulerRotation(euler, eulerRotOder)
 
         outEulerHandle = dataBlock.outputValue(EulerScalarMath.outEuler)
 
         if operation == 0:
             eEuler.reorderIt(outRotOrder)
-            vResult = eEuler.asVector()
-            outEulerHandle.setMVector(vResult)
+            outEulerHandle.set3Double(eEuler.x, eEuler.y, eEuler.z)
         elif operation == 1:
             eEuler.reorderIt(outRotOrder)
-            vScalar = om2.MVector(
+            eScalar = om2.MEulerRotation(
                 om2.MAngle(scalar, om2.MAngle.kDegrees).asRadians(),
                 om2.MAngle(scalar, om2.MAngle.kDegrees).asRadians(),
                 om2.MAngle(scalar, om2.MAngle.kDegrees).asRadians(),
+                outRotOrder
             )
-            vResult = eEuler.asVector() + vScalar
-            outEulerHandle.setMVector(vResult)
+            eOutEuler = eEuler + eScalar
+            outEulerHandle.set3Double(eOutEuler.x, eOutEuler.y, eOutEuler.z)
         elif operation == 2:
             eEuler.reorderIt(outRotOrder)
-            vScalar = om2.MVector(
+            eScalar = om2.MEulerRotation(
                 om2.MAngle(scalar, om2.MAngle.kDegrees).asRadians(),
                 om2.MAngle(scalar, om2.MAngle.kDegrees).asRadians(),
                 om2.MAngle(scalar, om2.MAngle.kDegrees).asRadians(),
+                outRotOrder
             )
-            vResult = eEuler.asVector() - vScalar
-            outEulerHandle.setMVector(vResult)
+            eOutEuler = eEuler - eScalar
+            outEulerHandle.set3Double(eOutEuler.x, eOutEuler.y, eOutEuler.z)
         elif operation == 3:
             eEuler.reorderIt(outRotOrder)
             eOutEuler = eEuler * scalar
-            vResult = eOutEuler.asVector()
-            outEulerHandle.setMVector(vResult)
+            outEulerHandle.set3Double(eOutEuler.x, eOutEuler.y, eOutEuler.z)
 
         outEulerHandle.setClean()
