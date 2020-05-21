@@ -25,6 +25,305 @@ kQuaternaryControlColor = om2.MColor([1.0, 1.0, 1.0])
 kGlobalControlColor = om2.MColor([1.0, 1.0, 1.0])
 
 
+def copyCurveShape(source, target, maintainOffset=False, shapes=None):
+    """Copy all shapes from source NURBS curve to another NURBS curve. [CONTROL TOOLS]
+
+    Args:
+        source (str): The name of the source NURBS Curve.
+        target (str): The name of the target NURBS Curve.
+        maintainOffset (bool: False [Optional]): Maintain offset position of CVs.
+        shapes (list, MIntArray: None [Optional]): The list of indexes of the specific shapes to copy.
+    
+    Returns:
+        True: If succeed.
+
+    Raises:
+       AttributeError: If source or target objects don't exist.
+
+    TODO: Select only specific shapes index.
+    """
+    try:
+        sourcePath = om2.MSelectionList().add(source).getDagPath(0)
+    except RuntimeError:
+        raise AttributeError("Object %s does not exist." % source)
+    try:
+        targetPath = om2.MSelectionList().add(target).getDagPath(0)
+    except RuntimeError:
+        raise AttributeError("Object %s does not exist." % target)
+    if shapes is not None:
+        assert isinstance(shapes, (list, om2.MIntArray))
+        if isinstance(shapes, list):
+            shapesIndices = om2.MIntArray()
+            for i in range(len(shapes)):
+                try:
+                    shapesIndices.append(i)
+                except TypeError:
+                    om2.MGlobal.displayWarning("Shape index %s is invalid. Entry skipped." % i)
+            shapes = shapesIndices
+
+    dagFn = om2.MFnDagNode(sourcePath)
+    childCount = dagFn.childCount()
+    mSource = sourcePath.inclusiveMatrix()
+    mTargetInv = targetPath.inclusiveMatrixInverse()
+
+    if childCount:
+        targetMob = targetPath.node()
+        for i in range(childCount):
+            if shapes is not None:
+                if i not in shapes:
+                    continue
+            childMob = dagFn.child(i)
+            if childMob.hasFn(om2.MFn.kNurbsCurve):
+                shapePath = om2.MDagPath.getAPathTo(childMob)
+                curveFn = om2.MFnNurbsCurve(childMob)
+                if not maintainOffset:
+                    cvsPos = curveFn.cvPositions()
+                else:
+                    cvsPos = om2.MPointArray()
+                    for pnt in curveFn.cvPositions():
+                        newPnt = (pnt * mSource) * mTargetInv
+                        cvsPos.append(newPnt)
+                knots = curveFn.knots()
+                degree = curveFn.degree
+                form = curveFn.form
+                is2D = False
+                rational = False
+                shapeMob = om2.MFnNurbsCurve().create(cvsPos, knots, degree, form, is2D, rational, targetMob)
+                dagMod = om2.MDagModifier()
+                nameNumber = str(i + 1) if childCount > 1 else ""
+                dagMod.renameNode(shapeMob, "%sShape%s" % (target, nameNumber))
+                dagMod.doIt()
+
+    return True
+
+
+def curveDistribution(curve, numObj, upVec=om2.MVector.kYaxisVector, objType="transform",
+                      hierarchical=False, nonUniformSegments=False):
+    """Non-uniform algorithm by distance between CVs.
+
+    1- Select the curve and put in the MFnNurbsCurve to get all the info
+    2- Get the number of CVs.
+    3- Number of object per segment = numObj / numCVs
+    4- Get the transformation matrix of the outputs. (Translation and Orientation).
+    5- Put them in hierarchy in prompted.
+    6- Put the result in a parent group if not.
+
+    Args:
+        curve (str, MObject or MDagPath): The base curve.
+        (numCVs - 1) * numPerSegment
+
+    Returns:
+        True: If succeed.
+
+    Raises:
+        True.
+
+    TODO: Connect inverse scale to joints. [parentScale to childInverseScale]
+    """
+    assert isinstance(curve, (str, om2.MObject, om2.MDagPath))
+    if isinstance(curve, str):
+        try:
+            crvPath = om2.MSelectionList().add(curve).getDagPath(0)
+        except:
+            raise RuntimeError("Object %s is not valid or not exists." % curve)
+        curve = crvPath
+
+    curveFn = om2.MFnNurbsCurve(curve)
+    transFn = om2.MFnTransform()
+    dagFn = om2.MFnDagNode()
+    lastObj = om2.MObject.kNullObj
+    if nonUniformSegments:
+        numCVs = curveFn.numCVs
+        perSegment = numObj / (numCVs - 1)
+        for i in range(numCVs):
+            if i < numCVs - 1:
+                curCVPos = curveFn.cvPosition(i, om2.MSpace.kWorld)
+                nextCVPos = curveFn.cvPosition(i + 1, om2.MSpace.kWorld)
+                param1 = curveFn.closestPoint(curCVPos, space=om2.MSpace.kWorld)[1]
+                param2 = curveFn.closestPoint(nextCVPos, space=om2.MSpace.kWorld)[1]
+                length1 = curveFn.findLengthFromParam(param1)
+                length2 = curveFn.findLengthFromParam(param2)
+                length = length2 - length1
+                stepLength = length / perSegment
+                for j in range(perSegment):
+                    param = curveFn.findParamFromLength(stepLength * j + length1)
+                    pos = curveFn.getPointAtParam(param)
+                    nAim = curveFn.tangent(param, om2.MSpace.kWorld)
+                    nAim.normalize()
+                    nNormal = upVec - ((upVec * nAim) * nAim)
+                    nNormal.normalize()
+                    nBinormal = nAim ^ nNormal
+                    nBinormal.normalize()
+                    ori = [
+                        nAim.x, nAim.y, nAim.z, 0.0,
+                        nNormal.x, nNormal.y, nNormal.z, 0.0,
+                        nBinormal.x, nBinormal.y, nBinormal.z, 0.0,
+                        0.0, 0.0, 0.0, 1.0
+                    ]
+                    mOri = om2.MMatrix(ori)
+                    mtxFn = om2.MTransformationMatrix(mOri)
+                    qOri = mtxFn.rotation(asQuaternion=True)
+                    obj = dagFn.create(objType, parent=lastObj)
+                    objPath = om2.MDagPath.getAPathTo(obj)
+                    transFn.setObject(objPath)
+                    transFn.setTranslation(om2.MVector(pos), om2.MSpace.kWorld)
+                    transFn.setRotation(qOri, om2.MSpace.kWorld)
+                    if hierarchical:
+                        lastObj = obj
+            else:
+                lastCVPos = curveFn.cvPosition(i, om2.MSpace.kWorld)
+                pos, param = curveFn.closestPoint(lastCVPos, space=om2.MSpace.kWorld)
+                nAim = curveFn.tangent(param, om2.MSpace.kWorld)
+                nAim.normalize()
+                nNormal = upVec - ((upVec * nAim) * nAim)
+                nNormal.normalize()
+                nBinormal = nAim ^ nNormal
+                nBinormal.normalize()
+                ori = [
+                    nAim.x, nAim.y, nAim.z, 0.0,
+                    nNormal.x, nNormal.y, nNormal.z, 0.0,
+                    nBinormal.x, nBinormal.y, nBinormal.z, 0.0,
+                    0.0, 0.0, 0.0, 1.0
+                ]
+                mOri = om2.MMatrix(ori)
+                mtxFn = om2.MTransformationMatrix(mOri)
+                qOri = mtxFn.rotation(asQuaternion=True)
+                obj = dagFn.create(objType, parent=lastObj)
+                objPath = om2.MDagPath.getAPathTo(obj)
+                transFn.setObject(objPath)
+                transFn.setTranslation(om2.MVector(pos), om2.MSpace.kWorld)
+                transFn.setRotation(qOri, om2.MSpace.kWorld)
+                if hierarchical:
+                    lastObj = obj
+    else:
+        crvLength = curveFn.length()
+        step = 1.0 / (numObj - 1.0) if numObj > 1 else 0.0
+        for i in range(numObj):
+            length = crvLength * step * i
+            param = curveFn.findParamFromLength(length)
+            pos = curveFn.getPointAtParam(param)
+            nAim = curveFn.tangent(param, om2.MSpace.kWorld)
+            nAim.normalize()
+            nNormal = upVec - ((upVec * nAim) * nAim)
+            nNormal.normalize()
+            nBinormal = nAim ^ nNormal
+            nBinormal.normalize()
+            ori = [
+                nAim.x, nAim.y, nAim.z, 0.0,
+                nNormal.x, nNormal.y, nNormal.z, 0.0,
+                nBinormal.x, nBinormal.y, nBinormal.z, 0.0,
+                0.0, 0.0, 0.0, 1.0
+            ]
+            mOri = om2.MMatrix(ori)
+            mtxFn = om2.MTransformationMatrix(mOri)
+            qOri = mtxFn.rotation(asQuaternion=True)
+            obj = dagFn.create(objType, parent=lastObj)
+            objPath = om2.MDagPath.getAPathTo(obj)
+            transFn.setObject(objPath)
+            transFn.setTranslation(om2.MVector(pos), om2.MSpace.kWorld)
+            transFn.setRotation(qOri, om2.MSpace.kWorld)
+            if hierarchical:
+                lastObj = obj
+
+    return True
+
+
+def createBezierCurve(ctrlPnts, returnData=False):
+    """Create a Bezier curve with given control points.
+
+    For N degree curve you must specify at least N+1 CVs to get a curve
+    with a single span
+    The number of knots required for a curve is M + 2N - 1 or N + CVS - 1.
+    If you want the curve to start exactly at the first CV and end
+    exactly at the last CV, then the knot vector must be structured
+    to have degree N "multiplicity" at beggining and end. This means
+    that the first N knots must be identical and the last N knots
+    must be identical.
+    Lines and polylines are usually degree 1, circles are degree 2,
+    and most free-form curves are degree 3 or 5.
+    Degree can be linear (1), quadratic (2), cubic (3) and quintic (5).
+    The order of NURBS curve is a positive whole number equal to
+    (degree+1)
+    It is possible to increase the degree of a NURBS curve and not
+    change its shape but is not possible to reduce.
+    Control points are a list of at least degree + 1 points.
+    The control points have an associated number called a weight.
+    With a few exceptions, weights are positive numbers. When a curve's
+    control points all have the same weight (usually 1), the curve is
+    called non-rational, otherwise the curve is called rational.
+    The knot numbers have to stay the same or get larger as you go down
+    the list and to limit the number of duplicate values to no more
+    than the degree.
+    The number of times a knot values is duplicated is called the
+    knot's multiplicity.
+    Full multiplicity knot is the knot that appears degree times.
+    Simple knot is the knot that appears one time.
+    If a list of knots starts with a full multiplicity knot, is
+    followed by simple knots, terminates with a full multiplicity knot,
+    and the values are equally spaced, then the knots are called
+    uniform. Otherwise is non-uniform.
+    Duplicate knot values in the middle of the knot list make a NURBS
+    curve less smooth. At the extreme, a full multiplicity knot in the
+    middle of the knot list means there is a place on the NURBS curve
+    that can be bent into a sharp kink. For this reason, some designers
+    like to add and remove knots and then adjust control points to make
+    curves have smoother of kinkier shapes.
+
+    Args:
+        ctrlPnts (MPointArray or list): The array position of the control points.
+        returnData (bool: False [Optional]): Create as virtual MFnNurbsCurveData.
+
+    Returns:
+        MObject: The curve object or the curve data created.
+
+    Raises:
+        AttributeError: If the ctrlPnts argument is not a MPointArray or list.
+    """
+    assert isinstance(ctrlPnts, om2.MPointArray) or isinstance(ctrlPnts, list)
+    if isinstance(ctrlPnts, list):
+        for pnt in ctrlPnts:
+            if (not isinstance(pnt, list) or
+                    not isinstance(pnt, tuple)):
+                raise AttributeError("CtrlPnts must be an MPointArray or list of 3D points.")
+            else:
+                if len(pnt) != 3:
+                    raise AttributeError("CtrlPnt must be an MPointArray or list of 3D points.")
+        ctrlPnts = om2.MPointArray(ctrlPnts)
+
+    numCvs = len(ctrlPnts) # Degree + Spans
+    degree = 3
+    spans = numCvs - degree
+    numKnots = spans + 2 * degree - 1
+    knots = om2.MDoubleArray()
+    curKnot = 1
+    form = om2.MFnNurbsCurve.kOpen
+    is2d = False
+    rational = True
+    for i in range(numKnots):
+        if i + 1 <= degree:
+            knots.append(0.0)
+        elif i + 1 > numKnots - degree:
+            knots.append(curKnot)
+        else:
+            knots.append(curKnot)
+            curKnot += 1
+    if returnData:
+        curveData = om2.MFnNurbsCurveData().create()
+        curveFn = om2.MFnNurbsCurve(curveData)
+        curveFn.create(ctrlPnts, knots, degree, form, is2d, rational, curveData)
+        resultMob = curveData
+    else:
+        curveFn = om2.MFnNurbsCurve()
+        curveFn.create(ctrlPnts, knots, degree, form, is2d, rational)
+        resultMob = curveFn.parent(0)
+        resultObj = om2.MDagPath.getAPathTo(resultMob).fullPathName()
+        sel = om2.MSelectionList().add(resultObj)
+        om2.MGlobal.setSelectionMode(om2.MGlobal.kSelectObjectMode)
+        om2.MGlobal.setActiveSelectionList(sel)
+        cmds.nurbsCurveToBezier()
+    return resultMob
+
+
 def findUpVectorPosition(const, parent=None, create=False):
     """Find up vector local position based on a object matrix.
 
@@ -169,10 +468,10 @@ def createChar(name):
         string: The Dag Path of the char node.
     """
     om2.MGlobal.setSelectionMode(om2.MGlobal.kSelectObjectMode)
-    charObj = om2.MFnDagNode().create("unknownTransform", "%s_char" % name)
-    deformObj = om2.MFnDagNode().create("unknownTransform", "deform_hrc", charObj)
-    geometryObj = om2.MFnDagNode().create("unknownTransform", "geometry_hrc", charObj)
-    geoIOObj = om2.MFnDagNode().create("unknownTransform", "geometry_settings_io", geometryObj)
+    charObj = om2.MFnDagNode().create("transform", "%s_char" % name)
+    deformObj = om2.MFnDagNode().create("transform", "deform_hrc", charObj)
+    geometryObj = om2.MFnDagNode().create("transform", "geometry_hrc", charObj)
+    geoIOObj = om2.MFnDagNode().create("transform", "geometry_settings_io", geometryObj)
     nodeFn = om2.MFnDependencyNode(charObj)
     plug = nodeFn.findPlug("useOutlinerColor", False)
     plug.setBool(True)
@@ -257,12 +556,12 @@ def createComponent(char, name):
             break
     if deformObj is None:
         raise RuntimeError("Can't find deform_hrc")
-    cmpntObj = om2.MFnDagNode().create("unknownTransform", "%s_cmpnt" % name, deformObj)
-    ioConnObj = om2.MFnDagNode().create("unknownTransform", "%s_settings_io" % name, cmpntObj)
-    jntsObj = om2.MFnDagNode().create("unknownTransform", "%s_joints_hrc" % name, cmpntObj)
-    ctrlsObj = om2.MFnDagNode().create("unknownTransform", "%s_controls_hrc" % name, cmpntObj)
-    ikHdlesObj = om2.MFnDagNode().create("unknownTransform", "%s_ikHandles_hrc" % name, cmpntObj)
-    miscObj = om2.MFnDagNode().create("unknownTransform", "%s_misc_hrc" % name, cmpntObj)
+    cmpntObj = om2.MFnDagNode().create("transform", "%s_cmpnt" % name, deformObj)
+    ioConnObj = om2.MFnDagNode().create("transform", "%s_settings_io" % name, cmpntObj)
+    jntsObj = om2.MFnDagNode().create("transform", "%s_joints_hrc" % name, cmpntObj)
+    ctrlsObj = om2.MFnDagNode().create("transform", "%s_controls_hrc" % name, cmpntObj)
+    ikHdlesObj = om2.MFnDagNode().create("transform", "%s_ikHandles_hrc" % name, cmpntObj)
+    miscObj = om2.MFnDagNode().create("transform", "%s_misc_hrc" % name, cmpntObj)
     lockAndHideAttributes([cmpntObj, ioConnObj, jntsObj, ctrlsObj, ikHdlesObj, miscObj],
                           ["translate", "rotate", "scale", "shear"])
     nodeFn.setObject(deformObj)
