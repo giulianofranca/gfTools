@@ -70,15 +70,13 @@ Sources:
 #include <maya/MFnMatrixAttribute.h>
 #include <maya/MFnNumericAttribute.h>
 #include <maya/MFnUnitAttribute.h>
+#include <maya/MFnCompoundAttribute.h>
 #include <maya/MMatrix.h>
-#include <maya/MFnMatrixData.h>
+#include <maya/MMatrixArray.h>
 #include <maya/MTransformationMatrix.h>
 #include <maya/MVector.h>
 #include <maya/MFloatVector.h>
 #include <maya/MEulerRotation.h>
-#include <maya/MPlugArray.h>
-#include <maya/MFnDagNode.h>
-#include <maya/MDagPath.h>
 
 
 class SpaceConstraint : public MPxNode{
@@ -86,12 +84,7 @@ public:
     SpaceConstraint();
     virtual ~SpaceConstraint();
 
-    virtual MStatus                     connectionMade(const MPlug &plug, 
-                                                       const MPlug &otherPlug,
-                                                       bool asSrc) override;
-    virtual MStatus                     connectionBroken(const MPlug &plug,
-                                                         const MPlug &otherPlug,
-                                                         bool asSrc) override;
+    virtual void                        postConstructor();
 
     virtual MStatus                     compute(const MPlug &plug, MDataBlock &dataBlock) override;
     virtual MPxNode::SchedulingType     schedulingType() const override;
@@ -104,20 +97,19 @@ public:
     const static MTypeId                kNodeID;
 
     static MObject                      inSpace;
-    static MObject                      inOffset;
-    static MObject                      inTarget;
-    static MObject                      inRestPose;
-    static MObject                      inAutoFillOff;
     static MObject                      inSpaceMatch;
+    static MObject                      inTarget;
+    static MObject                      inOffset;
+    static MObject                      inRestPose;
+    static MObject                      inTargetList;
+    static MObject                      inMatchMatrix;
     static MObject                      outConstTrans;
     static MObject                      outConstRot;
+    static MObject                      outConstRotX;
+    static MObject                      outConstRotY;
+    static MObject                      outConstRotZ;
     static MObject                      outConstSca;
 
-private:
-    void                                autoFillOffset(uint32_t &index);
-    bool                                checkOutputConnections();
-
+public:
     short                               fLastSpace;
-    MMatrix                             fOffsetMatch;
-    MObject                             fConstraintObject;
 };
