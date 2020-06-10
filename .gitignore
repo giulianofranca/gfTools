@@ -8,3 +8,9 @@ core/_studies/RigAPI
 
 # Extensions
 *.pyc
+
+# C++ Builds
+build
+gfTools_Windows
+gfTools_Linux
+gfTools_Darwin

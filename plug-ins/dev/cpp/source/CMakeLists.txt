@@ -25,13 +25,7 @@ set(SOURCE_FILES
     "n_gfUtilFindParamFromCurveLength.cpp" "headers/n_gfUtilFindParamFromCurveLength.h"
 )
 
-# if(WIN32)
-#     set(COMPILE_FLAGS "/arch:AVX")
-# else()
-#     set(COMPILE_FLAGS "-mavx")
-# endif()
-
-# Find FindMaya.cmake
+# Find Packages
 find_package(Maya REQUIRED)
 find_package(OpenGL REQUIRED)
 
@@ -43,29 +37,37 @@ target_compile_options(${PROJECT_NAME} PRIVATE ${COMPILE_FLAGS})
 
 MAYA_PLUGIN(${PROJECT_NAME})
 
+if(${MAIN_APP_BUILD})
+    # Install from main build.py
+    install(TARGETS ${PROJECT_NAME} 
+        RUNTIME DESTINATION "plug-ins/release/Maya${MAYA_VERSION}")
+    if(${INSTALL_SOURCE})
+        message(STATUS "Installation of source code is enabled.")
+        install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+            DESTINATION "plug-ins")
+        install(DIRECTORY ${CMAKE_MODULE_PATH}
+            DESTINATION "plug-ins")
+        install(FILES "../CMakeLists.txt"
+            DESTINATION "plug-ins")
+        install(FILES "../build.py"
+            DESTINATION "plug-ins")
+    else()
+        install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/headers"
+            DESTINATION "plug-ins"
+            FILES_MATCHING PATTERN "*.h")
+    endif()
+else()
+    # Install from exclusive plug-ins build.py
+    install(TARGETS ${PROJECT_NAME}
+        RUNTIME DESTINATION "plug-ins/Debug/Maya${MAYA_VERSION}"
+        CONFIGURATIONS Debug)
+    install(TARGETS ${PROJECT_NAME}
+        RUNTIME DESTINATION "plug-ins/Release/Maya${MAYA_VERSION}"
+        CONFIGURATIONS Release)
+    if(${INSTALL_SOURCE})
+        message(WARNING "Installation of source code is not available using local build.py. Operation skipped.")
+    endif()
+endif()
 
-
-
-
-# Find Maya libs and headers
-# include_directories(${MAYA_INCLUDE_DIR})
-# link_directories(${MAYA_LIBRARY_DIR})
-
-
-# target_link_libraries(${PROJECT_NAME} ${MAYA_LIBRARIES})
-
-
-
-# install(TARGETS ${PROJECT_NAME} ${MAYA_TARGET_TYPE} DESTINATION plug-ins)
-
-
-
-
-# HOW TO COMPILE
-# 1- cd <build folder>
-# 2- cmake -h
-# 3- cmake -G "Visual Studio 11 2012 Win64" -DMAYA_VERSION=2017 ../         # Pass the project CMakeLists.txt location
-# 4- cmake --build . --config Release
-# 5- cmake --build . --config Release --target Install
 
 # LINUX = https://lexfrench.com/?p=842

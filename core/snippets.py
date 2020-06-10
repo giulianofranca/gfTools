@@ -39,8 +39,7 @@ def copyCurveShape(source, target, maintainOffset=False, shapes=None):
 
     Raises:
        AttributeError: If source or target objects don't exist.
-
-    TODO: Select only specific shapes index.
+    TODO: Add the ability to act in the selection.
     """
     try:
         sourcePath = om2.MSelectionList().add(source).getDagPath(0)
@@ -93,6 +92,68 @@ def copyCurveShape(source, target, maintainOffset=False, shapes=None):
                 nameNumber = str(i + 1) if childCount > 1 else ""
                 dagMod.renameNode(shapeMob, "%sShape%s" % (target, nameNumber))
                 dagMod.doIt()
+
+    return True
+
+
+def mirrorCurveShape(across="YZ"):
+    """Mirror curve nodes shapes selected withou mess with transform node.
+
+    Args:
+        across (str): The axis of the mirror. Can be "XY", "YZ" or "XZ".
+    
+    Returns:
+        True: If succeed.
+
+    Raises:
+        RuntimeError: If nothing is selected.
+        TypeError: If across argument is invalid.
+        TypeError: If node selected is not a NURBS Curve.
+    """
+    selList = om2.MGlobal.getActiveSelectionList()
+    if selList.length() < 1:
+        raise RuntimeError("Must select at least one object.")
+    if not isinstance(across, str):
+        raise TypeError("Across parameter is invalid.")
+    if across.upper() == "XY":
+        eAcross = om2.MEulerRotation(0.0, 0.0, math.pi)
+    elif across.upper() == "YZ":
+        eAcross = om2.MEulerRotation(math.pi, 0.0, 0.0)
+    elif across.upper() == "XZ":
+        eAcross = om2.MEulerRotation(0.0, math.pi, 0.0)
+    else:
+        raise TypeError("Across parameter is invalid.")
+
+    mtxFn = om2.MTransformationMatrix()
+    mtxFn.setRotation(eAcross)
+    mMirror = mtxFn.asMatrix()
+
+    for i in range(selList.length()):
+        curObjMob = selList.getDependNode(i)
+        nodeFn = om2.MFnDependencyNode(curObjMob)
+        if curObjMob.hasFn(om2.MFn.kDagNode):
+            curObjPath = om2.MDagPath.getAPathTo(curObjMob)
+            dagFn = om2.MFnDagNode(curObjPath)
+            childCount = dagFn.childCount()
+            if childCount:
+                for j in range(childCount):
+                    shapeMob = dagFn.child(j)
+                    if shapeMob.hasFn(om2.MFn.kTransform):
+                        continue
+                    elif shapeMob.hasFn(om2.MFn.kNurbsCurve):
+                        curveFn = om2.MFnNurbsCurve(shapeMob)
+                        cvsPos = om2.MPointArray()
+                        for pnt in curveFn.cvPositions():
+                            finalPnt = pnt * mMirror
+                            cvsPos.append(finalPnt)
+                        curveFn.setCVPositions(cvsPos)
+                        curveFn.updateCurve()
+                    else:
+                        raise TypeError("Object %s is not a NURBS Curve." % nodeFn.name())
+            else:
+                raise TypeError("Object %s is not a NURBS Curve." % nodeFn.name())
+        else:
+            raise TypeError("Object %s is not a NURBS Curve." % nodeFn.name())
 
     return True
 
@@ -1111,47 +1172,6 @@ def unfreezeTransformations():
         fnTrans.translateBy(vPos, om2.MSpace.kWorld)
     return True
 
-def mirrorControlShape(xAxis=True, yAxis=True, zAxis=True):
-    """Mirror control shapes selected.
-
-    Args:
-        xAxis (bool: True [Optional]): Apply on the X Axis.
-        yAxis (bool: True [Optional]): Apply on the Y Axis.
-        zAxis (bool: True [Optional]): Apply on the Z Axis.
-
-    Returns:
-        True: If succeed.
-
-    Raises:
-        RuntimeError: If nothing is selected.
-        TypeError: If control attribute is not a kNurbsCurve.
-    """
-    sel = om2.MGlobal.getActiveSelectionList()
-    if sel.length() < 1:
-        raise RuntimeError("Must select at least one object.")
-    shapeObjPath = None
-    for s in range(sel.length()):
-        transformObjPath = sel.getDagPath(s)
-        dagFn = om2.MFnDagNode(transformObjPath)
-        for i in range(dagFn.childCount()):
-            nextChild = dagFn.child(i)
-            if nextChild.apiType() == om2.MFn.kNurbsCurve:
-                shapeObj = nextChild
-                shapeObjPath = om2.MDagPath().getAPathTo(shapeObj)
-                break
-        if shapeObjPath is None:
-            raise TypeError("The selection must be a Nurbs Curve.")
-        curveFn = om2.MFnNurbsCurve(shapeObjPath)
-        for i in range(curveFn.numSpans):
-            cvPoint = curveFn.cvPosition(i)
-            vCvPos = om2.MVector(cvPoint.x, cvPoint.y, cvPoint.z)
-            xVal = -vCvPos.x if xAxis else vCvPos.x
-            yVal = -vCvPos.y if yAxis else vCvPos.y
-            zVal = -vCvPos.z if zAxis else vCvPos.z
-            cvPointMir = om2.MPoint(xVal, yVal, zVal)
-            curveFn.setCVPosition(i, cvPointMir)
-            curveFn.updateCurve()
-    return True
 
 def createObject(objType, name=None):
     """Create object of specific type.

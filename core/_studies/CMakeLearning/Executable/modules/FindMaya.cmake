@@ -1,27 +1,19 @@
-# Copyright (c) 2020 Giuliano França
-
-# MIT License
-
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
+# Copyright 2017 Chad Vernon
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
+# associated documentation files (the "Software"), to deal in the Software without restriction,
+# including without limitation the rights to use, copy, modify, merge, publish, distribute,
+# sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
-
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
-
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
-
-# Small modification of FindMaya.cmake created by Chad Vernon.
-# https://github.com/chadmv/cgcmake/blob/master/modules/FindMaya.cmake
+#
+# The above copyright notice and this permission notice shall be included in all copies or
+# substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT
+# NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+# DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #.rst:
 # FindMaya
@@ -49,6 +41,11 @@
 # ``MAYA_LIBRARIES``
 #   All the Maya libraries.
 #
+
+# Set a default Maya version if not specified
+# if(NOT DEFINED MAYA_VERSION)
+#     set(MAYA_VERSION 2017 CACHE STRING "Maya version")
+# endif()
 
 # OS Specific environment setup
 set(MAYA_COMPILE_DEFINITIONS "REQUIRE_IOSTREAM;_BOOL")
@@ -85,20 +82,19 @@ set(MAYA_LOCATION ${MAYA_INSTALL_BASE_PATH}/maya${MAYA_VERSION}${MAYA_INSTALL_BA
 find_path(MAYA_INCLUDE_DIR maya/MFn.h
     PATHS
         ${MAYA_LOCATION}
+        $ENV{MAYA_LOCATION}
     PATH_SUFFIXES
-        "devkitBase/include/"
-        "devkit/include/"
         "include/"
+        "devkit/include/"
 )
 
-# Maya lib directory
 find_library(MAYA_LIBRARY
     NAMES 
         OpenMaya
     PATHS
         ${MAYA_LOCATION}
+        $ENV{MAYA_LOCATION}
     PATH_SUFFIXES
-        "devkitBase/lib/"
         "lib/"
         "Maya.app/Contents/MacOS/"
     NO_DEFAULT_PATH
@@ -126,15 +122,15 @@ endif()
 
 # Add the other Maya libraries into the main Maya::Maya library
 # Libraries to add if needed: OpenMayaFX, OpenMayaAnim, clew
-set(_MAYA_LIBRARIES OpenMayaFX, OpenMayaAnim, OpenMayaRender OpenMayaUI Foundation)
+set(_MAYA_LIBRARIES OpenMayaRender OpenMayaUI Foundation)
 foreach(MAYA_LIB ${_MAYA_LIBRARIES})
     find_library(MAYA_${MAYA_LIB}_LIBRARY
         NAMES 
             ${MAYA_LIB}
         PATHS
             ${MAYA_LOCATION}
+            $ENV{MAYA_LOCATION}
         PATH_SUFFIXES
-            "devkitBase/lib/"
             "lib/"
             "Maya.app/Contents/MacOS/"
         NO_DEFAULT_PATH)
