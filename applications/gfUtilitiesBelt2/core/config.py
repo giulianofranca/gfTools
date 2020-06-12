@@ -49,19 +49,18 @@ import collections
 import datetime
 import maya.cmds as cmds
 
+from gfUtilitiesBelt2.core import appInfo
 from gfUtilitiesBelt2.core import getMayaInfo
 from gfUtilitiesBelt2.core import pockets
+reload(appInfo)
 reload(getMayaInfo)
 reload(pockets)
 
 
 # Settings
-kApplicationName = "gfUtilitiesBelt"
-kVersion = "1.0.01"
-kMinRequiredVersion = "1.0"
 kLastMayaInfoUpdate = None
 kLastMayaUsed = None
-kMayaInfoUpdateThreshold = 5            # In hours
+kMayaInfoUpdateThreshold = 5 # In hours
 kOpenedPockets = None
 kLastPocket = None
 kListView = False
@@ -73,7 +72,7 @@ kDefaultAutoLoad = False
 kDefaultAutoUpdate = True
 
 kSettingsFileName = "settings.json"
-kSettingsFilePath = os.path.join(getMayaInfo.kCorePath, kSettingsFileName)
+kSettingsFilePath = os.path.join(appInfo.kCorePath, kSettingsFileName)
 kDatetimeFormat = "%m-%d-%Y_%H-%M"
 
 
@@ -90,9 +89,9 @@ def createDefaultSettings():
     appSettings["Auto Load"] = kDefaultAutoLoad
     appSettings["Auto Update"] = kDefaultAutoUpdate
     appSettings["Maya Info Update Threshold"] = kMayaInfoUpdateThreshold
-    settings["Application"] = kApplicationName
-    settings["Current Version"] = kVersion
-    settings["Required Version"] = kMinRequiredVersion
+    settings["Application"] = appInfo.kApplicationName
+    settings["Current Version"] = appInfo.kApplicationVersion
+    settings["Required Version"] = appInfo.kMinRequiredVersion
     settings["Last Maya Info Update"] = kLastMayaInfoUpdate
     settings["Last Maya Used"] = kLastMayaUsed
     settings["Opened Pockets"] = kOpenedPockets
@@ -142,6 +141,10 @@ def runStartConfigurations():
             settings["Last Maya Info Update"] = getCurrentDateTime(string=True)
 
     # 5- Check the opened pockets and last pocket used.
+    # Check if they exist.
+    myPocket = pockets.Pocket.fromFile(os.path.join(appInfo.kPocketsPath, "Test.gfpocket"))
+    print(myPocket)
+    print(len(myPocket))
 
     # 6- Save settings file
     writeSettingsFile(settings)
@@ -191,7 +194,7 @@ def checkSettingsFile():
         True or False: If file exists and is valid or not.
     """
     fileName = kSettingsFileName
-    path = getMayaInfo.kCorePath
+    path = appInfo.kCorePath
     if fileName not in os.listdir(path):
         return False
 

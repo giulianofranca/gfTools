@@ -43,6 +43,7 @@ Sources:
 
 This code supports Pylint. Rc file in project.
 """
+import sys
 import os
 import json
 import collections
@@ -52,9 +53,16 @@ import maya.OpenMayaUI as omui1
 import maya.cmds as cmds
 import maya.mel as mel
 
-# - Update the maya info when requested
-# - Update the maya info regurlarly by amount of time passed.
-# - Update maya tools filter from maya info ???
+if sys.version_info.major >= 3:
+    import pickle
+else:
+    import cPickle as pickle
+
+from gfUtilitiesBelt2.core import appInfo
+reload(appInfo)
+
+# TODO: Update maya tools filter from maya info ???
+# TODO: Remove JSON support and only generate binary file.
 
 
 kMayaToolsFilter = [
@@ -66,31 +74,38 @@ kMayaToolsFilter = [
     "No sounds available",
     "No Quick Select Sets Defined"
 ]
-kCorePath = os.path.normpath(os.path.abspath(os.path.dirname(__file__)))
-kMayaInfoFileName = "mayaData.json"
-kMayaInfoFilePath = os.path.join(kCorePath, kMayaInfoFileName)
+kMayaInfoFileName = "mayaData"
+kMayaInfoFilePath = os.path.join(appInfo.kCorePath, kMayaInfoFileName)
 
 
 
 
-def writeMayaInfoFile(mayaInfo):
+def writeMayaInfoFile(mayaInfo, bin=False):
     """Write a json file with specified dict containing all Maya info.
 
     Args:
         mayaInfo (OrderedDict): The info dictionary to write in the json file.
+        bin (bool: False [Optional]): Write in binary mode.
 
     Returns:
         True: If succeeded.
     """
     fullPath = kMayaInfoFilePath
-    with open(fullPath, "w") as f:
-        json.dump(mayaInfo, f, indent=4, ensure_ascii=False)
+    if bin:
+        with open(fullPath, "wb") as f:
+            pickle.dump(mayaInfo, f, pickle.HIGHEST_PROTOCOL)
+    else:
+        with open(fullPath, "w") as f:
+            json.dump(mayaInfo, f, indent=4, ensure_ascii=False)
     
     return True
 
 
-def readMayaInfoFile():
+def readMayaInfoFile(bin=False):
     """Read the json file containing all Maya info.
+
+    Args:
+        bin (bool: False [Optional]): Read in binary mode.
 
     Returns:
         OrderedDict: The dictionary containing all the Maya info.
@@ -101,8 +116,12 @@ def readMayaInfoFile():
     fullPath = kMayaInfoFilePath
     if not checkMayaInfoFile():
         raise RuntimeError("Maya info file not founded.")
-    with open(fullPath, "r") as f:
-        data = json.load(f, object_pairs_hook=collections.OrderedDict)
+    if bin:
+        with open(fullPath, "rb") as f:
+            data = pickle.load(f)
+    else:
+        with open(fullPath, "r") as f:
+            data = json.load(f, object_pairs_hook=collections.OrderedDict)
 
     return data
 
@@ -114,7 +133,7 @@ def checkMayaInfoFile():
         True or False: If file exists and is valid or not.
     """
     fileName = kMayaInfoFileName
-    path = kCorePath
+    path = appInfo.kCorePath
     if fileName not in os.listdir(path):
         return False
 
@@ -127,6 +146,7 @@ def updateMayaInfo():
     Returns:
         True: If succeeded.
     """
+    # TODO: writeMayaInfoFile in binary mode.
     mayaWin = getMayaWindow()
     mayaMenuBar = getMayaMenuBar(mayaWin)
     mayaMenuList = filterMayaMenus(mayaMenuBar)
@@ -137,9 +157,13 @@ def updateMayaInfo():
         useProgressBar("Gathering Maya info...", i)
         menu.aboutToShow.emit()
         getCmdsFromMenu(menu, menu, data)
-    writeMayaInfoFile(data)
+    writeMayaInfoFile(data, bin=False)
     useProgressBar("Gathering Maya info...", i, end=True)
     return True
+
+
+def searchMayaTool():
+    pass
 
 
 

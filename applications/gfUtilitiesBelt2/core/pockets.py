@@ -37,18 +37,29 @@ Requirements:
 
 Todo:
     * Add commands to generate/read settings for the application
+    * Binary file or json file?
 
 Sources:
     * https://docs.python.org/3/reference/datamodel.html#special-method-names
 
 This code supports Pylint. Rc file in project.
 """
+import sys
 import os
 import collections
-import maya.cmds as cmds
+
+if sys.version_info.major >= 3:
+    import pickle
+else:
+    import cPickle as pickle
+
+from gfUtilitiesBelt2.core import appInfo
+reload(appInfo)
 
 
-kPocketFileExt = ".pocket"
+kPocketFileExt = ".gfpocket"
+
+
 
 
 class Pocket(object):
@@ -84,7 +95,8 @@ class Pocket(object):
 
     def __init__(self, name, tools=None):
         """Constructor."""
-        self.mayaVersion = cmds.about(v=True)
+        self.mayaVersion = appInfo.kMayaVersion
+        self.filePath = None
         self.name = name
         self.tools = tools
         if self.tools is None:
@@ -92,11 +104,11 @@ class Pocket(object):
 
     def __repr__(self):
         """Repr."""
-        return "%s(name='%s', tools=%s)" %(self.__class__, str(self.name), str(self.tools))
+        return "%s.core.pockets.Pocket(name='%s', tools=%s)" %(appInfo.kApplicationName, str(self.name), str(self.tools))
 
     def __str__(self):
         """Str."""
-        return self.name
+        return str(self.tools)
 
 
     ####################################
@@ -217,33 +229,128 @@ class Pocket(object):
     # CLASS METHODS
 
     @classmethod
-    def fromFile(cls):
-        pass
+    def fromFile(cls, filepath):
+        """Create a Pocket instance from a Pocket file.
+
+        Args:
+            filepath (str): The path where the file is.
+
+        Returns:
+            Pocket: The Pocket instance with all information.
+
+        Raises:
+            RuntimeError: If the file is not recognized.
+        """
+        status = cls.checkFile(filepath)
+        if not status:
+            raise RuntimeError("File %s was not recognized." % os.path.basename(filepath))
+        with open(filepath, "rb") as f:
+            content = pickle.load(f)
+        newPocket = cls(content["Name"], content["Tools"])
+        newPocket.mayaVersion = content["Maya Version"]
+        newPocket.filePath = filepath
+        return newPocket
 
 
     ####################################
     # STATIC METHODS
 
+    @staticmethod
+    def checkFile(filepath):
+        """Check if the file specified is a Pocket file.
+
+        Args:
+            filepath (str): The filepath of the Pocket file.
+
+        Returns:
+            True or False: True if the file is valid or False if is not.
+        """
+        fileName = os.path.basename(filepath)
+        # 1- Check if the file have the right extension: .gfpocket.
+        if not fileName.upper().endswith(kPocketFileExt.upper()):
+            return False
+        try:
+            with open(filepath, "rb") as f:
+                content = pickle.load(f)
+            # 2- Check if application name is right inside the file.
+            if content["Application"] != appInfo.kApplicationName:
+                return False
+            # 3- Check if the file version is compatible with application version.
+            status = appInfo.checkVersion(content["Version"])
+            if not status:
+                return False
+            # 4- Check if the Maya version is greater or equal the current Maya version.
+            status = appInfo.checkMayaVersion(content["Maya Version"])
+            if not status:
+                sys.stdout.write("[%s] The pocket %s was created in a newest Maya version. You may notice some unexpected results." % (appInfo.kApplicationName, fileName))
+        except Exception:
+            print("Opa! Exception :(")
+            return False
+        return True
+
 
     ####################################
     # REGULAR METHODS
 
-    def writeFile(self):
-        # Create in which maya version?
-        pass
+    def writeFile(self, output):
+        """Write a gfpocket file with all the informations about a Pocket.
 
-    def readFile(self):
-        pass
+        Args:
+            output (str): The path to save the file.
+
+        Returns:
+            True: If succeeded.
+        """
+        content = collections.OrderedDict()
+        content["Application"] = appInfo.kApplicationName
+        content["Version"] = appInfo.kApplicationVersion
+        content["Maya Version"] = self.mayaVersion
+        content["Name"] = self.name
+        content["Tools"] = self.tools
+        with open(output, "wb") as f:
+            pickle.dump(content, f, pickle.HIGHEST_PROTOCOL)
+        return True
+
+
+    def readFile(self, filepath):
+        """Read the gfpocket file with all the informations about a Pocket.
+
+        Args:
+            filepath (str): The path where the file is.
+
+        Returns:
+            Pocket: The Pocket instance with all information.
+
+        Raises:
+            RuntimeError: If the file is not recognized.
+        """
+        status = self.checkFile(filepath)
+        if not status:
+            raise RuntimeError("File %s was not recognized." % filepath)
+        with open(filepath, "rb") as f:
+            content = pickle.load(f)
+        newPocket = Pocket(content["Name"], content["Tools"])
+        newPocket.mayaVersion = content["Maya Version"]
+        newPocket.filePath = filepath
+        return newPocket
+
 
     def deletePocket(self):
         pass
 
+
     def addTool(self):
         pass
+
 
     def removeTool(self):
         pass
 
-    def reorderTools(self):
+
+    def moveToolUp(self):
+        pass
+
+
+    def moveToolDown(self):
         pass
 

@@ -6,6 +6,11 @@ plug-ins/dev/cpp/build
 core/_studies/testMayaPyExtension
 core/_studies/RigAPI
 
+# gfTools applications
+applications/gfUtilitiesBelt2/core/mayaData
+applications/gfUtilitiesBelt2/core/*.json
+applications/gfUtilitiesBelt2/pockets/*.gfpocket
+
 # Extensions
 *.pyc
 
