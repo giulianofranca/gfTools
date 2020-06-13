@@ -43,11 +43,11 @@ Sources:
 
 This code supports Pylint. Rc file in project.
 """
+import sys
 import os
 import json
 import collections
 import datetime
-import maya.cmds as cmds
 
 from gfUtilitiesBelt2.core import appInfo
 from gfUtilitiesBelt2.core import getMayaInfo
@@ -60,7 +60,7 @@ reload(pockets)
 # Settings
 kLastMayaInfoUpdate = None
 kLastMayaUsed = None
-kMayaInfoUpdateThreshold = 5 # In hours
+kMayaInfoUpdateThreshold = 5
 kOpenedPockets = None
 kLastPocket = None
 kListView = False
@@ -116,7 +116,7 @@ def runStartConfigurations():
     appSettings = settings["Settings"]
 
     # 2- Check if maya info file exist. If not, update maya info
-    mayaVersion = cmds.about(v=True)
+    mayaVersion = appInfo.kMayaVersion
     if not getMayaInfo.checkMayaInfoFile():
         getMayaInfo.updateMayaInfo()
         settings["Last Maya Info Update"] = getCurrentDateTime(string=True)
@@ -127,7 +127,6 @@ def runStartConfigurations():
             getMayaInfo.updateMayaInfo()
             settings["Last Maya Info Update"] = getCurrentDateTime(string=True)
             settings["Last Maya Used"] = mayaVersion
-            
 
     # 4- Find if auto update is enabled
     autoUpdate = appSettings["Auto Update"]
@@ -140,14 +139,22 @@ def runStartConfigurations():
             getMayaInfo.updateMayaInfo()
             settings["Last Maya Info Update"] = getCurrentDateTime(string=True)
 
-    # 5- Check the opened pockets and last pocket used.
-    # Check if they exist.
-    myPocket = pockets.Pocket.fromFile(os.path.join(appInfo.kPocketsPath, "Test.gfpocket"))
-    print(myPocket)
-    print(len(myPocket))
+    # 5- Check the opened pockets and last pocket used. Check if they exist and is valid.
+    if settings["Opened Pockets"] is not None:
+        for pocket in settings["Opened Pockets"]:
+            status = pockets.Pocket.checkFile(pocket)
+            if not status:
+                sys.stdout.write("[%s] The file %s was not recognized as a valid Pocket file. Operation skipped." % (appInfo.kApplicationName, pocket))
+                settings["Opened Pockets"].remove(pocket)
+    if settings["Last Pocket Used"] is not None:
+        lastPocketUsed = settings["Last Pocket Used"]
+        status = pockets.Pocket.checkFile(lastPocketUsed)
+        if not status:
+            sys.stdout.write("[%s] The file %s was not recognized as a valid Pocket file. Operation skipped." % (appInfo.kApplicationName, lastPocketUsed))
+            settings["Last Pocket Used"] = None
 
     # 6- Save settings file
-    writeSettingsFile(settings)
+    updateSettings(settings)
 
     # 7- Return the settings dictionary
     return settings

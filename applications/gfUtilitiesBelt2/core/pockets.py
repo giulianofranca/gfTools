@@ -54,7 +54,9 @@ else:
     import cPickle as pickle
 
 from gfUtilitiesBelt2.core import appInfo
+from gfUtilitiesBelt2.core import getMayaInfo
 reload(appInfo)
+reload(getMayaInfo)
 
 
 kPocketFileExt = ".gfpocket"
@@ -283,8 +285,13 @@ class Pocket(object):
             status = appInfo.checkMayaVersion(content["Maya Version"])
             if not status:
                 sys.stdout.write("[%s] The pocket %s was created in a newest Maya version. You may notice some unexpected results." % (appInfo.kApplicationName, fileName))
+            # 5- Check if tools are valid Maya tools or valid custom tools.
+            # TODO: Review this. Return False here?
+            mayaData = getMayaInfo.readMayaInfoFile()
+            for tool in content["Tools"]:
+                if tool not in mayaData.keys():
+                    sys.stdout.write("[%s] The tool %s was not recognized as a Maya valid tool. You may notice some unexpected results." % (appInfo.kApplicationName, tool))
         except Exception:
-            print("Opa! Exception :(")
             return False
         return True
 

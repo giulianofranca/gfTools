@@ -39,16 +39,45 @@ Todo:
     * NDA
 
 Sources:
-    * NDA
+    * https://help.autodesk.com/view/MAYAUL/2019/ENU/?guid=Maya_SDK_MERGED_Writing_Workspace_controls_html
+    * https://help.autodesk.com/view/MAYAUL/2019/ENU/?guid=Maya_SDK_MERGED_Maya_Python_API_Working_with_PySide_in_Maya_PyQt_and_PySide_Widget_Best_html
+    * https://gist.github.com/liorbenhorin/217bfb7e54c6f75b9b1b2b3d73a1a43a
+    * https://gist.github.com/liorbenhorin/69da10ec6f22c6d7b92deefdb4a4f475 <-- This
 
 This code supports Pylint. Rc file in project.
 """
 # This is only to call the application
+import sys
+import shiboken2
+from PySide2 import QtWidgets
+import maya.cmds as cmds
+import maya.OpenMayaUI as omui1
+import maya.app.general.mayaMixin as mayaMixin
 
 from gfUtilitiesBelt2.core import config
 reload(config)
 
 
+
+
+class DockableMainWindow(mayaMixin.MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
+    def __init__(self, appSettings, parent=None):
+        super(DockableMainWindow, self).__init__(parent=parent)
+        # Put GUI code here
+
+    def deleteInstances(self):
+        pass
+
+    def deleteControl(self, control):
+        pass
+
+    def dockCloseEventTriggered(self):
+        pass
+
+
+
+
 def main():
     settings = config.runStartConfigurations()
+    # Open the gui with all settings
     # Capture the width and height before close the application
