@@ -46,8 +46,8 @@ This code supports Pylint. Rc file in project.
 import sys
 import os
 import json
-import collections
 import shiboken2
+from collections import OrderedDict
 from PySide2 import QtWidgets
 import maya.OpenMayaUI as omui1
 import maya.cmds as cmds
@@ -121,7 +121,7 @@ def readMayaInfoFile(bin=False):
             data = pickle.load(f)
     else:
         with open(fullPath, "r") as f:
-            data = json.load(f, object_pairs_hook=collections.OrderedDict)
+            data = json.load(f, object_pairs_hook=OrderedDict)
 
     return data
 
@@ -150,7 +150,7 @@ def updateMayaInfo():
     mayaWin = getMayaWindow()
     mayaMenuBar = getMayaMenuBar(mayaWin)
     mayaMenuList = filterMayaMenus(mayaMenuBar)
-    data = collections.OrderedDict()
+    data = OrderedDict()
     menuCount = len(mayaMenuList)
     useProgressBar("Gathering Maya info...", 0, begin=True, maxValue=menuCount)
     for i, menu in enumerate(mayaMenuList):
@@ -242,7 +242,7 @@ def getCmdsFromMenu(qMenu, parentMenu, outDict):
             if not any(filt in menuItem.text() for filt in filterList):
                 if not menuItem.isSeparator():
                     mMenuItem = omui1.MQtUtil.fullName(long(shiboken2.getCppPointer(menuItem)[0]))
-                    toolInfo = collections.OrderedDict()
+                    toolInfo = OrderedDict()
                     keyName, path = getFullPathItem(menuItem)
                     toolInfo["name"] = menuItem.text()
                     toolInfo["info"] = menuItem.toolTip()

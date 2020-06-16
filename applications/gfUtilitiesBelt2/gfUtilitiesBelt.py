@@ -36,7 +36,7 @@ Requirements:
     * Maya 2017 or above.
 
 Todo:
-    * NDA
+    * Add fade animations
 
 Sources:
     * https://help.autodesk.com/view/MAYAUL/2019/ENU/?guid=Maya_SDK_MERGED_Writing_Workspace_controls_html
@@ -47,32 +47,10 @@ Sources:
 This code supports Pylint. Rc file in project.
 """
 # This is only to call the application
-import sys
-import shiboken2
-from PySide2 import QtWidgets
-import maya.cmds as cmds
-import maya.OpenMayaUI as omui1
-import maya.app.general.mayaMixin as mayaMixin
-
 from gfUtilitiesBelt2.core import config
+from gfUtilitiesBelt2.core import ui
 reload(config)
-
-
-
-
-class DockableMainWindow(mayaMixin.MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
-    def __init__(self, appSettings, parent=None):
-        super(DockableMainWindow, self).__init__(parent=parent)
-        # Put GUI code here
-
-    def deleteInstances(self):
-        pass
-
-    def deleteControl(self, control):
-        pass
-
-    def dockCloseEventTriggered(self):
-        pass
+reload(ui)
 
 
 

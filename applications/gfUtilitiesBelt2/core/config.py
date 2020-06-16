@@ -46,8 +46,8 @@ This code supports Pylint. Rc file in project.
 import sys
 import os
 import json
-import collections
 import datetime
+from collections import OrderedDict
 
 from gfUtilitiesBelt2.core import appInfo
 from gfUtilitiesBelt2.core import getMayaInfo
@@ -84,8 +84,8 @@ def createDefaultSettings():
     Returns:
         OrderedDict: The settings dictionary.
     """
-    settings = collections.OrderedDict()
-    appSettings = collections.OrderedDict()
+    settings = OrderedDict()
+    appSettings = OrderedDict()
     appSettings["Auto Load"] = kDefaultAutoLoad
     appSettings["Auto Update"] = kDefaultAutoUpdate
     appSettings["Maya Info Update Threshold"] = kMayaInfoUpdateThreshold
@@ -189,7 +189,7 @@ def readSettingsFile():
     if not checkSettingsFile():
         raise RuntimeError("Settings file not founded.")
     with open(fullPath, "r") as f:
-        settings = json.load(f, object_pairs_hook=collections.OrderedDict)
+        settings = json.load(f, object_pairs_hook=OrderedDict)
 
     return settings
 

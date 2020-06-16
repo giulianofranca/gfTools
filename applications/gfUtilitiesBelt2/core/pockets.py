@@ -46,7 +46,7 @@ This code supports Pylint. Rc file in project.
 """
 import sys
 import os
-import collections
+from collections import OrderedDict
 
 if sys.version_info.major >= 3:
     import pickle
@@ -308,7 +308,7 @@ class Pocket(object):
         Returns:
             True: If succeeded.
         """
-        content = collections.OrderedDict()
+        content = OrderedDict()
         content["Application"] = appInfo.kApplicationName
         content["Version"] = appInfo.kApplicationVersion
         content["Maya Version"] = self.mayaVersion
