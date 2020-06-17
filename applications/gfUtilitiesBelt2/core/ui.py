@@ -55,42 +55,12 @@ import maya.OpenMaya as omui1
 import maya.cmds as cmds
 
 from gfUtilitiesBelt2.core import appInfo
+from gfUtilitiesBelt2.core.getMayaInfo import getMayaWindow
 reload(appInfo)
 
 
+kMainUIFile = os.path.join(appInfo.kGUIPath, "win_main.ui")
 
-
-# def dockWindow(winClass):
-#     # TODO: Review this functionality.
-#     # 1- If the workspace control already exists, delete it and create a new control.
-#     if cmds.workspaceControl(winClass.kWorkspaceControlName, q=True, ex=True):
-#         cmds.workspaceControl(winClass.kWorkspaceControlName, e=True, close=True)
-#         cmds.deleteUI(winClass.kWorkspaceControlName, control=True)
-
-#     # 2- Create a workspaceControl manually.
-#     dockControl = cmds.workspaceControl(
-#         winClass.kWorkspaceControlName,
-#         iw=275,
-#         mw=True,
-#         l=winClass.kWorkspaceControlLabel,
-#         dtc=["ToolBox", "right"],
-#         wp="preferred",
-#         fl=True
-#     )
-
-#     # 3- Wrap the workspaceControl to a QWidget.
-#     dockWidgetPtr = omui1.MQtUtil.findControl(winClass.kWorkspaceControlName)
-#     dockWidget = shiboken2.wrapInstance(long(dockWidgetPtr), QtWidgets.QWidget) # TODO: Study more about this
-#     dockWidget.setAttribute(QtCore.Qt.WA_DeleteOnClose)
-
-#     # 4- Parent the main class to a dockWidget.
-#     mainWin = winClass(dockWidget)
-
-#     # 5- Restore the dockWidget to show the gui.
-#     cmds.evalDeferred(lambda *args: cmds.workspaceControl(dockControl, e=True, rs=True))
-
-#     # 6- Return the class
-#     return mainWin
 
 
 
@@ -143,44 +113,55 @@ class GenericDockWindow(MayaQWidgetDockableMixin, QtWidgets.QWidget):
 ####################################
 # MAIN WINDOW CLASS
 
-# class MainWindow(QtWidgets.QMainWindow):
+class MainWin(QtWidgets.QWidget):
+    def __init__(self, parent=None):
+        super(MainWin, self).__init__(parent)
+        loader = QtUiTools.QUiLoader()
+        uiFile = QtCore.QFile(kMainUIFile)
+        uiFile.open(QtCore.QFile.ReadOnly)
+        self.ui = loader.load(uiFile, self)
+        uiFile.close()
 
-#     kinstances = []
-#     kControlName = "%s_WorkspaceControl" appInfo.kApplicationName
-#     kControlLabel = appInfo.kApplicationName
+        self.initUI()
+        self.show()
+        self.activateWindow()
 
+    def initUI(self):
+        self.setWindowTitle("%s %s" %(appInfo.kApplicationName, appInfo.kApplicationVersion))
+        self.setAttribute(QtCore.Qt.WA_DeleteOnClose, True)
+        self.setWindowFlags(QtCore.Qt.Tool | QtCore.Qt.FramelessWindowHint)
+        self.setWindowOpacity(1.0)
+        self.oldPos = self.pos()
+        self.ui.btnClose.clicked.connect(lambda: self.close())
 
-#     ######################################
-#     # MAIN METHODS
+    def mousePressEvent(self, event):
+        localPos = QtCore.QPoint(event.localPos().x(), event.localPos().y())
+        if self.childAt(event.pos()) == self.ui.frmTitleBar:
+            if self.windowOpacity() <= 1.0:
+                self.setWindowOpacity(0.5)
+        self.oldPos = [localPos, self.pos()]
 
-#     def __init__(self, parent=None):
-#         super(MainWindow, self).__init__(parent=parent)
-#         MainWindow.deleteInstances()
-#         self.__class__.kinstances.append(weakref.proxy(self))
+    def mouseMoveEvent(self, event):
+        localClickPos = self.oldPos[0]
+        globalClickPos = localClickPos + self.oldPos[1]
+        if self.childAt(localClickPos) == self.ui.frmTitleBar:
+            delta = QtCore.QPoint(event.globalPos() - globalClickPos)
+            self.move(self.pos() + delta)
+            self.oldPos = [localClickPos, self.pos()]
+        # localClickPos = self.oldPos[0]
+        # globalClickPos = localClickPos + self.oldPos[1]
+        # if localClickPos.y() <= self.ui.frmTitleBar.height():
+        #     delta = QtCore.QPoint(event.globalPos() - globalClickPos)
+        #     self.move(self.pos() + delta)
+        #     self.oldPos = [localClickPos, self.pos()]
 
-#         # Set the workspaceControl margins
-#         self.windowName = self.kControlName
-#         self.ui = parent
-#         self.workspaceLayout = parent.layout()
-#         self.workspaceLayout.setContentsMargins(2, 2, 2, 2)
+    def mouseReleaseEvent(self, event):
+        if self.windowOpacity() < 1.0:
+            self.setWindowOpacity(1.0)
 
-#         loader = QtUiTools.QUiLoader()
-
-#     @staticmethod
-#     def deleteInstances():
-#         for instance in MainWindow.kinstances:
-#             try:
-#                 instance.setParent(None)
-#                 instance.deleteLater()
-#             except:
-#                 # Ignore the fact that the actual parent has already been deleted by Maya.
-#                 pass
-
-#             MainWindow.kinstances.remove(instance)
-#             del instance
-
-#     def onExitCode(self):
-#         pass
+    def closeEvent(self, event):
+        event.accept()
+        sys.stdout.write("Application closed.\n")
 
 
 ####################################

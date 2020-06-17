@@ -49,6 +49,7 @@ This code supports Pylint. Rc file in project.
 # This is only to call the application
 from gfUtilitiesBelt2.core import config
 from gfUtilitiesBelt2.core import ui
+from gfUtilitiesBelt2.core.getMayaInfo import getMayaWindow
 reload(config)
 reload(ui)
 
@@ -57,5 +58,6 @@ reload(ui)
 
 def main():
     settings = config.runStartConfigurations()
+    mainWin = ui.MainWin(getMayaWindow())
     # Open the gui with all settings
     # Capture the width and height before close the application
