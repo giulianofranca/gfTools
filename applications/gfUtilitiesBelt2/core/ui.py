@@ -39,7 +39,8 @@ Todo:
     * NDA
 
 Sources:
-    * NDA
+    * https://www.learnpyqt.com/widgets/
+    * https://www.learnpyqt.com/courses/custom-widgets/creating-your-own-custom-widgets/
 
 This code supports Pylint. Rc file in project.
 """
@@ -48,6 +49,7 @@ import sys
 import os
 import shiboken2
 from PySide2 import QtCore
+from PySide2 import QtGui
 from PySide2 import QtWidgets
 from PySide2 import QtUiTools
 from maya.app.general.mayaMixin import MayaQWidgetDockableMixin
@@ -56,10 +58,17 @@ import maya.cmds as cmds
 
 from gfUtilitiesBelt2.core import appInfo
 from gfUtilitiesBelt2.core.getMayaInfo import getMayaWindow
+from gfTools.core.widgets import TitleBar
 reload(appInfo)
 
 
 kMainUIFile = os.path.join(appInfo.kGUIPath, "win_main.ui")
+
+kDarkerColor = QtGui.QColor(55, 55, 55)
+kLighterColor = QtGui.QColor(68, 68, 68)
+kDarkerTextColor = QtGui.QColor(103, 103, 103)
+kLighterTextColor = QtGui.QColor(187, 187, 187)
+kCloseColor = QtGui.QColor(189, 189, 189)
 
 
 
@@ -117,6 +126,7 @@ class MainWin(QtWidgets.QWidget):
     def __init__(self, parent=None):
         super(MainWin, self).__init__(parent)
         loader = QtUiTools.QUiLoader()
+        loader.registerCustomWidget(TitleBar.GFTitleBar)
         uiFile = QtCore.QFile(kMainUIFile)
         uiFile.open(QtCore.QFile.ReadOnly)
         self.ui = loader.load(uiFile, self)
@@ -129,35 +139,34 @@ class MainWin(QtWidgets.QWidget):
     def initUI(self):
         self.setWindowTitle("%s %s" %(appInfo.kApplicationName, appInfo.kApplicationVersion))
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose, True)
-        self.setWindowFlags(QtCore.Qt.Tool | QtCore.Qt.FramelessWindowHint)
-        self.setWindowOpacity(1.0)
+        self.setWindowFlags(QtCore.Qt.Tool) # | QtCore.Qt.FramelessWindowHint
         self.oldPos = self.pos()
-        self.ui.btnClose.clicked.connect(lambda: self.close())
+        # self.ui.btnClose.clicked.connect(lambda: self.close())
 
-    def mousePressEvent(self, event):
-        localPos = QtCore.QPoint(event.localPos().x(), event.localPos().y())
-        if self.childAt(event.pos()) == self.ui.frmTitleBar:
-            if self.windowOpacity() <= 1.0:
-                self.setWindowOpacity(0.5)
-        self.oldPos = [localPos, self.pos()]
+    # def mousePressEvent(self, event):
+    #     localPos = QtCore.QPoint(event.localPos().x(), event.localPos().y())
+    #     if self.childAt(event.pos()) == self.ui.frmTitleBar:
+    #         if self.windowOpacity() <= 1.0:
+    #             self.setWindowOpacity(0.5)
+    #     self.oldPos = [localPos, self.pos()]
 
-    def mouseMoveEvent(self, event):
-        localClickPos = self.oldPos[0]
-        globalClickPos = localClickPos + self.oldPos[1]
-        if self.childAt(localClickPos) == self.ui.frmTitleBar:
-            delta = QtCore.QPoint(event.globalPos() - globalClickPos)
-            self.move(self.pos() + delta)
-            self.oldPos = [localClickPos, self.pos()]
-        # localClickPos = self.oldPos[0]
-        # globalClickPos = localClickPos + self.oldPos[1]
-        # if localClickPos.y() <= self.ui.frmTitleBar.height():
-        #     delta = QtCore.QPoint(event.globalPos() - globalClickPos)
-        #     self.move(self.pos() + delta)
-        #     self.oldPos = [localClickPos, self.pos()]
+    # def mouseMoveEvent(self, event):
+    #     localClickPos = self.oldPos[0]
+    #     globalClickPos = localClickPos + self.oldPos[1]
+    #     if self.childAt(localClickPos) == self.ui.frmTitleBar:
+    #         delta = QtCore.QPoint(event.globalPos() - globalClickPos)
+    #         self.move(self.pos() + delta)
+    #         self.oldPos = [localClickPos, self.pos()]
+    #     # localClickPos = self.oldPos[0]
+    #     # globalClickPos = localClickPos + self.oldPos[1]
+    #     # if localClickPos.y() <= self.ui.frmTitleBar.height():
+    #     #     delta = QtCore.QPoint(event.globalPos() - globalClickPos)
+    #     #     self.move(self.pos() + delta)
+    #     #     self.oldPos = [localClickPos, self.pos()]
 
-    def mouseReleaseEvent(self, event):
-        if self.windowOpacity() < 1.0:
-            self.setWindowOpacity(1.0)
+    # def mouseReleaseEvent(self, event):
+    #     if self.windowOpacity() < 1.0:
+    #         self.setWindowOpacity(1.0)
 
     def closeEvent(self, event):
         event.accept()
