@@ -26,6 +26,7 @@ set(SOURCE_FILES
 )
 
 # Find Packages
+set(OpenGL_GL_PREFERENCE "LEGACY")
 find_package(Maya REQUIRED)
 find_package(OpenGL REQUIRED)
 
