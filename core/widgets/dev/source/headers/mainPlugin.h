@@ -2,7 +2,7 @@
 #define GFWIDGETS_H
 
 #include <QtCore/QtPlugin>
-#include <QtUiPlugin/QDesignerCustomWidgetInterface>
+#include <QtUiPlugin/QDesignerCustomWidgetCollectionInterface>
 
 
 

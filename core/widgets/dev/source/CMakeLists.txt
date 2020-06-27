@@ -2,10 +2,11 @@ set(SOURCE_FILES
     "mainPlugin.cpp" "headers/mainPlugin.h"
     "analogclock.cpp" "headers/analogclock.h"
     "analogclockplugin.cpp" "headers/analogclockplugin.h"
+    "w_gfToolTitleBar.cpp" "headers/w_gfToolTitleBar.h"
+    "w_gfCloseButton.cpp" "headers/w_gfCloseButton.h"
 )
 
 # Find Packages
-# find_package(PySide2 REQUIRED))
 find_package(Qt5 COMPONENTS Core Gui Widgets UiPlugin REQUIRED)
 get_target_property(QTCORE_LOCATION Qt5::Core LOCATION)
 message(STATUS "Found Qt: ${QTCORE_LOCATION}")
@@ -57,52 +58,6 @@ if(${INSTALL_QTDESIGNER})
 endif()
 
 
-###########################################################################################
-# Test for mainwindow.cpp
-# set(SOURCE_FILES
-#     "main.cpp"
-#     "mainwindow.cpp" "headers/mainwindow.h" "ui/mainwindow.ui"
-# )
-
-# Find Packages
-# find_package(Qt5 REQUIRED COMPONENTS Core Gui Widgets)
-
-# Add a executable
-# add_executable(${PROJECT_NAME} ${SOURCE_FILES})
-# target_link_libraries(${PROJECT_NAME} PRIVATE Qt5::Core Qt5::Gui Qt5::Widgets)
-
-# if(${MAIN_APP_BUILD})
-#     # Install from main build.py
-#     install(TARGETS ${PROJECT_NAME}
-#         RUNTIME DESTINATION "core/widgets")
-#     if(${INSTALL_SOURCE})
-#         message(STATUS "Installation of source code is enabled.")
-#         install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-#             DESTINATION "core/widgets")
-#         install(FILES "../CMakeLists.txt"
-#             DESTINATION "core/widgets")
-#         install(FILES "../build.py"
-#             DESTINATION "core/widgets")
-#     else()
-#         install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/headers"
-#             DESTINATION "core/widgets"
-#             FILES_MATCHING PATTERN "*.h")
-#     endif()
-# else()
-#     # Install from exclusive widgets build.py
-#     # Don't use CONFIGURATIONS in Linux
-#     install(TARGETS ${PROJECT_NAME}
-#         RUNTIME DESTINATION "Debug"
-#         CONFIGURATIONS Debug)
-#     install(TARGETS ${PROJECT_NAME}
-#         RUNTIME DESTINATION "Release"
-#         CONFIGURATIONS Release)
-#     if(${INSTALL_SOURCE})
-#         message(WARNING "Installation of source code is not available using local build.py. Operation skipped.")
-#     endif()
-# endif()
-
-###########################################################################################
 
 # https://stackoverflow.com/questions/28825200/how-could-i-specify-the-file-name-of-the-qt-designer-form-class-by-cmakeqt5-wra
 # https://doc.qt.io/qtcreator/adding-plugins.html

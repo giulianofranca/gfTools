@@ -58,7 +58,7 @@ import maya.cmds as cmds
 
 from gfUtilitiesBelt2.core import appInfo
 from gfUtilitiesBelt2.core.getMayaInfo import getMayaWindow
-from gfTools.core.widgets import TitleBar
+# from gfTools.core.widgets import TitleBar
 reload(appInfo)
 
 

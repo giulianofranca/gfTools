@@ -50,6 +50,8 @@ This code supports Pylint. Rc file in project.
 from gfUtilitiesBelt2.core import config
 from gfUtilitiesBelt2.core import ui
 from gfUtilitiesBelt2.core.getMayaInfo import getMayaWindow
+from PySide2 import QtUiTools
+from PySide2 import QtCore
 reload(config)
 reload(ui)
 
@@ -57,7 +59,14 @@ reload(ui)
 
 
 def main():
-    settings = config.runStartConfigurations()
-    mainWin = ui.MainWin(getMayaWindow())
+    path = "C:/Users/gfranca/Documents/maya/2017/scripts/gfTools/core/widgets/gfWidgets_Windows/Release/gfWidgets.dll"
+    pluginLoader = QtCore.QPluginLoader(path)
+    print(pluginLoader.staticInstances())
+    # status = pluginLoader.instance()
+    # print(status)
+    # loader = QtUiTools.QUiLoader()
+    # loader.registerCustomWidget()
+    # settings = config.runStartConfigurations()
+    # mainWin = ui.MainWin(getMayaWindow())
     # Open the gui with all settings
     # Capture the width and height before close the application
