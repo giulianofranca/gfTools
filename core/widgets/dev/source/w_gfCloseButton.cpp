@@ -13,8 +13,16 @@ GFCloseButton::GFCloseButton(QWidget *parent) : QPushButton(parent){
     setHoverColor(QColor(255, 255, 255));
     setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
     setAttribute(Qt::WA_Hover);
-    kActiveColor = kDormantColor;
     kButtonArea = QRegion(0, 0, width(), height(), QRegion::Ellipse);
+    kActiveColor = kDormantColor;
+    kAnimated = true;
+
+    // Animation setup
+    kActiveColorAnim = new QPropertyAnimation(this, "activeColor", this);
+    kShapeAnim = new QPropertyAnimation(this, "angle", this);
+    kActiveColorAnimCurve = QEasingCurve(QEasingCurve::OutQuart);
+    kShapeAnimCurve = QEasingCurve(QEasingCurve::OutBounce);
+    connect(kActiveColorAnim, SIGNAL(valueChanged(QVariant)), this, SLOT(animFrameChange(QVariant)));
 }
 
 
@@ -54,6 +62,7 @@ void GFCloseButton::paintEvent(QPaintEvent *event){
     pen.setWidth(kLineWidth);
     painter.setPen(pen);
     painter.translate(midPnt);
+    painter.rotate(kAngle);
     painter.drawPath(path);
 }
 
@@ -98,16 +107,36 @@ void GFCloseButton::hoverMoveEvent(QHoverEvent *event){
 
 void GFCloseButton::hoverEnterEvent(QHoverEvent *event){
     this->setCursor(QCursor(Qt::PointingHandCursor));
-    kActiveColor = kHoverColor;
-    update();
+    if (kAnimated){
+        kActiveColorAnim->stop();
+        kActiveColorAnim->setDuration(500);
+        kActiveColorAnim->setEasingCurve(kActiveColorAnimCurve);
+        kActiveColorAnim->setStartValue(kActiveColor);
+        kActiveColorAnim->setEndValue(kHoverColor);
+        kActiveColorAnim->start();
+    }
+    else{
+        kActiveColor = kHoverColor;
+        update();
+    }
     emit mouseHoverEntered();
 }
 
 
 void GFCloseButton::hoverLeaveEvent(QHoverEvent *event){
     this->setCursor(QCursor(Qt::ArrowCursor));
-    kActiveColor = kDormantColor;
-    update();
+    if (kAnimated){
+        kActiveColorAnim->stop();
+        kActiveColorAnim->setDuration(500);
+        kActiveColorAnim->setEasingCurve(kActiveColorAnimCurve);
+        kActiveColorAnim->setStartValue(kActiveColor);
+        kActiveColorAnim->setEndValue(kDormantColor);
+        kActiveColorAnim->start();
+    }
+    else{
+        kActiveColor = kDormantColor;
+        update();
+    }
     emit mouseHoverLeaved();
 }
 
@@ -136,6 +165,11 @@ void GFCloseButton::doubleClickEvent(QMouseEvent *event){
             emit mouseDoubleClicked();
         }
     }
+}
+
+
+void GFCloseButton::animFrameChange(const QVariant &value){
+    repaint(kButtonArea);
 }
 
 

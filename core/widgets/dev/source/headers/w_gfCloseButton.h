@@ -4,6 +4,9 @@
 #include <QtCore/QtGlobal>
 #include <QtCore/QPoint>
 #include <QtCore/QEvent>
+#include <QtCore/QPropertyAnimation>
+#include <QtCore/QVariantAnimation>
+#include <QtCore/QEasingCurve>
 #include <QtGui/QHoverEvent>
 #include <QtGui/QMouseEvent>
 #include <QtGui/QPainter>
@@ -13,7 +16,8 @@
 #include <QtUiPlugin/QDesignerExportWidget>
 #include <QtUiPlugin/QDesignerCustomWidgetInterface>
 
-//TODO: Implement hoverMove event. If the move pos is in button area emit hoverEntered.
+// TODO: QParallelAnimation group and animation of shape rotation.
+// TODO: Recreate all signals to use builtin signals when possible.
 
 
 /////////////////////////////////////////////////////////////////////
@@ -26,10 +30,13 @@ class QDESIGNER_WIDGET_EXPORT GFCloseButton : public QPushButton{
     Q_PROPERTY(QColor dormantColor READ dormantColor WRITE setDormantColor)
     Q_PROPERTY(QColor hoverColor READ hoverColor WRITE setHoverColor)
     Q_PROPERTY(bool animated READ animated WRITE setAnimated)
+    Q_PROPERTY(QColor activeColor MEMBER kActiveColor DESIGNABLE false)
+    Q_PROPERTY(qreal angle MEMBER kAngle DESIGNABLE false)
 
 public:
     explicit GFCloseButton(QWidget *parent=nullptr);
 
+    // PROPERTY METHODS
     int                                 lineWidth() const;
     void                                setLineWidth(int width);
     int                                 padding() const;
@@ -42,6 +49,7 @@ public:
     void                                setAnimated(bool animated);
 
 protected:
+    // EVENTS
     void                                paintEvent(QPaintEvent *event) override;
     bool                                event(QEvent *event) override;
     void                                hoverMoveEvent(QHoverEvent *event);
@@ -51,6 +59,7 @@ protected:
     void                                doubleClickEvent(QMouseEvent *event);
 
 signals:
+    // SIGNALS
     // Use signals beginning with mouse. (e.g. mouseClicked() instead of clicked())
     void                                mouseHoverEntered();
     void                                mouseHoverLeaved();
@@ -58,14 +67,26 @@ signals:
     void                                mouseRightClicked();
     void                                mouseDoubleClicked();
 
+private slots:
+    // PRIVATE SLOTS
+    void                                animFrameChange(const QVariant &value);
+
 private:
+    // PROPERTIES
     int                                 kLineWidth;
     int                                 kPadding;
     QColor                              kDormantColor;
     QColor                              kHoverColor;
-    QColor                              kActiveColor;
     bool                                kAnimated;
+    QColor                              kActiveColor;
+    qreal                               kAngle;
+
+    // PRIVATE DATA
     QRegion                             kButtonArea;
+    QPropertyAnimation                  *kActiveColorAnim;
+    QEasingCurve                        kActiveColorAnimCurve;
+    QPropertyAnimation                  *kShapeAnim;
+    QEasingCurve                        kShapeAnimCurve;
 };
 
 
