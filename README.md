@@ -5,7 +5,7 @@ gfTools for Autodesk Maya
 
 Short description with website link if exists. Work for Autodesk Maya 2017-2020 for Windows, MacOS and Linux.
 
-[![License](https://img.shields.io/github/license/giuliano-franca/gfTools?color=blue&label=license&style=for-the-badge)](LICENSE.txt)
+[![License](https://img.shields.io/github/license/giuliano-franca/gfTools?color=blue&label=license&style=for-the-badge)](LICENSE)
 [![Downloads](https://img.shields.io/github/downloads/giuliano-franca/gfTools/total?style=for-the-badge)](https://github.com/giuliano-franca/gfTools/releases)
 <!-- Add Releases badge -->
 
