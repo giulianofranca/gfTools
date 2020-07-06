@@ -1,19 +1,15 @@
 # -*- coding: utf-8 -*-
 """
 Copyright (c) 2019 Giuliano França
-
 MIT License
-
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
 to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
-
 The above copyright notice and this permission notice shall be included in all
 copies or substantial portions of the Software.
-
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -21,9 +17,7 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-
 ====================================================================================================
-
 How to use:
     * Copy the parent folder to the MAYA_SCRIPT_PATH.
     * To find MAYA_SCRIPT_PATH paste this command in a Python tab:
@@ -31,17 +25,12 @@ How to use:
     * In Maya, go to Windows > Settings/Preferences > Plug-in Manager.
     * Browse for "gfTools > plug-ins > dev > python"
     * Find gfTools_P.py and import it.
-
 Requirements:
     * Maya 2017 or above.
-
 Todo:
     * NDA
-
 Sources:
-    * https://www.learnpyqt.com/widgets/
-    * https://www.learnpyqt.com/courses/custom-widgets/creating-your-own-custom-widgets/
-
+    * NDA
 This code supports Pylint. Rc file in project.
 """
 import weakref
@@ -58,17 +47,10 @@ import maya.cmds as cmds
 
 from gfUtilitiesBelt2.core import appInfo
 from gfUtilitiesBelt2.core.getMayaInfo import getMayaWindow
-# from gfTools.core.widgets import TitleBar
 reload(appInfo)
 
 
-kMainUIFile = os.path.join(appInfo.kGUIPath, "win_main.ui")
-
-kDarkerColor = QtGui.QColor(55, 55, 55)
-kLighterColor = QtGui.QColor(68, 68, 68)
-kDarkerTextColor = QtGui.QColor(103, 103, 103)
-kLighterTextColor = QtGui.QColor(187, 187, 187)
-kCloseColor = QtGui.QColor(189, 189, 189)
+kMainUIFile = os.path.join(appInfo.kGUIPath, "win_main - Copy.ui")
 
 
 
@@ -126,7 +108,8 @@ class MainWin(QtWidgets.QWidget):
     def __init__(self, parent=None):
         super(MainWin, self).__init__(parent)
         loader = QtUiTools.QUiLoader()
-        loader.registerCustomWidget(TitleBar.GFTitleBar)
+        loader.addPluginPath("C:\\Users\\gfranca\\Documents\\maya\\2017\\scripts\\gfTools\\core\\widgets\\dev\\gfWidgets_Windows\\Release\\gfWidgets.dll")
+        print(loader.availableWidgets())
         uiFile = QtCore.QFile(kMainUIFile)
         uiFile.open(QtCore.QFile.ReadOnly)
         self.ui = loader.load(uiFile, self)
@@ -139,34 +122,36 @@ class MainWin(QtWidgets.QWidget):
     def initUI(self):
         self.setWindowTitle("%s %s" %(appInfo.kApplicationName, appInfo.kApplicationVersion))
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose, True)
-        self.setWindowFlags(QtCore.Qt.Tool) # | QtCore.Qt.FramelessWindowHint
+        self.setWindowFlags(QtCore.Qt.Tool | QtCore.Qt.FramelessWindowHint)
+        self.setWindowOpacity(1.0)
         self.oldPos = self.pos()
         # self.ui.btnClose.clicked.connect(lambda: self.close())
+        self.ui.gfCloseButton.clicked.connect(lambda: self.close())
 
-    # def mousePressEvent(self, event):
-    #     localPos = QtCore.QPoint(event.localPos().x(), event.localPos().y())
-    #     if self.childAt(event.pos()) == self.ui.frmTitleBar:
-    #         if self.windowOpacity() <= 1.0:
-    #             self.setWindowOpacity(0.5)
-    #     self.oldPos = [localPos, self.pos()]
+    def mousePressEvent(self, event):
+        localPos = QtCore.QPoint(event.localPos().x(), event.localPos().y())
+        if self.childAt(event.pos()) == self.ui.frmTitleBar:
+            if self.windowOpacity() <= 1.0:
+                self.setWindowOpacity(0.5)
+        self.oldPos = [localPos, self.pos()]
 
-    # def mouseMoveEvent(self, event):
-    #     localClickPos = self.oldPos[0]
-    #     globalClickPos = localClickPos + self.oldPos[1]
-    #     if self.childAt(localClickPos) == self.ui.frmTitleBar:
-    #         delta = QtCore.QPoint(event.globalPos() - globalClickPos)
-    #         self.move(self.pos() + delta)
-    #         self.oldPos = [localClickPos, self.pos()]
-    #     # localClickPos = self.oldPos[0]
-    #     # globalClickPos = localClickPos + self.oldPos[1]
-    #     # if localClickPos.y() <= self.ui.frmTitleBar.height():
-    #     #     delta = QtCore.QPoint(event.globalPos() - globalClickPos)
-    #     #     self.move(self.pos() + delta)
-    #     #     self.oldPos = [localClickPos, self.pos()]
+    def mouseMoveEvent(self, event):
+        localClickPos = self.oldPos[0]
+        globalClickPos = localClickPos + self.oldPos[1]
+        if self.childAt(localClickPos) == self.ui.frmTitleBar:
+            delta = QtCore.QPoint(event.globalPos() - globalClickPos)
+            self.move(self.pos() + delta)
+            self.oldPos = [localClickPos, self.pos()]
+        # localClickPos = self.oldPos[0]
+        # globalClickPos = localClickPos + self.oldPos[1]
+        # if localClickPos.y() <= self.ui.frmTitleBar.height():
+        #     delta = QtCore.QPoint(event.globalPos() - globalClickPos)
+        #     self.move(self.pos() + delta)
+        #     self.oldPos = [localClickPos, self.pos()]
 
-    # def mouseReleaseEvent(self, event):
-    #     if self.windowOpacity() < 1.0:
-    #         self.setWindowOpacity(1.0)
+    def mouseReleaseEvent(self, event):
+        if self.windowOpacity() < 1.0:
+            self.setWindowOpacity(1.0)
 
     def closeEvent(self, event):
         event.accept()

@@ -7,9 +7,16 @@ set(SOURCE_FILES
 )
 
 # Find Packages
+if(LINUX AND APPLE)
+    set(OpenGL_GL_PREFERENCE "LEGACY")
+endif()
+find_package(OpenGL REQUIRED)
+find_package(Maya REQUIRED)
 find_package(Qt5 COMPONENTS Core Gui Widgets UiPlugin REQUIRED)
-get_target_property(QTCORE_LOCATION Qt5::Core LOCATION)
-message(STATUS "Found Qt: ${QTCORE_LOCATION}")
+find_package(Python3 REQUIRED COMPONENTS Interpreter Development)
+find_package(PySide2 REQUIRED)
+find_package(Shiboken2 REQUIRED)
+message(STATUS "Found Qt: ${Qt5_VERSION}")
 
 # Add a shared library
 add_library(${PROJECT_NAME} SHARED ${SOURCE_FILES})

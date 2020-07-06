@@ -1,6 +1,7 @@
 set(SOURCE_FILES
     "main.cpp"
     "headers/utils.h" "utils.cpp"
+    "headers/testClass.h" "testClass.cpp"
 )
 
 find_package(Maya REQUIRED)

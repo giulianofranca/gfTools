@@ -79,6 +79,8 @@ sourceFiles = [
     "source/main.cpp"
     "source/headers/utils.h"
     "source/utils.cpp"
+    "source/headers/testClass.h"
+    "source/testClass.cpp"
 ]
 
 module = CMakeExtension("_gfRigSystemAPI", sources=sourceFiles)

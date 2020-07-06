@@ -59,6 +59,7 @@ Sources:
 
 This code supports Pylint. Rc file in project.
 """
+import maya.cmds as cmds
 import maya.api._OpenMaya_py2 as om2
 
 
@@ -214,3 +215,5 @@ class DistributeAlongSurface(om2.MPxNode):
 
         surfaceHandle.setClean()
         outTransHandle.setAllClean()
+
+        cmds.refresh()

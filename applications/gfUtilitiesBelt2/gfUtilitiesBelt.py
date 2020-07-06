@@ -59,14 +59,14 @@ reload(ui)
 
 
 def main():
-    path = "C:/Users/gfranca/Documents/maya/2017/scripts/gfTools/core/widgets/gfWidgets_Windows/Release/gfWidgets.dll"
-    pluginLoader = QtCore.QPluginLoader(path)
-    print(pluginLoader.staticInstances())
+    # path = "C:/Users/gfranca/Documents/maya/2017/scripts/gfTools/core/widgets/gfWidgets_Windows/Release/gfWidgets.dll"
+    # pluginLoader = QtCore.QPluginLoader(path)
+    # print(pluginLoader.staticInstances())
     # status = pluginLoader.instance()
     # print(status)
     # loader = QtUiTools.QUiLoader()
     # loader.registerCustomWidget()
-    # settings = config.runStartConfigurations()
-    # mainWin = ui.MainWin(getMayaWindow())
+    settings = config.runStartConfigurations()
+    mainWin = ui.MainWin(getMayaWindow())
     # Open the gui with all settings
     # Capture the width and height before close the application

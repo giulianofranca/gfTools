@@ -2,8 +2,14 @@
     "Application" : "gfUtilitiesBelt",
     "Current Version": "1.0",
     "Required Version" : "1.0",
+	"Last Maya Info Update" : "qwerty",
+	"Maya Info Update Threshold" : null,
+	"Opened Pockets" : [
+		""
+	],
+	"Last Pocket" : ""
     "Settings" : {
-        "AutoLoad" : true,
-        "OpenedPockets" : ""
+        "Auto Load" : true,
+		"Auto Update" : true
     }
 }

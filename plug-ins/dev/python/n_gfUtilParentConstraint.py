@@ -45,15 +45,19 @@ Description:
     or scale constraint.
 
 Attributes:
-    * Offset: The matrix offset between the source and target objects.
-    * Target World Matrix: The world matrix of the target object.
+    * Contraint Joint Orient: The joint orient of the constrainted object.
+    * Constraint Rotate Order: The rotate order of the constrainted object.
     * Constraint Parent Inverse Matrix: The world inverse matrix of the parent of the constrainted object.
-    * Out Constraint: The output matrix of the constraint.
+    * Constraint Parent Scale: The scale of the parent of the constrainted object.
+    * Target World Matrix: The world matrix of the parent.
+    * Target Offset: The offset matrix of the constraint object in this parent world matrix.
+    * Target Weight: The weight of this target matrix.
+    * Constraint Translate: The output translation for the constrainted object.
+    * Constraint Rotate: The output rotate for the constrainted object.
+    * Constraint Scale: The output scale for the constrainted object.
 
 Todo:
-    * Add support to joint orient.
-    * Add support to rotation order.
-    * Add support to weights.
+    * NDA
 
 Sources:
     * NDA

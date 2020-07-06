@@ -1,13 +1,12 @@
 <!-- https://medium.com/better-programming/add-badges-to-a-github-repository-716d2988dc6a -->
-gfTools for Autodesk Maya
-=========================
+gfTools
+=======
 **Stay cool man, this repo is on development yet. This is just to remember me what i have to do. =]**
 
 Short description with website link if exists. Work for Autodesk Maya 2017-2020 for Windows, MacOS and Linux.
 
 [![License](https://img.shields.io/github/license/giuliano-franca/gfTools?color=blue&label=license&style=for-the-badge)](LICENSE)
 [![Downloads](https://img.shields.io/github/downloads/giuliano-franca/gfTools/total?style=for-the-badge)](https://github.com/giuliano-franca/gfTools/releases)
-<!-- Add Releases badge -->
 
 <!-- Build Status
 ------------ -->
@@ -15,6 +14,7 @@ Short description with website link if exists. Work for Autodesk Maya 2017-2020 
 Supported Platforms
 -------------------
 gfTools build on Windows, macOS and Linux and is created using Windows and Fedora.
+Currently available for Autodesk Maya versions 2017 to 2020.
 
 Additional Documentation
 ------------------------
@@ -28,7 +28,7 @@ Dependencies
 * C++ Compiler
 * [CMake](https://cmake.org/download/) (Pre-builded in version 3.15.2)
 * [Maya Devkit](https://www.autodesk.com/developer-network/platform-technologies/maya)
-* [Qt](https://download.qt.io/official_releases/qt/) (Pre-builded in version 5.13.2)
+* [Qt](https://download.qt.io/new_archive/qt/) (Pre-builded in version 5.13.2)
 * [Python 3](https://www.python.org/downloads/)
 
 Getting the Application

@@ -69,6 +69,7 @@ This code supports Pylint. Rc file in project.
 """
 # pylint: disable=no-name-in-module
 
+import math
 import maya.api._OpenMaya_py2 as om2
 import maya.api._OpenMayaUI_py2 as omui2
 import maya.api._OpenMayaRender_py2 as omr2

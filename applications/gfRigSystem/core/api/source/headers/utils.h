@@ -23,13 +23,13 @@ inline bool isinstance(const T*){
 
 
 // -------------------------------------------------------------------------------------------
-// FUNCTIONS
+// ---------- FUNCTIONS
 // -------------------------------------------------------------------------------------------
 
 // unfreezeTransformations
-static void unfreezeTransformations();
-static void unfreezeTransformationsUNDO();
-static PyObject* unfreezeTransformationsPy(PyObject* self, PyObject* args);
+void unfreezeTransformations();
+void unfreezeTransformationsUNDO();
+PyObject* unfreezeTransformationsPy(PyObject* self, PyObject* args);
 
 static const char kUnfreezeTransformationsDoc[] = "Unfreeze selected objects translation.";
 static PyMethodDef unfreezeTransformationsDef{
@@ -39,9 +39,9 @@ static PyMethodDef unfreezeTransformationsDef{
 
 
 // getPoleVectorPosition
-static const char* getPoleVectorPosition(double distance=1.0);
-static const char* getPoleVectorPositionUNDO();
-static PyObject* getPoleVectorPositionPy(PyObject* self, PyObject* args);
+const char* getPoleVectorPosition(double distance=1.0);
+const char* getPoleVectorPositionUNDO();
+PyObject* getPoleVectorPositionPy(PyObject* self, PyObject* args);
 
 static const char kGetPoleVectorPositionDoc[] = "Find the right pole vector position based on selection.";
 static PyMethodDef getPoleVectorPositionDef{

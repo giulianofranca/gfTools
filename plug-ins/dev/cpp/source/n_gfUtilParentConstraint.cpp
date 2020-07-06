@@ -170,58 +170,9 @@ MStatus ParentConstraint::compute(const MPlug& plug, MDataBlock& dataBlock){
 
     MMatrix mResult = mTargetsAdded * mConstParInv * mInvSca;
 
-    {
-        MString toPrint = MString("mTargetsAdded = ");
-        toPrint += mTargetsAdded[3][0];
-        toPrint += ", ";
-        toPrint += mTargetsAdded[3][1];
-        toPrint += ", ";
-        toPrint += mTargetsAdded[3][2];
-        MGlobal::displayInfo(toPrint);
-    }
-
-    {
-        MString toPrint = MString("mConstParInv = ");
-        toPrint += mConstParInv[3][0];
-        toPrint += ", ";
-        toPrint += mConstParInv[3][1];
-        toPrint += ", ";
-        toPrint += mConstParInv[3][2];
-        MGlobal::displayInfo(toPrint);
-    }
-
-    {
-        MString toPrint = MString("mInvSca = ");
-        toPrint += mInvSca[0][0];
-        toPrint += ", ";
-        toPrint += mInvSca[1][1];
-        toPrint += ", ";
-        toPrint += mInvSca[2][2];
-        MGlobal::displayInfo(toPrint);
-    }
-
-    {
-        MString toPrint = MString("mResult = ");
-        toPrint += mResult[3][0];
-        toPrint += ", ";
-        toPrint += mResult[3][1];
-        toPrint += ", ";
-        toPrint += mResult[3][2];
-        MGlobal::displayInfo(toPrint);
-    }
-
     if (plug == outConstTrans){
         MDataHandle outTransHandle = dataBlock.outputValue(outConstTrans);
         MVector outTrans = MVector(mResult[3][0], mResult[3][1], mResult[3][2]);
-        {
-            MString toPrint = MString("outTrans = ");
-            toPrint += outTrans.x;
-            toPrint += ", ";
-            toPrint += outTrans.y;
-            toPrint += ", ";
-            toPrint += outTrans.z;
-            MGlobal::displayInfo(toPrint);
-        }
         outTransHandle.setMFloatVector(outTrans);
         outTransHandle.setClean();
     }

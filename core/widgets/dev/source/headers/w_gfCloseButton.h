@@ -16,9 +16,6 @@
 #include <QtUiPlugin/QDesignerExportWidget>
 #include <QtUiPlugin/QDesignerCustomWidgetInterface>
 
-// TODO: QParallelAnimation group and animation of shape rotation.
-// TODO: Recreate all signals to use builtin signals when possible.
-
 
 /////////////////////////////////////////////////////////////////////
 // Export Widget
@@ -27,6 +24,7 @@ class QDESIGNER_WIDGET_EXPORT GFCloseButton : public QPushButton{
     Q_OBJECT
     Q_PROPERTY(int lineWidth READ lineWidth WRITE setLineWidth)
     Q_PROPERTY(int padding READ padding WRITE setPadding)
+    Q_PROPERTY(QColor backgroundColor READ backgroundColor WRITE setBackgroundColor)
     Q_PROPERTY(QColor dormantColor READ dormantColor WRITE setDormantColor)
     Q_PROPERTY(QColor hoverColor READ hoverColor WRITE setHoverColor)
     Q_PROPERTY(bool animated READ animated WRITE setAnimated)
@@ -41,6 +39,8 @@ public:
     void                                setLineWidth(int width);
     int                                 padding() const;
     void                                setPadding(int padding);
+    QColor                              backgroundColor() const;
+    void                                setBackgroundColor(QColor color);
     QColor                              dormantColor() const;
     void                                setDormantColor(QColor color);
     QColor                              hoverColor() const;
@@ -60,12 +60,11 @@ protected:
 
 signals:
     // SIGNALS
-    // Use signals beginning with mouse. (e.g. mouseClicked() instead of clicked())
-    void                                mouseHoverEntered();
-    void                                mouseHoverLeaved();
-    void                                mouseClicked();
-    void                                mouseRightClicked();
-    void                                mouseDoubleClicked();
+    void                                hoverEntered();
+    void                                hoverLeaved();
+    void                                clicked();
+    void                                rightClicked();
+    void                                doubleClicked();
 
 private slots:
     // PRIVATE SLOTS
@@ -75,6 +74,7 @@ private:
     // PROPERTIES
     int                                 kLineWidth;
     int                                 kPadding;
+    QColor                              kBackgroundColor;
     QColor                              kDormantColor;
     QColor                              kHoverColor;
     bool                                kAnimated;
@@ -84,8 +84,8 @@ private:
     // PRIVATE DATA
     QRegion                             kButtonArea;
     QPropertyAnimation                  *kActiveColorAnim;
-    QEasingCurve                        kActiveColorAnimCurve;
     QPropertyAnimation                  *kShapeAnim;
+    QEasingCurve                        kActiveColorAnimCurve;
     QEasingCurve                        kShapeAnimCurve;
 };
 

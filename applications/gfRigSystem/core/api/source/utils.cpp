@@ -7,7 +7,7 @@
 
 // unfreezeTransformations
 
-static void unfreezeTransformations(){
+void unfreezeTransformations(){
     /* Unfreeze selected objects translation.
 
     Returns:
@@ -29,10 +29,10 @@ static void unfreezeTransformations(){
     return;
 }
 
-static void unfreezeTransformationsUNDO(){
+void unfreezeTransformationsUNDO(){
 }
 
-static PyObject* unfreezeTransformationsPy(PyObject* self, PyObject* args){
+PyObject* unfreezeTransformationsPy(PyObject* self, PyObject* args){
     PyGILState_STATE pyGILState = PyGILState_Ensure();
 
     unfreezeTransformations();
@@ -44,7 +44,7 @@ static PyObject* unfreezeTransformationsPy(PyObject* self, PyObject* args){
 
 // getPoleVectorPosition
 
-static const char* getPoleVectorPosition(double distance){
+const char* getPoleVectorPosition(double distance){
     /*Find the right pole vector position based on selection.
 
     Create an transform object in the right position. To use this command select 3 dag nodes in the scene.
@@ -109,7 +109,7 @@ static const char* getPoleVectorPosition(double distance){
     return posObjPath.fullPathName().asChar();
 }
 
-static PyObject* getPoleVectorPositionPy(PyObject* self, PyObject* args){
+PyObject* getPoleVectorPositionPy(PyObject* self, PyObject* args){
     double distance;
     if (!PyArg_ParseTuple(args, "d", &distance))
         return NULL;
@@ -123,12 +123,16 @@ static PyObject* getPoleVectorPositionPy(PyObject* self, PyObject* args){
         pathName = getPoleVectorPosition(distance);
     else{
         PyErr_Format(PyExc_RuntimeError, "Selection list is less than 3. Select at least 3 objects.");
+        // or use PyErr_SetString()
         return NULL;
     }
 
     PyObject* result = Py_BuildValue("s", pathName);
 
     PyGILState_Release(pyGILState);
+
+    // Use Py_DECREF if any PyObject created here will not be returned
+    // Py_DECREF(result);
 
     return result;
 }

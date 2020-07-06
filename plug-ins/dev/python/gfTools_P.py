@@ -60,6 +60,7 @@ Nodes:
 
 Todo:
     * NDA
+    * cmds.getClassification("quatToEuler")
 
 Sources:
     * https://github.com/bungnoid/glTools
@@ -102,6 +103,8 @@ import n_gfUtilEulerToVector as n_EulerToVector
 import n_gfUtilVectorToEuler as n_VectorToEuler
 import n_gfUtilDecompRowMatrix as n_DecomposeRowMatrix
 import n_gfUtilFindParamFromCurveLength as n_FindParamFromLength
+
+import n_gfDebugGeometry as n_DebugGeometry
 # gfMenu
 reload(m_Menu)
 # gfDebug
@@ -132,6 +135,8 @@ reload(n_EulerToVector)
 reload(n_VectorToEuler)
 reload(n_DecomposeRowMatrix)
 reload(n_FindParamFromLength)
+
+reload(n_DebugGeometry)
 
 
 def maya_useNewAPI():
@@ -199,6 +204,38 @@ def DEREGISTER_LOCATOR_NODE(NODE, PLUGIN):
 
     try:
         omr2.MDrawRegistry.deregisterDrawOverrideCreator(NODE.kNodeClassify, NODE.kNodeRegistrantID)
+    except BaseException:
+        sys.stderr.write("Failed to deregister override: %s" % NODE.kNodeName)
+        raise
+
+def REGISTER_SURFACESHAPE_NODE(NODE, PLUGIN, UI, GEOOVERRIDE):
+    """ Registar a MPxSurfaceShape node. """
+    # pylint: disable=invalid-name
+    try:
+        PLUGIN.registerShape(NODE.kNodeName, NODE.kNodeID, NODE.creator,
+                             NODE.initialize, UI.creator, NODE.kNodeClassify)
+    except BaseException:
+        sys.stderr.write("Failed to register node: %s" % NODE.kNodeName)
+        raise
+
+    if GEOOVERRIDE is not None:
+        try:
+            omr2.MDrawRegistry.registerGeometryOverrideCreator(NODE.kNodeClassify, NODE.kNodeRegistrantID,
+                                                               GEOOVERRIDE.creator)
+        except BaseException:
+            sys.stderr.write("Failed to register override: %s" % NODE.kNodeName)
+            raise
+
+def DEREGISTER_SURFACESHAPE_NODE(NODE, PLUGIN):
+    """ Deregister a MPxSurfaceShape node. """
+    try:
+        PLUGIN.deregisterNode(NODE.kNodeID)
+    except BaseException:
+        sys.stderr.write("Failed to deregister node: %s" % NODE.kNodeName)
+        raise
+
+    try:
+        omr2.MDrawRegistry.deregisterGeometryOverrideCreator(NODE.kNodeClassify, NODE.kNodeRegistrantID)
     except BaseException:
         sys.stderr.write("Failed to deregister override: %s" % NODE.kNodeName)
         raise
@@ -293,6 +330,11 @@ n_FindParamFromLength.FindParamFromLength.kNodeName = "gfFindParamFromLength_P"
 n_FindParamFromLength.FindParamFromLength.kNodeClassify = "utility/general"
 n_FindParamFromLength.FindParamFromLength.kNodeID = om2.MTypeId(0x0012f7d8)
 
+n_DebugGeometry.DebugGeometry.kNodeName = "gfDebugGeometry_P"
+n_DebugGeometry.DebugGeometry.kNodeClassify = "drawdb/geometry/customShape"
+n_DebugGeometry.DebugGeometry.kNodeRegistrantID = "gfDebugGeometry_PNodePlugin"
+n_DebugGeometry.DebugGeometry.kNodeID = om2.MTypeId(0x0012f7d9)
+
 
 def initializePlugin(mobject):
     """ Initializes the plug-in. """
@@ -323,6 +365,7 @@ def initializePlugin(mobject):
     REGISTER_NODE(n_VectorToEuler.VectorToEuler, mplugin2)
     REGISTER_NODE(n_DecomposeRowMatrix.DecomposeRowMatrix, mplugin2)
     REGISTER_NODE(n_FindParamFromLength.FindParamFromLength, mplugin2)
+    REGISTER_SURFACESHAPE_NODE(n_DebugGeometry.DebugGeometry, mplugin2, n_DebugGeometry.DebugGeometryUI, n_DebugGeometry.DebugGeometryOverride)
     om2.MGlobal.displayInfo("[gfTools_P] Plugin loaded successfully.")
     # m_Menu.MainMenu.loadMenu()
 
@@ -356,5 +399,6 @@ def uninitializePlugin(mobject):
     DEREGISTER_NODE(n_VectorToEuler.VectorToEuler, mplugin2)
     DEREGISTER_NODE(n_DecomposeRowMatrix.DecomposeRowMatrix, mplugin2)
     DEREGISTER_NODE(n_FindParamFromLength.FindParamFromLength, mplugin2)
+    DEREGISTER_SURFACESHAPE_NODE(n_DebugGeometry.DebugGeometry, mplugin2)
     om2.MGlobal.displayInfo("[gfTools_P] Plugin unloaded successfully.")
     # m_Menu.MainMenu.unloadMenu()
