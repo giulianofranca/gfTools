@@ -1,5 +1,11 @@
-# Python3_INCLUDE_DIRS
-# Python3_LIBRARY_DIRS
+# https://www.it-swarm.dev/pt/visual-studio/integre-o-llvm-clang-4.x.x5.x.x6.x.x-ao-visual-studio-2017/830728596/
+# https://docs.microsoft.com/pt-br/cpp/build/clang-support-msbuild?view=vs-2019#custom_llvm_location
+# https://doc.qt.io/qtforpython/shiboken2/gettingstarted.html
+# https://blog.basyskom.com/2019/using-shiboken2-to-create-python-bindings-for-a-qt-library/
+# https://www.qt.io/blog/2018/05/31/write-python-bindings
+# https://www.ics.com/blog/integrating-custom-widget-qt-designer
+# https://gist.github.com/dgovil/852777eca16bfbabac224b50e6d8d739
+# https://forums.cgsociety.org/t/c-qt-q-object-problem-with-cmake/1815551/4
 
 #.rst:
 # FindPySide2
