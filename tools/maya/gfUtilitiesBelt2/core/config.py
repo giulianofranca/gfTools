@@ -1,26 +1,18 @@
 # -*- coding: utf-8 -*-
 """
-Copyright (c) 2019 Giuliano França
+Copyright 2020 Giuliano Franca
 
-MIT License
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+    http://www.apache.org/licenses/LICENSE-2.0
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
 
 ====================================================================================================
 
@@ -64,8 +56,6 @@ kMayaInfoUpdateThreshold = 5
 kOpenedPockets = None
 kLastPocket = None
 kListView = False
-kWidth = 275
-kHeight = 600
 
 # Default application settings
 kDefaultAutoLoad = False
@@ -97,8 +87,6 @@ def createDefaultSettings():
     settings["Opened Pockets"] = kOpenedPockets
     settings["Last Pocket Used"] = kLastPocket
     settings["List View"] = kListView
-    settings["Width"] = kWidth
-    settings["Height"] = kHeight
     settings["Settings"] = appSettings
     return settings
 
@@ -110,53 +98,30 @@ def runStartConfigurations():
     Returns:
         OrderedDict: The settings dictionary.
     """
+    # TODO: Update Maya info after the ui loads
     # 1- Read settings file
     updateSettings()
     settings = readSettingsFile()
     appSettings = settings["Settings"]
 
-    # 2- Check if maya info file exist. If not, update maya info
-    mayaVersion = appInfo.kMayaVersion
-    if not getMayaInfo.checkMayaInfoFile():
-        getMayaInfo.updateMayaInfo()
-        settings["Last Maya Info Update"] = getCurrentDateTime(string=True)
-        settings["Last Maya Used"] = mayaVersion
-    else:
-        # 3- Check if current Maya version is different than last Maya version used
-        if mayaVersion != settings["Last Maya Used"]:
-            getMayaInfo.updateMayaInfo()
-            settings["Last Maya Info Update"] = getCurrentDateTime(string=True)
-            settings["Last Maya Used"] = mayaVersion
-
-    # 4- Find if auto update is enabled
-    autoUpdate = appSettings["Auto Update"]
-    if autoUpdate:
-        # 5- If is, check the threshold and update.
-        lastUpdate = convertStrToDatetime(settings["Last Maya Info Update"])
-        now = getCurrentDateTime()
-        threshold = datetime.timedelta(hours=appSettings["Maya Info Update Threshold"])
-        if now - lastUpdate > threshold:
-            getMayaInfo.updateMayaInfo()
-            settings["Last Maya Info Update"] = getCurrentDateTime(string=True)
-
-    # 5- Check the opened pockets and last pocket used. Check if they exist and is valid.
+    # 2- Check the opened pockets and last pocket used. Check if they exist and is valid.
     if settings["Opened Pockets"] is not None:
         for pocket in settings["Opened Pockets"]:
             status = pockets.Pocket.checkFile(pocket)
             if not status:
-                sys.stdout.write("[%s] The file %s was not recognized as a valid Pocket file. Operation skipped." % (appInfo.kApplicationName, pocket))
+                sys.stdout.write("[%s] The file %s was not recognized as a valid Pocket file or doesn't exist. Operation skipped." % (appInfo.kApplicationName, pocket))
                 settings["Opened Pockets"].remove(pocket)
     if settings["Last Pocket Used"] is not None:
         lastPocketUsed = settings["Last Pocket Used"]
         status = pockets.Pocket.checkFile(lastPocketUsed)
         if not status:
-            sys.stdout.write("[%s] The file %s was not recognized as a valid Pocket file. Operation skipped." % (appInfo.kApplicationName, lastPocketUsed))
+            sys.stdout.write("[%s] The file %s was not recognized as a valid Pocket file or doesn't exist. Operation skipped." % (appInfo.kApplicationName, lastPocketUsed))
             settings["Last Pocket Used"] = None
 
-    # 6- Save settings file
+    # 3- Save settings file
     updateSettings(settings)
 
-    # 7- Return the settings dictionary
+    # 4- Return the settings dictionary
     return settings
 
 
@@ -258,3 +223,47 @@ def convertStrToDatetime(string):
         datetime: The datetime specified.
     """
     return datetime.datetime.strptime(string, kDatetimeFormat)
+
+
+def getTimedeltaFromThreshold(threshold):
+    """Return the timedelta from given hours threshold.
+
+    Args:
+        threshold (str): The threshold in hours.
+
+    Returns:
+        timedelta: The timedelta instance.
+    """
+    return datetime.timedelta(hours=threshold)
+
+
+def updateCheckMayaLibraries(settings):
+    """Check and update Maya tools library.
+
+    Args:
+        settings (OrderedDict): The application settings dict.
+    """
+    # 1- Check if Maya info file exist. If not, update Maya info.
+    mayaVersion = appInfo.kMayaVersion
+    if not getMayaInfo.checkMayaInfoFile():
+        getMayaInfo.updateMayaInfo()
+        settings["Last Maya Info Update"] = getCurrentDateTime(string=True)
+        settings["Last Maya Used"] = mayaVersion
+    else:
+        # 2- Check if current Maya version is different then last Maya version used
+        if mayaVersion != settings["Last Maya Used"]:
+            getMayaInfo.updateMayaInfo()
+            settings["Last Maya Info Update"] = getCurrentDateTime(string=True)
+            settings["Last Maya Used"] = mayaVersion
+    # 3- Find if auto update is enabled
+    autoUpdate = settings["Settings"]["Auto Update"]
+    if autoUpdate:
+        # 4- If it is, check the threshold and update.
+        lastUpdate = convertStrToDatetime(settings["Last Maya Info Update"])
+        now = getCurrentDateTime()
+        threshold = getTimedeltaFromThreshold(settings["Settings"]["Maya Info Update Threshold"])
+        if now - lastUpdate > threshold:
+            getMayaInfo.updateMayaInfo()
+            settings["Last Maya Info Update"] = getCurrentDateTime(string=True)
+    # 5- Update settings file
+    updateSettings(settings)

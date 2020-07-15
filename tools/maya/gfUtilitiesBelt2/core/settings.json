@@ -1,14 +1,12 @@
 {
     "Application": "gfUtilitiesBelt", 
-    "Current Version": "1.0.05", 
+    "Current Version": "1.0.09", 
     "Required Version": "1.0", 
-    "Last Maya Info Update": "06-29-2020_17-58", 
-    "Last Maya Used": "2017", 
+    "Last Maya Info Update": "07-15-2020_18-55", 
+    "Last Maya Used": "2019", 
     "Opened Pockets": null, 
     "Last Pocket Used": null, 
     "List View": false, 
-    "Width": 275, 
-    "Height": 600, 
     "Settings": {
         "Auto Load": false, 
         "Auto Update": true, 
