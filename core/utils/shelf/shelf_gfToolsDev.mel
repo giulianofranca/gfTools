@@ -6,14 +6,17 @@ global proc shelf_gfToolsDev () {
 
     shelfButton
         -enableCommandRepeat 1
+        -flexibleWidthType 3
+        -flexibleWidthValue 64
         -enable 1
-        -width 73
-        -height 38
+        -width 67
+        -height 34
         -manage 1
         -visible 1
         -preventOverride 0
         -annotation "Tool in Development" 
         -enableBackground 0
+        -backgroundColor 0 0 0 
         -highlightColor 0.321569 0.521569 0.65098 
         -align "center" 
         -label "gfProjectManager" 
@@ -37,14 +40,17 @@ global proc shelf_gfToolsDev () {
     ;
     shelfButton
         -enableCommandRepeat 1
+        -flexibleWidthType 3
+        -flexibleWidthValue 64
         -enable 1
-        -width 73
-        -height 38
+        -width 67
+        -height 34
         -manage 1
         -visible 1
         -preventOverride 0
         -annotation "Tool in Development" 
         -enableBackground 0
+        -backgroundColor 0 0 0 
         -highlightColor 0.321569 0.521569 0.65098 
         -align "center" 
         -label "gfUtilitiesBelt" 
@@ -68,14 +74,17 @@ global proc shelf_gfToolsDev () {
     ;
     shelfButton
         -enableCommandRepeat 1
+        -flexibleWidthType 3
+        -flexibleWidthValue 64
         -enable 1
-        -width 73
-        -height 38
+        -width 67
+        -height 34
         -manage 1
         -visible 1
         -preventOverride 0
         -annotation "Tool in Development" 
         -enableBackground 0
+        -backgroundColor 0 0 0 
         -highlightColor 0.321569 0.521569 0.65098 
         -align "center" 
         -label "gfRigSystem" 
@@ -99,14 +108,17 @@ global proc shelf_gfToolsDev () {
     ;
     shelfButton
         -enableCommandRepeat 1
+        -flexibleWidthType 3
+        -flexibleWidthValue 64
         -enable 1
-        -width 73
-        -height 38
+        -width 67
+        -height 34
         -manage 1
         -visible 1
         -preventOverride 0
         -annotation "Tool in Development" 
         -enableBackground 0
+        -backgroundColor 0 0 0 
         -highlightColor 0.321569 0.521569 0.65098 
         -align "center" 
         -label "gfCtrlEditor" 
@@ -130,14 +142,17 @@ global proc shelf_gfToolsDev () {
     ;
     shelfButton
         -enableCommandRepeat 1
+        -flexibleWidthType 3
+        -flexibleWidthValue 64
         -enable 1
-        -width 73
-        -height 38
+        -width 67
+        -height 34
         -manage 1
         -visible 1
         -preventOverride 0
         -annotation "Tool in Development" 
         -enableBackground 0
+        -backgroundColor 0 0 0 
         -highlightColor 0.321569 0.521569 0.65098 
         -align "center" 
         -label "gfSkinTool" 
@@ -161,14 +176,17 @@ global proc shelf_gfToolsDev () {
     ;
     shelfButton
         -enableCommandRepeat 1
+        -flexibleWidthType 3
+        -flexibleWidthValue 64
         -enable 1
-        -width 73
-        -height 38
+        -width 67
+        -height 34
         -manage 1
         -visible 1
         -preventOverride 0
         -annotation "Tool in Development" 
         -enableBackground 0
+        -backgroundColor 0 0 0 
         -highlightColor 0.321569 0.521569 0.65098 
         -align "center" 
         -label "gfPSDCreator" 
@@ -192,14 +210,17 @@ global proc shelf_gfToolsDev () {
     ;
     shelfButton
         -enableCommandRepeat 1
+        -flexibleWidthType 3
+        -flexibleWidthValue 64
         -enable 1
-        -width 73
-        -height 38
+        -width 67
+        -height 34
         -manage 1
         -visible 1
         -preventOverride 0
         -annotation "Tool in Development" 
         -enableBackground 0
+        -backgroundColor 0 0 0 
         -highlightColor 0.321569 0.521569 0.65098 
         -align "center" 
         -label "gfMuscleBuilder" 
@@ -223,14 +244,17 @@ global proc shelf_gfToolsDev () {
     ;
     shelfButton
         -enableCommandRepeat 1
+        -flexibleWidthType 3
+        -flexibleWidthValue 64
         -enable 1
-        -width 73
-        -height 38
+        -width 67
+        -height 34
         -manage 1
         -visible 1
         -preventOverride 0
         -annotation "Tool in Development" 
         -enableBackground 0
+        -backgroundColor 0 0 0 
         -highlightColor 0.321569 0.521569 0.65098 
         -align "center" 
         -label "gfAnimPicker" 
@@ -254,14 +278,17 @@ global proc shelf_gfToolsDev () {
     ;
     shelfButton
         -enableCommandRepeat 1
+        -flexibleWidthType 3
+        -flexibleWidthValue 64
         -enable 1
-        -width 73
-        -height 38
+        -width 67
+        -height 34
         -manage 1
         -visible 1
         -preventOverride 0
         -annotation "Tool in Development" 
         -enableBackground 0
+        -backgroundColor 0 0 0 
         -highlightColor 0.321569 0.521569 0.65098 
         -align "center" 
         -label "gfPoseLibrary" 
@@ -285,14 +312,17 @@ global proc shelf_gfToolsDev () {
     ;
     shelfButton
         -enableCommandRepeat 1
+        -flexibleWidthType 3
+        -flexibleWidthValue 64
         -enable 1
-        -width 73
-        -height 38
+        -width 67
+        -height 34
         -manage 1
         -visible 1
         -preventOverride 0
         -annotation "Tool in Development" 
         -enableBackground 0
+        -backgroundColor 0 0 0 
         -highlightColor 0.321569 0.521569 0.65098 
         -align "center" 
         -label "gfShotReview" 
@@ -316,14 +346,17 @@ global proc shelf_gfToolsDev () {
     ;
     shelfButton
         -enableCommandRepeat 1
+        -flexibleWidthType 3
+        -flexibleWidthValue 64
         -enable 1
-        -width 73
-        -height 38
+        -width 67
+        -height 34
         -manage 1
         -visible 1
         -preventOverride 0
         -annotation "Tool in Development" 
         -enableBackground 0
+        -backgroundColor 0 0 0 
         -highlightColor 0.321569 0.521569 0.65098 
         -align "center" 
         -label "gfMaterialLibrary" 
@@ -347,14 +380,17 @@ global proc shelf_gfToolsDev () {
     ;
     shelfButton
         -enableCommandRepeat 1
+        -flexibleWidthType 3
+        -flexibleWidthValue 64
         -enable 1
-        -width 73
-        -height 38
+        -width 67
+        -height 34
         -manage 1
         -visible 1
         -preventOverride 0
         -annotation "Tool in Development" 
         -enableBackground 0
+        -backgroundColor 0 0 0 
         -highlightColor 0.321569 0.521569 0.65098 
         -align "center" 
         -label "gfRenderQueue" 

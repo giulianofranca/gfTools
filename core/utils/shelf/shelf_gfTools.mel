@@ -1,0 +1,84 @@
+global proc shelf_gfTools () {
+    global string $gBuffStr;
+    global string $gBuffStr0;
+    global string $gBuffStr1;
+
+
+    shelfButton
+        -enableCommandRepeat 1
+        -flexibleWidthType 3
+        -flexibleWidthValue 32
+        -enable 1
+        -width 35
+        -height 34
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "import platform\nif platform.system() == \"Windows\":\n    cmds.loadPlugin(n=\"gfTools.mll\", qt=True)\nelif platform.syste() == \"Linux\":\n    cmds.loadPlugin(n=\"gfTools.so\", qt=True)\nelse:\n    cmds.loadPlugin(n=\"gfTools.bundle\", qt=True)" 
+        -enableBackground 0
+        -backgroundColor 0 0 0 
+        -highlightColor 0.321569 0.521569 0.65098 
+        -align "center" 
+        -label "LoadPlugin" 
+        -labelOffset 0
+        -rotation 0
+        -flipX 0
+        -flipY 0
+        -useAlpha 1
+        -font "plainLabelFont" 
+        -imageOverlayLabel "LoadPlugin" 
+        -overlayLabelColor 0.8 0.8 0.8 
+        -overlayLabelBackColor 0 0 0 0.5 
+        -image "pythonFamily.png" 
+        -image1 "pythonFamily.png" 
+        -style "iconOnly" 
+        -marginWidth 1
+        -marginHeight 1
+        -command "import platform\nif platform.system() == \"Windows\":\n    cmds.loadPlugin(n=\"gfTools.mll\", qt=True)\nelif platform.syste() == \"Linux\":\n    cmds.loadPlugin(n=\"gfTools.so\", qt=True)\nelse:\n    cmds.loadPlugin(n=\"gfTools.bundle\", qt=True)" 
+        -sourceType "python" 
+        -commandRepeatable 1
+        -flat 1
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -flexibleWidthType 3
+        -flexibleWidthValue 32
+        -enable 1
+        -width 35
+        -height 34
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "gfUtilitiesBelt" 
+        -enableBackground 0
+        -backgroundColor 0 0 0 
+        -highlightColor 0.321569 0.521569 0.65098 
+        -align "center" 
+        -label "gfUtilitiesBelt" 
+        -labelOffset 0
+        -rotation 0
+        -flipX 0
+        -flipY 0
+        -useAlpha 1
+        -font "plainLabelFont" 
+        -imageOverlayLabel "gfUtilitiesBelt" 
+        -overlayLabelColor 0.8 0.8 0.8 
+        -overlayLabelBackColor 0 0 0 0.5 
+        -image "pythonFamily.png" 
+        -image1 "pythonFamily.png" 
+        -style "iconOnly" 
+        -marginWidth 1
+        -marginHeight 1
+        -command "from gfUtilitiesBelt2 import gfUtilitiesBelt\nreload(gfUtilitiesBelt)\ngfUtilitiesBelt.main()" 
+        -sourceType "python" 
+        -commandRepeatable 1
+        -flat 1
+        -mi "Create Pocket" ( "print(\"Create a new pocket.\")" )
+        -mip 0
+        -mi "Load Pocket" ( "print(\"Load a pocket.\")" )
+        -mip 1
+        -mi "Update Libraries" ( "from gfUtilitiesBelt2.core import getMayaInfo\nreload(getMayaInfo)\ngetMayaInfo.updateMayaInfo()" )
+        -mip 2
+    ;
+
+} 
