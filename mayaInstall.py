@@ -114,8 +114,9 @@ def generateMod(info):
     else:
         appLine = "+ PLATFORM:mac MAYAVERSION:%s %s %s %s\n" % (kMayaVersion, info["Application"], info["Current Version"], info["Path"])
     lines.append(appLine)
+    lines.append("PYTHONPATH +:= core/widgets/python")
     lines.append("PYTHONPATH +:= tools/maya\n")
-    lines.append("PYTHONPATH +:= plug-ins/maya/AETemplates\n")
+    lines.append("MAYA_SCRIPT_PATH +:= plug-ins/maya/AETemplates\n")
     lines.append("MAYA_SCRIPT_PATH +:= tools/maya\n")
     lines.append("MAYA_PLUG_IN_PATH +:= plugin/maya/release/%s\n" % kMayaVersion)
     lines.append("MAYA_SHELF_PATH +:= core/utils/shelf\n")
