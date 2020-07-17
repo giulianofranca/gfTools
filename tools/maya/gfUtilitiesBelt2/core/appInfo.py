@@ -40,7 +40,7 @@ import maya.cmds as cmds
 
 
 kApplicationName = "gfUtilitiesBelt"
-kApplicationVersion = "1.0.09"
+kApplicationVersion = "1.0.11"
 kMinRequiredVersion = "1.0"
 kMayaVersion = cmds.about(v=True)
 

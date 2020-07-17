@@ -53,7 +53,7 @@ reload(pockets)
 kLastMayaInfoUpdate = None
 kLastMayaUsed = None
 kMayaInfoUpdateThreshold = 5
-kOpenedPockets = None
+kOpenedPockets = []
 kLastPocket = None
 kListView = False
 
@@ -98,19 +98,17 @@ def runStartConfigurations():
     Returns:
         OrderedDict: The settings dictionary.
     """
-    # TODO: Update Maya info after the ui loads
     # 1- Read settings file
     updateSettings()
     settings = readSettingsFile()
     appSettings = settings["Settings"]
 
-    # 2- Check the opened pockets and last pocket used. Check if they exist and is valid.
-    if settings["Opened Pockets"] is not None:
-        for pocket in settings["Opened Pockets"]:
-            status = pockets.Pocket.checkFile(pocket)
-            if not status:
-                sys.stdout.write("[%s] The file %s was not recognized as a valid Pocket file or doesn't exist. Operation skipped." % (appInfo.kApplicationName, pocket))
-                settings["Opened Pockets"].remove(pocket)
+    # 2- Check opened pockets and last pocket used. Check if they exist and is valid.
+    for pocket in settings["Opened Pockets"]:
+        status = pockets.Pocket.checkFile(pocket)
+        if not status:
+            sys.stdout.write("[%s] The file %s was not recognized as a valid Pocket file or doesn't exist. Operation skipped." % (appInfo.kApplicationName, pocket))
+            settings["Opened Pockets"].remove(pocket)
     if settings["Last Pocket Used"] is not None:
         lastPocketUsed = settings["Last Pocket Used"]
         status = pockets.Pocket.checkFile(lastPocketUsed)
@@ -120,6 +118,12 @@ def runStartConfigurations():
 
     # 3- Save settings file
     updateSettings(settings)
+
+    # 4- Convert pockets filepaths to pocket objects
+    for pocket in settings["Opened Pockets"]:
+        pocket = pockets.Pocket.fromFile(pocket)
+    if settings["Last Pocket Used"] is not None:
+        settings["Last Pocket Used"] = pockets.Pocket.fromFile(pocket)
 
     # 4- Return the settings dictionary
     return settings

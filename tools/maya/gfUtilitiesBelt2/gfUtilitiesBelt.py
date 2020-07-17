@@ -34,7 +34,7 @@ Sources:
     * https://help.autodesk.com/view/MAYAUL/2019/ENU/?guid=Maya_SDK_MERGED_Writing_Workspace_controls_html
     * https://help.autodesk.com/view/MAYAUL/2019/ENU/?guid=Maya_SDK_MERGED_Maya_Python_API_Working_with_PySide_in_Maya_PyQt_and_PySide_Widget_Best_html
     * https://gist.github.com/liorbenhorin/217bfb7e54c6f75b9b1b2b3d73a1a43a
-    * https://gist.github.com/liorbenhorin/69da10ec6f22c6d7b92deefdb4a4f475 <-- This
+    * https://gist.github.com/liorbenhorin/69da10ec6f22c6d7b92deefdb4a4f475
 
 This code supports Pylint. Rc file in project.
 """
@@ -52,6 +52,5 @@ reload(ui)
 def main():
     settings = config.runStartConfigurations()
     mainWin = ui.showWindow(settings)
-    # TODO: Add load plugin button in shelf
     # Open the gui with all settings
     # Capture the width and height before close the application
