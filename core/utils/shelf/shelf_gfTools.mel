@@ -14,7 +14,7 @@ global proc shelf_gfTools () {
         -manage 1
         -visible 1
         -preventOverride 0
-        -annotation "import platform\nif platform.system() == \"Windows\":\n    cmds.loadPlugin(n=\"gfTools.mll\", qt=True)\nelif platform.syste() == \"Linux\":\n    cmds.loadPlugin(n=\"gfTools.so\", qt=True)\nelse:\n    cmds.loadPlugin(n=\"gfTools.bundle\", qt=True)" 
+        -annotation "Load/Reload gfTools Plugin" 
         -enableBackground 0
         -backgroundColor 0 0 0 
         -highlightColor 0.321569 0.521569 0.65098 
@@ -26,11 +26,10 @@ global proc shelf_gfTools () {
         -flipY 0
         -useAlpha 1
         -font "plainLabelFont" 
-        -imageOverlayLabel "LoadPlugin" 
         -overlayLabelColor 0.8 0.8 0.8 
         -overlayLabelBackColor 0 0 0 0.5 
-        -image "pythonFamily.png" 
-        -image1 "pythonFamily.png" 
+        -image "C:/gfTools/core/utils/icons/gfToolsPlugin_icon32.png" 
+        -image1 "C:/gfTools/core/utils/icons/gfToolsPlugin_icon32.png" 
         -style "iconOnly" 
         -marginWidth 1
         -marginHeight 1
@@ -38,6 +37,19 @@ global proc shelf_gfTools () {
         -sourceType "python" 
         -commandRepeatable 1
         -flat 1
+    ;
+    separator
+        -enable 1
+        -width 12
+        -height 35
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -enableBackground 0
+        -backgroundColor 0 0 0 
+        -highlightColor 0.321569 0.521569 0.65098 
+        -style "shelf" 
+        -horizontal 0
     ;
     shelfButton
         -enableCommandRepeat 1
@@ -61,11 +73,10 @@ global proc shelf_gfTools () {
         -flipY 0
         -useAlpha 1
         -font "plainLabelFont" 
-        -imageOverlayLabel "gfUtilitiesBelt" 
         -overlayLabelColor 0.8 0.8 0.8 
         -overlayLabelBackColor 0 0 0 0.5 
-        -image "pythonFamily.png" 
-        -image1 "pythonFamily.png" 
+        -image "C:/gfTools/core/utils/icons/gfUtilitiesBelt_icon32.png" 
+        -image1 "C:/gfTools/core/utils/icons/gfUtilitiesBelt_icon32.png" 
         -style "iconOnly" 
         -marginWidth 1
         -marginHeight 1
