@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>GFUtilitiesBeltWidget</class>
- <widget class="QWidget" name="GFUtilitiesBeltWidget">
+ <class>GFUtilitiesBeltMain</class>
+ <widget class="QWidget" name="GFUtilitiesBeltMain">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -45,7 +45,7 @@
      </property>
      <layout class="QHBoxLayout" name="layTitleBar">
       <property name="spacing">
-       <number>8</number>
+       <number>16</number>
       </property>
       <property name="leftMargin">
        <number>8</number>
@@ -73,8 +73,23 @@
           <height>16</height>
          </size>
         </property>
+        <property name="font">
+         <font>
+          <family>Work Sans Medium</family>
+         </font>
+        </property>
+        <property name="cursor">
+         <cursorShape>PointingHandCursor</cursorShape>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">border:None</string>
+        </property>
         <property name="text">
          <string>Menu</string>
+        </property>
+        <property name="icon">
+         <iconset resource="resources.qrc">
+          <normaloff>:/icons/img/gfUtilitiesBelt_menu16.png</normaloff>:/icons/img/gfUtilitiesBelt_menu16.png</iconset>
         </property>
         <property name="checkable">
          <bool>true</bool>
@@ -95,8 +110,23 @@
           <height>16</height>
          </size>
         </property>
+        <property name="font">
+         <font>
+          <family>Work Sans Medium</family>
+         </font>
+        </property>
+        <property name="cursor">
+         <cursorShape>PointingHandCursor</cursorShape>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">border:None</string>
+        </property>
         <property name="text">
          <string>Search</string>
+        </property>
+        <property name="icon">
+         <iconset resource="resources.qrc">
+          <normaloff>:/icons/img/gfUtilitiesBelt_search16.png</normaloff>:/icons/img/gfUtilitiesBelt_search16.png</iconset>
         </property>
         <property name="checkable">
          <bool>true</bool>
@@ -117,8 +147,23 @@
           <height>16</height>
          </size>
         </property>
+        <property name="font">
+         <font>
+          <family>Work Sans Medium</family>
+         </font>
+        </property>
+        <property name="cursor">
+         <cursorShape>PointingHandCursor</cursorShape>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">border:None</string>
+        </property>
         <property name="text">
          <string>List View</string>
+        </property>
+        <property name="icon">
+         <iconset resource="resources.qrc">
+          <normaloff>:/icons/img/gfUtilitiesBelt_listView16.png</normaloff>:/icons/img/gfUtilitiesBelt_listView16.png</iconset>
         </property>
         <property name="checkable">
          <bool>true</bool>
@@ -167,13 +212,13 @@
         <property name="minimumSize">
          <size>
           <width>0</width>
-          <height>30</height>
+          <height>0</height>
          </size>
         </property>
         <property name="maximumSize">
          <size>
           <width>16777215</width>
-          <height>30</height>
+          <height>0</height>
          </size>
         </property>
         <property name="focusPolicy">
@@ -221,17 +266,296 @@
           <number>0</number>
          </property>
          <property name="leftMargin">
-          <number>24</number>
+          <number>0</number>
          </property>
          <property name="topMargin">
-          <number>24</number>
+          <number>0</number>
          </property>
          <property name="rightMargin">
-          <number>24</number>
+          <number>0</number>
          </property>
          <property name="bottomMargin">
-          <number>24</number>
+          <number>0</number>
          </property>
+         <item>
+          <widget class="QWidget" name="wdgSideMenuTitle" native="true">
+           <layout class="QVBoxLayout" name="laySideMenuTitle">
+            <property name="spacing">
+             <number>0</number>
+            </property>
+            <property name="leftMargin">
+             <number>8</number>
+            </property>
+            <property name="topMargin">
+             <number>24</number>
+            </property>
+            <property name="rightMargin">
+             <number>8</number>
+            </property>
+            <property name="bottomMargin">
+             <number>24</number>
+            </property>
+            <item>
+             <widget class="QPushButton" name="lblAppTitle">
+              <property name="font">
+               <font>
+                <family>Work Sans Light</family>
+                <pointsize>14</pointsize>
+                <weight>50</weight>
+                <bold>false</bold>
+               </font>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">border:None</string>
+              </property>
+              <property name="text">
+               <string/>
+              </property>
+              <property name="icon">
+               <iconset resource="resources.qrc">
+                <normaloff>:/icons/img/gfUtilitiesBelt_icon32.png</normaloff>:/icons/img/gfUtilitiesBelt_icon32.png</iconset>
+              </property>
+              <property name="iconSize">
+               <size>
+                <width>32</width>
+                <height>32</height>
+               </size>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="lblAppVersion">
+              <property name="font">
+               <font>
+                <family>Work Sans Light</family>
+               </font>
+              </property>
+              <property name="text">
+               <string/>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item>
+          <widget class="QWidget" name="wdgSideMenuArea" native="true">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <layout class="QVBoxLayout" name="laySideMenuArea">
+            <property name="spacing">
+             <number>8</number>
+            </property>
+            <property name="leftMargin">
+             <number>8</number>
+            </property>
+            <property name="topMargin">
+             <number>8</number>
+            </property>
+            <property name="rightMargin">
+             <number>8</number>
+            </property>
+            <property name="bottomMargin">
+             <number>8</number>
+            </property>
+            <item>
+             <widget class="QPushButton" name="btnAddPocket">
+              <property name="minimumSize">
+               <size>
+                <width>0</width>
+                <height>40</height>
+               </size>
+              </property>
+              <property name="font">
+               <font>
+                <family>Work Sans Medium</family>
+                <pointsize>12</pointsize>
+               </font>
+              </property>
+              <property name="cursor">
+               <cursorShape>PointingHandCursor</cursorShape>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">border:None</string>
+              </property>
+              <property name="text">
+               <string>Add Pocket</string>
+              </property>
+              <property name="icon">
+               <iconset resource="resources.qrc">
+                <normaloff>:/icons/img/gfUtilitiesBelt_addPocket32.png</normaloff>:/icons/img/gfUtilitiesBelt_addPocket32.png</iconset>
+              </property>
+              <property name="iconSize">
+               <size>
+                <width>32</width>
+                <height>32</height>
+               </size>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="btnEditPocket">
+              <property name="minimumSize">
+               <size>
+                <width>0</width>
+                <height>40</height>
+               </size>
+              </property>
+              <property name="font">
+               <font>
+                <family>Work Sans Medium</family>
+                <pointsize>12</pointsize>
+               </font>
+              </property>
+              <property name="cursor">
+               <cursorShape>PointingHandCursor</cursorShape>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">border:None</string>
+              </property>
+              <property name="text">
+               <string>Edit Pocket</string>
+              </property>
+              <property name="icon">
+               <iconset resource="resources.qrc">
+                <normaloff>:/icons/img/gfUtilitiesBelt_editPocket32.png</normaloff>:/icons/img/gfUtilitiesBelt_editPocket32.png</iconset>
+              </property>
+              <property name="iconSize">
+               <size>
+                <width>32</width>
+                <height>32</height>
+               </size>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="btnUpdateLibs">
+              <property name="minimumSize">
+               <size>
+                <width>0</width>
+                <height>40</height>
+               </size>
+              </property>
+              <property name="font">
+               <font>
+                <family>Work Sans Medium</family>
+                <pointsize>12</pointsize>
+               </font>
+              </property>
+              <property name="cursor">
+               <cursorShape>PointingHandCursor</cursorShape>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">border:None</string>
+              </property>
+              <property name="text">
+               <string>Update Libraries</string>
+              </property>
+              <property name="icon">
+               <iconset resource="resources.qrc">
+                <normaloff>:/icons/img/gfUtilitiesBelt_updateLibraries32.png</normaloff>:/icons/img/gfUtilitiesBelt_updateLibraries32.png</iconset>
+              </property>
+              <property name="iconSize">
+               <size>
+                <width>32</width>
+                <height>32</height>
+               </size>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="btnSettings">
+              <property name="minimumSize">
+               <size>
+                <width>0</width>
+                <height>40</height>
+               </size>
+              </property>
+              <property name="font">
+               <font>
+                <family>Work Sans Medium</family>
+                <pointsize>12</pointsize>
+               </font>
+              </property>
+              <property name="cursor">
+               <cursorShape>PointingHandCursor</cursorShape>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">border:None</string>
+              </property>
+              <property name="text">
+               <string>Settings</string>
+              </property>
+              <property name="icon">
+               <iconset resource="resources.qrc">
+                <normaloff>:/icons/img/gfUtilitiesBelt_settings32.png</normaloff>:/icons/img/gfUtilitiesBelt_settings32.png</iconset>
+              </property>
+              <property name="iconSize">
+               <size>
+                <width>32</width>
+                <height>32</height>
+               </size>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="btnAbout">
+              <property name="minimumSize">
+               <size>
+                <width>0</width>
+                <height>40</height>
+               </size>
+              </property>
+              <property name="font">
+               <font>
+                <family>Work Sans Medium</family>
+                <pointsize>12</pointsize>
+               </font>
+              </property>
+              <property name="cursor">
+               <cursorShape>PointingHandCursor</cursorShape>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">border:None</string>
+              </property>
+              <property name="text">
+               <string>About Application</string>
+              </property>
+              <property name="icon">
+               <iconset resource="resources.qrc">
+                <normaloff>:/icons/img/gfUtilitiesBelt_aboutApp32.png</normaloff>:/icons/img/gfUtilitiesBelt_aboutApp32.png</iconset>
+              </property>
+              <property name="iconSize">
+               <size>
+                <width>32</width>
+                <height>32</height>
+               </size>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item>
+          <spacer name="spcSideMenu">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>20</width>
+             <height>40</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
         </layout>
        </widget>
       </item>
@@ -256,6 +580,8 @@
    </item>
   </layout>
  </widget>
- <resources/>
+ <resources>
+  <include location="resources.qrc"/>
+ </resources>
  <connections/>
 </ui>

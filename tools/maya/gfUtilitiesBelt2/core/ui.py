@@ -37,6 +37,7 @@ This code supports Pylint. Rc file in project.
 """
 import sys
 import os
+import functools
 from PySide2 import QtCore
 from PySide2 import QtGui
 from PySide2 import QtWidgets
@@ -44,14 +45,18 @@ import maya.cmds as cmds
 
 import gfMayaWidgets
 import gfWidgets
+import gfLayouts
 from gfUtilitiesBelt2.core import appInfo
 from gfUtilitiesBelt2.core import config
 from gfUtilitiesBelt2.core import pockets
+from gfUtilitiesBelt2.core import resources
 reload(gfMayaWidgets)
 reload(gfWidgets)
+reload(gfLayouts)
 reload(appInfo)
 reload(config)
 reload(pockets)
+reload(resources)
 
 
 def showWindow(settings):
@@ -64,29 +69,45 @@ def showWindow(settings):
 # MAIN WINDOW CLASS
 
 class MainWin(gfMayaWidgets.GenericWidgetWin):
-    kUiFilePath = os.path.join(appInfo.kGUIPath, "win_main.ui")
-    kWindowName = "gfUtilitiesBeltWin"
+    kWindowName = "%sWin" % appInfo.kApplicationName
     kWindowLabel = "%s" % appInfo.kApplicationName
-    kWorkspaceName = "gfUtilitiesBeltDock"
+    kWorkspaceName = "%sDock" % appInfo.kApplicationName
     kWorkspaceOptions = "dtc=['ToolBox', 'right'], iw=281, wp='preferred', mw=True"
 
 
     def __init__(self, settings=None, parent=None):
+        self.kUiFilePath = os.path.join(appInfo.kGUIPath, "win_main.ui")
         super(MainWin, self).__init__(settings, parent)
         self.appConfig = settings
         self.appSettings = settings["Settings"]
         self.pockets = self.appConfig["Opened Pockets"]
+        self.listView = False           # TODO: Read from settings
+        # functools.partial(gfMayaWidgets.showMayaWidget, AboutWin, None)
 
         self.initUI()
 
-        cmds.evalDeferred(self.autoUpdateLibraries)
-
 
     def initUI(self):
+        # TODO: Load ui in center of the screen
+        self.ui.lblAppTitle.setText(appInfo.kApplicationName)
+        self.ui.lblAppVersion.setText("version %s" % appInfo.kApplicationVersion)
         self.ui.wdgSideMenu.setFixedWidth(0)
         self.ui.txtSearch.setFixedHeight(0)
         self.ui.btnMenu.clicked.connect(self.showSideMenu)
         self.ui.btnSearch.clicked.connect(self.showSearchField)
+        self.ui.btnListView.clicked.connect(self.toggleListView)
+        self.ui.btnAbout.clicked.connect(self.loadAboutWin)
+        if not self.appConfig["Opened Pockets"]:
+            self.generateTestPocket()
+            # self.generateHomePocket()
+
+        cmds.evalDeferred(self.autoUpdateLibraries)
+
+
+    def loadAboutWin(self):
+        print("Yep")
+        gfMayaWidgets.showMayaWidget(AboutWin)
+        print("Still yep")
 
 
     def resizeEvent(self, event):
@@ -103,14 +124,37 @@ class MainWin(gfMayaWidgets.GenericWidgetWin):
         
     def showSideMenu(self):
         if self.ui.btnMenu.isChecked():
-            self.ui.wdgSideMenu.setFixedWidth(self.width())
+            if issubclass(MainWin, gfMayaWidgets.GenericWidgetDock):
+                self.ui.wdgSideMenu.setFixedWidth(self.parentWidget().width())
+            else:
+                self.ui.wdgSideMenu.setFixedWidth(self.width())
+            # TODO: Animate this
+            self.ui.btnMenu.setIcon(QtGui.QIcon(":/icons/img/gfUtilitiesBelt_close16.png"))
+            self.ui.btnSearch.setVisible(False)
+            self.ui.btnListView.setVisible(False)
+            self.ui.txtSearch.setVisible(False)
         else:
             self.ui.wdgSideMenu.setFixedWidth(0)
+            # TODO: Animate this
+            self.ui.btnMenu.setIcon(QtGui.QIcon(":/icons/img/gfUtilitiesBelt_menu16.png"))
+            self.ui.btnSearch.setVisible(True)
+            self.ui.btnListView.setVisible(True)
+            self.ui.txtSearch.setVisible(True)
+
+
+    def toggleListView(self):
+        # TODO: Every time a pocket is showed update list view
+        if self.ui.btnListView.isChecked():
+            self.listView = True
+            self.ui.btnListView.setText("Icon View")
+            self.ui.btnListView.setIcon(QtGui.QIcon(":/icons/img/gfUtilitiesBelt_iconView16.png"))
+        else:
+            self.listView = False
+            self.ui.btnListView.setText("List View")
+            self.ui.btnListView.setIcon(QtGui.QIcon(":/icons/img/gfUtilitiesBelt_listView16.png"))
 
 
     def autoUpdateLibraries(self):
-        if not self.appConfig["Opened Pockets"]:
-            self.generateTestPocket()
         # TODO: Generate progress bar
         config.updateCheckMayaLibraries(self.appConfig)
 
@@ -147,19 +191,24 @@ class MainWin(gfMayaWidgets.GenericWidgetWin):
         scrTab.setFrameShape(QtWidgets.QFrame.NoFrame)
         wdgContent = QtWidgets.QWidget(scrTab)
         wdgContent.setObjectName("wdgContentHome")
-        layContent = QtWidgets.QVBoxLayout(wdgContent)
+        if self.listView:
+            layContent = QtWidgets.QVBoxLayout(wdgContent)
+        else:
+            # layContent = gfLayouts.FlowLayout(wdgContent)
+            layContent = QtWidgets.QVBoxLayout(wdgContent)
         layContent.setObjectName("layContentHome")
         layContent.setContentsMargins(8, 8, 8, 8)
         layContent.setSpacing(8)
         for i in range(30):
             testWdg = gfWidgets.ListIconButton(wdgContent)
             testWdg.setMinimumHeight(40)
-            testWdg.setText("Edit Mesh|Bevel".split("|")[-1])
+            testWdg.setText("Custom Tool".split("|")[-1])
+            # testWdg.setText("NS")
             testWdg.setDescription("Create a bevel along the selected edges or faces")
             testWdg.setToolTip(testWdg.description())
-            testWdg.setDisplayStyle(gfWidgets.ListIconButton.DisplayStyle.kIconStyle)
+            # testWdg.setDisplayStyle(gfWidgets.ListIconButton.DisplayStyle.kIconStyle)
+            testWdg.setDisplayStyle(gfWidgets.ListIconButton.DisplayStyle.kListStyle)
             layContent.addWidget(testWdg)
-        print(testWdg.size())
         scrTab.setWidget(wdgContent)
         layHome.addWidget(scrTab)
         self.ui.tabPockets.setTabsClosable(False)
@@ -211,9 +260,33 @@ class MainWin(gfMayaWidgets.GenericWidgetWin):
         return QtCore.QSize(281, 600)
 
 
-    def closeWorkspace(self):
-        sys.stdout.write("gfUtilitiesBelt closed.\n")
+    def closeEvent(self, event):
+        event.accept()
+        sys.stdout.write("%s closed.\n" % appInfo.kApplicationName)
+
+
 
 
 ########################################################################
-# EDIT POCKET WINDOW CLASS
+# ABOUT APPLICATION WINDOW CLASS
+
+class AboutWin(gfMayaWidgets.GenericDialogWin):
+    kWindowName = "%sAboutWin" % appInfo.kApplicationName
+    kWindowLabel = "%s" % appInfo.kApplicationName
+
+
+    def __init__(self, settings=None, parent=None):
+        self.kUiFilePath = os.path.join(appInfo.kGUIPath, "win_about.ui")
+        super(AboutWin, self).__init__(settings, parent)
+
+        self.initUI()
+
+
+    def initUI(self):
+        # TODO: Load ui in center of the screen
+        pass
+
+
+    def closeEvent(self, event):
+        event.accept()
+        sys.stdout.write("Closing about window.\n")

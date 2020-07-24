@@ -29,6 +29,23 @@ Requirements:
 
 Todo:
     * Add fade animations
+    * Custom Tools:
+        * Set background color
+        * Create parent constraint
+        * Create aim constraint
+        * Create space constraint (callback)
+        * Create rivet
+        * Mirror acrossPlane
+        * Get pole vector location
+        * Align objects to path
+        * Soft selection to cluster
+        * Switch object display
+        * Wire deformer to cluster
+        * Populate FK
+        * Make TX (Arnold and Renderman)
+        * Grouper (Zero out)
+        * Threadmill to worldspace
+        * Check symmetry
 
 Sources:
     * https://help.autodesk.com/view/MAYAUL/2019/ENU/?guid=Maya_SDK_MERGED_Writing_Workspace_controls_html
