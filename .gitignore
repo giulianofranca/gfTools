@@ -2,14 +2,14 @@
 __pycache__/
 .vs/
 .vscode/
-plug-ins/dev/cpp/build
+plugin/maya/dev/cpp/build
 core/_studies/testMayaPyExtension
 core/_studies/RigAPI
 
-# gfTools applications
-applications/gfUtilitiesBelt2/core/mayaData
-applications/gfUtilitiesBelt2/core/*.json
-applications/gfUtilitiesBelt2/pockets/*.gfpocket
+# gfTools tools
+tools/maya/gfUtilitiesBelt2/core/mayaData
+tools/maya/gfUtilitiesBelt2/core/*.json
+tools/maya/gfUtilitiesBelt2/pockets/*.gfpocket
 
 # Extensions
 *.pyc
