@@ -68,7 +68,7 @@ def showWindow(settings):
 ########################################################################
 # MAIN WINDOW CLASS
 
-class MainWin(gfMayaWidgets.GenericWidgetWin):
+class MainWin(gfMayaWidgets.GenericWidgetDock):
     kWindowName = "%sWin" % appInfo.kApplicationName
     kWindowLabel = "%s" % appInfo.kApplicationName
     kWorkspaceName = "%sDock" % appInfo.kApplicationName
@@ -106,7 +106,7 @@ class MainWin(gfMayaWidgets.GenericWidgetWin):
 
     def loadAboutWin(self):
         print("Yep")
-        gfMayaWidgets.showMayaWidget(AboutWin)
+        gfMayaWidgets.showMayaWidget(AboutWin, dict())
         print("Still yep")
 
 

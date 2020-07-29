@@ -133,10 +133,10 @@ class GenericWidgetWin(QtWidgets.QWidget):
         if int(version) < 2017:
             raise RuntimeError("Maya version not supported (%s)." % version)
 
-    @classmethod
-    def deleteWindow(cls):
-        if cmds.window(cls.kWindowName, q=True, ex=True):
-            cmds.deleteUI(cls.kWindowName)
+    # @classmethod
+    # def deleteWindow(cls):
+    #     if cmds.window(cls.kWindowName, q=True, ex=True):
+    #         cmds.deleteUI(cls.kWindowName)
 
 
 
@@ -162,26 +162,26 @@ class GenericWidgetDock(GenericWidgetWin):
         self.dockLayout = self.dockWidget.layout()
         self.dockLayout.addWidget(self.ui)
 
-    @classmethod
-    def deleteWindow(cls):
-        if cmds.workspaceControl(cls.kWorkspaceName, q=True, exists=True):
-            cmds.workspaceControl(cls.kWorkspaceName, e=True, close=True)
-            cmds.deleteUI(cls.kWorkspaceName, control=True)
+    # @classmethod
+    # def deleteWindow(cls):
+    #     if cmds.workspaceControl(cls.kWorkspaceName, q=True, exists=True):
+    #         cmds.workspaceControl(cls.kWorkspaceName, e=True, close=True)
+    #         cmds.deleteUI(cls.kWorkspaceName, control=True)
 
-    @classmethod
-    def dock(cls):
-        cls.deleteWindow()
-        command = "workspace = cmds.workspaceControl(cls.kWorkspaceName, %s, l=cls.kWindowLabel)" % cls.kWorkspaceOptions
-        exec command in globals(), locals()
-        workspacePtr = omui1.MQtUtil.findControl(workspace)
-        workspaceWidget = shiboken2.wrapInstance(long(workspacePtr), QtWidgets.QWidget)
-        workspaceWidget.setAttribute(QtCore.Qt.WA_DeleteOnClose, True)
-        return workspaceWidget
-
-
+    # @classmethod
+    # def dock(cls):
+    #     cls.deleteWindow()
+    #     command = "workspace = cmds.workspaceControl(cls.kWorkspaceName, %s, l=cls.kWindowLabel)" % cls.kWorkspaceOptions
+    #     exec command in globals(), locals()
+    #     workspacePtr = omui1.MQtUtil.findControl(workspace)
+    #     workspaceWidget = shiboken2.wrapInstance(long(workspacePtr), QtWidgets.QWidget)
+    #     workspaceWidget.setAttribute(QtCore.Qt.WA_DeleteOnClose, True)
+    #     return workspaceWidget
 
 
-class GenericDialogWin(QtWidgets.QDialog):
+
+
+class GenericDialogWin(QtWidgets.QWidget):
     kInstances = []
     kWindowName = None
     kWindowLabel = None
@@ -248,7 +248,7 @@ class GenericDialogWin(QtWidgets.QDialog):
 
 
 
-def showMayaWidget(widgetClass, settings=None):
+def showMayaWidget2(widgetClass, settings=None):
     # TODO: Delete deleteWindow() and dock() class methods
     widgetClass.deleteWindow()
     if issubclass(widgetClass, GenericWidgetDock):
@@ -263,6 +263,38 @@ def showMayaWidget(widgetClass, settings=None):
         win.show()
         win.activateWindow()
     return win
+
+
+
+
+def showMayaWidget(widgetClass, settings=None):
+    if issubclass(widgetClass, GenericWidgetDock):
+        if cmds.workspaceControl(widgetClass.kWorkspaceName, q=True, exists=True):
+            cmds.workspaceControl(widgetClass.kWorkspaceName, e=True, close=True)
+            cmds.deleteUI(widgetClass.kWorkspaceName, control=True)
+        command = "workspace = cmds.workspaceControl(widgetClass.kWorkspaceName, %s, l=widgetClass.kWindowLabel)" % widgetClass.kWorkspaceOptions
+        exec command in globals(), locals()
+        workspacePtr = omui1.MQtUtil.findControl(workspace)
+        parent = shiboken2.wrapInstance(long(workspacePtr), QtWidgets.QWidget)
+        parent.setAttribute(QtCore.Qt.WA_DeleteOnClose, True)
+    else:
+        if cmds.window(widgetClass.kWindowName, q=True, ex=True):
+            cmds.deleteUI(widgetClass.kWindowName)
+        if issubclass(widgetClass, GenericWidgetWin):
+            parent = shiboken2.wrapInstance(long(omui1.MQtUtil.mainWindow()), QtWidgets.QMainWindow)
+        else:
+            parent = None
+    win = widgetClass(settings, parent)
+    if issubclass(widgetClass, GenericWidgetDock):
+        parent.destroyed.connect(lambda: win.close())
+        # cmds.evalDeferred(lambda *args: cmds.workspaceControl(widgetClass.kWorkspaceName, e=True, rs=True))
+    else:
+        win.show()
+        win.activateWindow()
+    return win
+
+
+        
 
 
 
