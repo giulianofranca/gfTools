@@ -1,6 +1,7 @@
 import sys
 import os
 import json
+import stat
 import platform
 import shutil
 import subprocess
@@ -55,10 +56,11 @@ def getMayaVersion():
 
 def getMayaModulePath():
     sys.stdout.write("Checking Maya module path...\n")
-    matches = [kMayaVersion, "Common Files"]
     if windows():
+        matches = [kMayaVersion, "Common Files"]
         paths = os.environ["MAYA_MODULE_PATH"].split(";")
-    else:
+    elif linux():
+        matches = [kMayaVersion, os.environ["HOME"]]
         paths = os.environ["MAYA_MODULE_PATH"].split(":")
     path = None
     for modPath in paths:
@@ -68,6 +70,8 @@ def getMayaModulePath():
     if not path:
         emitModPathErrorMsg()
         return False
+    if not os.path.isdir(path):
+        os.mkdir(path)
     return os.path.abspath(path)
 
 def getAppInfo():
@@ -114,13 +118,11 @@ def generateMod(info):
     else:
         appLine = "+ PLATFORM:mac MAYAVERSION:%s %s %s %s\n" % (kMayaVersion, info["Application"], info["Current Version"], info["Path"])
     lines.append(appLine)
-    lines.append("PYTHONPATH +:= core/widgets/python")
+    lines.append("PYTHONPATH +:= core/widgets/python\n")
     lines.append("PYTHONPATH +:= tools/maya\n")
-    lines.append("MAYA_SCRIPT_PATH +:= plug-ins/maya/AETemplates\n")
-    lines.append("MAYA_SCRIPT_PATH +:= tools/maya\n")
+    lines.append("MAYA_SCRIPT_PATH +:= scripts/maya\n")
     lines.append("MAYA_PLUG_IN_PATH +:= plugin/maya/release/%s\n" % kMayaVersion)
-    lines.append("MAYA_SHELF_PATH +:= core/utils/shelf\n")
-    lines.append("XBMLANGPATH +:= core/utils/icons\n")
+    lines.append("MAYA_SHELF_PATH +:= scripts/maya/shelves\n")
     with open(fileName, "w") as f:
         f.writelines(lines)
     return fileName
@@ -152,7 +154,7 @@ def restartMaya():
         if windows():
             mayaExec = os.path.abspath(os.path.join(mayaDir, "maya.exe"))
         elif linux():
-            mayaExec = os.path.abspath(os.path.join(mayaDir, "maya.bin"))
+            mayaExec = os.path.abspath(os.path.join(mayaDir, "maya"))
         curScene = cmds.file(q=True, sn=True)
         command = 'confirmDialog -t "%s" -m "gfTools uninstalled successfully!" -b "Ok" -icn "information";' % kDialogTitle
         if windows():
@@ -245,7 +247,7 @@ def installWindows():
         emitCancelMsg()
         return
     sys.stdout.write("\nInstalling gfTools for Autodesk Maya %s.\n" % kMayaVersion)
-    sys.stdout.write("Current platform: Windows %s\n" % platform.release())
+    sys.stdout.write("Current platform: %s %s\n" % (platform.system(), platform.release()))
     # 1- Get current Maya version.
     status = getMayaVersion()
     if not status:
@@ -314,7 +316,7 @@ def installLinux():
         emitCancelMsg()
         return
     sys.stdout.write("\nInstalling gfTools for Autodesk Maya %s.\n" % kMayaVersion)
-    sys.stdout.write("Current platform: Linux %s\n" % (" ".join(platform.dist()[:2]).title()))
+    sys.stdout.write("Current platform: %s %s\n" % (platform.system(), (" ".join(platform.dist()[:2]).title())))
     # 1- Get current Maya version.
     status = getMayaVersion()
     if not status:
@@ -325,7 +327,30 @@ def installLinux():
         return
     sys.stdout.write("Maya module path: %s\n" % modPath)
     # 3- Get gfTools information (directory, appName, version).
+    appInfo = getAppInfo()
+    if not appInfo:
+        return
+    appInfo["Path"] = kAppPath
+    sys.stdout.write("gfTools version: %s\n" % appInfo["Current Version"])
     sys.stdout.write("gfTools directory path: %s\n" % kAppPath)
     # 4- Generate the mod file.
+    status = checkMod(modPath)
+    if status:
+        emitAppInstalledMsg()
+        return
+    modFile = generateMod(appInfo)
     # 5- Copy the generated mod file to Maya mod path, if it doesn't exists.
-    # 6- Restart Maya?
+    status = installModFile(modFile, modPath)
+    if not status:
+        return
+    # 6- Delete leftover file.
+    sys.stdout.write("Cleaning leftover files...\n")
+    os.remove(modFile)
+    # 7- Prompt to restart Maya.
+    status = emitInstallCompleteMsg()
+    if status:
+        status = saveScene()
+        if status:
+            restartMaya()
+    else:
+        emitCancelRestartMsg()
