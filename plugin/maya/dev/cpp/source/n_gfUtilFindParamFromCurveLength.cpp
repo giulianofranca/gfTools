@@ -41,7 +41,7 @@ MStatus FindParamFromLength::initialize(){
     MFnNumericAttribute nAttr;
     MFnUnitAttribute uAttr;
 
-    inCurve = tAttr.create("inputCurve", "icrv", MFnData::kNurbsCurve, &status);
+    inCurve = tAttr.create("inputCurve", "icrv", MFnData::kNurbsCurve, MObject::kNullObj, &status);
     INPUT_ATTR(tAttr);
 
     inArcLength = uAttr.create("arcLength", "length", MFnUnitAttribute::kDistance, 0.0, &status);

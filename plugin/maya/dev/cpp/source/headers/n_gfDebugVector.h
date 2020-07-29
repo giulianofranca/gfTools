@@ -67,6 +67,9 @@ Sources:
 #ifdef _WIN64
 #define _USE_MATH_DEFINES
 #endif
+#ifdef __linux__
+#include <GL/gl.h>
+#endif
 #include <cmath>
 #include <assert.h>
 
@@ -96,7 +99,6 @@ Sources:
 #include <maya/MEventMessage.h>
 
 using namespace std;
-
 
 class DebugVector : public MPxLocatorNode{
 public:

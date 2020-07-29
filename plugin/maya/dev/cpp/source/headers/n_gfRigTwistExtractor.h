@@ -62,6 +62,7 @@ Sources:
 #include <cstdint>
 #include <vector>
 #include <numeric>
+#include <algorithm>
 
 #include <maya/MPxNode.h>
 

@@ -273,6 +273,7 @@ void DebugVector::draw(M3dView & view, const MDagPath &,
         * style [M3dView.DisplayStyle] is the style to draw object in.
         * status [M3dView.DisplayStatus] is the selection status of the object.
     */
+#if MAYA_API_VERSION <= 20180000
     MObject thisMob = thisMObject();
     float lineW = MPlug(thisMob, inLineWidth).asFloat();
     MFloatVector color = MPlug(thisMob, inColor).asMDataHandle().asFloatVector();
@@ -347,6 +348,7 @@ void DebugVector::draw(M3dView & view, const MDagPath &,
     glLineWidth(1.0f);
 
     view.endGL();
+#endif
 }
 
 bool DebugVector::isBounded() const

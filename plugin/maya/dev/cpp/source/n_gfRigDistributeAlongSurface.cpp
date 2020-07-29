@@ -44,7 +44,7 @@ MStatus DistributeAlongSurface::initialize(){
     MFnNumericAttribute nAttr;
     MFnMatrixAttribute mAttr;
 
-    inSurface = tAttr.create("inputSurface", "isurf", MFnData::kNurbsSurface, &status);
+    inSurface = tAttr.create("inputSurface", "isurf", MFnData::kNurbsSurface, MObject::kNullObj, &status);
     INPUT_ATTR(tAttr);
 
     inDistributeAlong = eAttr.create("distributeAlong", "da", 0, &status);

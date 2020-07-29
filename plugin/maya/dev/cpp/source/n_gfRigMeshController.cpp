@@ -50,13 +50,13 @@ MStatus MeshController::initialize(){
     MFnTypedAttribute tAttr;
     MFnNumericAttribute nAttr;
 
-    inIndexList = tAttr.create("indexList", "index", MFnData::kString, &status);
+    inIndexList = tAttr.create("indexList", "index", MFnData::kString, MObject::kNullObj, &status);
     INPUT_ATTR(tAttr);
 
     inOffset = nAttr.create("offset", "offset", MFnNumericData::kFloat, 0.0f, &status);
     INPUT_ATTR(nAttr);
 
-    inMesh = tAttr.create("controlMesh", "controlMesh", MFnData::kMesh, &status);
+    inMesh = tAttr.create("controlMesh", "controlMesh", MFnData::kMesh, MObject::kNullObj, &status);
     INPUT_ATTR(tAttr);
 
     inColor = nAttr.createColor("color", "color", &status);
