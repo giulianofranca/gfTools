@@ -28,8 +28,8 @@ global proc shelf_gfTools () {
         -font "plainLabelFont" 
         -overlayLabelColor 0.8 0.8 0.8 
         -overlayLabelBackColor 0 0 0 0.5 
-        -image "C:/gfTools/core/utils/icons/gfToolsPlugin_icon32.png" 
-        -image1 "C:/gfTools/core/utils/icons/gfToolsPlugin_icon32.png" 
+        -image "gfToolsPlugin_icon32.png" 
+        -image1 "gfToolsPlugin_icon32.png" 
         -style "iconOnly" 
         -marginWidth 1
         -marginHeight 1
@@ -75,8 +75,8 @@ global proc shelf_gfTools () {
         -font "plainLabelFont" 
         -overlayLabelColor 0.8 0.8 0.8 
         -overlayLabelBackColor 0 0 0 0.5 
-        -image "C:/gfTools/core/utils/icons/gfUtilitiesBelt_icon32.png" 
-        -image1 "C:/gfTools/core/utils/icons/gfUtilitiesBelt_icon32.png" 
+        -image "gfUtilitiesBelt_icon32.png" 
+        -image1 "gfUtilitiesBelt_icon32.png" 
         -style "iconOnly" 
         -marginWidth 1
         -marginHeight 1
