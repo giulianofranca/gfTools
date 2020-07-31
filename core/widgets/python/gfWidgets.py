@@ -44,9 +44,15 @@ reload(resources)
 
 
 
-workSans = ":/fonts/WorkSans-Thin.ttf"
-if workSans not in QtGui.QFontDatabase().families():
-    QtGui.QFontDatabase.addApplicationFont(workSans)
+fonts = [
+    ":/fonts/fonts/WorkSans-Light.ttf",
+    ":/fonts/fonts/WorkSans-Medium.ttf",
+    ":/fonts/fonts/WorkSans-Regular.ttf",
+    ":/fonts/fonts/WorkSans-SemiBold.ttf"
+]
+for font in fonts:
+    if font not in QtGui.QFontDatabase().families():
+        QtGui.QFontDatabase.addApplicationFont(font)
 
 
 
@@ -283,7 +289,6 @@ class DialogButton(QtWidgets.QPushButton):
 
     def __init__(self, text=None, parent=None):
         super(DialogButton, self).__init__(parent)
-        self._icon = QtGui.QImage(":/icons/img/gfUtilitiesBelt_python32.png")
         self._text = "" if text is None else text
         self._radius = 12
         self._style = DialogButton.DisplayStyle.kSecondaryPriority
@@ -300,20 +305,30 @@ class DialogButton(QtWidgets.QPushButton):
         self._style = style
 
 
-    def icon(self):
-        return self._icon
-
-
-    def setIcon(self, icon):
-        self._icon = icon
-
-
     def text(self):
         return self._text
 
 
     def setText(self, text):
         self._text = text
+
+
+    def color(self):
+        return self._color
+
+
+    def setColor(self, color):
+        self._color = color
+        self.repaint(self.rect())
+
+
+    def radius(self):
+        return self._radius
+
+
+    def setRadius(self, radius):
+        self._radius = radius
+        self.repaint(self.rect())
 
 
     def sizeHint(self):
