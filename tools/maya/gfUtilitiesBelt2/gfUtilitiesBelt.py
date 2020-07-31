@@ -46,6 +46,7 @@ Todo:
         * Grouper (Zero out)
         * Threadmill to worldspace
         * Check symmetry
+        * Bake rig to joints (bones)
 
 Sources:
     * https://help.autodesk.com/view/MAYAUL/2019/ENU/?guid=Maya_SDK_MERGED_Writing_Workspace_controls_html

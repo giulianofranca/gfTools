@@ -506,7 +506,7 @@
              </widget>
             </item>
             <item>
-             <widget class="QPushButton" name="btnAbout">
+             <widget class="QPushButton" name="btnAboutApp">
               <property name="minimumSize">
                <size>
                 <width>0</width>

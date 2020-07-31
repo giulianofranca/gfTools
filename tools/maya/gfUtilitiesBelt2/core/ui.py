@@ -43,23 +43,33 @@ from PySide2 import QtGui
 from PySide2 import QtWidgets
 import maya.cmds as cmds
 
-import gfMayaWidgets
-import gfWidgets
-import gfLayouts
 from gfUtilitiesBelt2.core import appInfo
 from gfUtilitiesBelt2.core import config
 from gfUtilitiesBelt2.core import pockets
 from gfUtilitiesBelt2.core import resources
-reload(gfMayaWidgets)
-reload(gfWidgets)
-reload(gfLayouts)
+import gfMayaWidgets
+import gfWidgets
+import gfLayouts
 reload(appInfo)
 reload(config)
 reload(pockets)
 reload(resources)
+reload(gfMayaWidgets)
+reload(gfWidgets)
+reload(gfLayouts)
 
 
 def showWindow(settings):
+    fonts = [
+    ":/fonts/fonts/WorkSans-Light.ttf",
+    ":/fonts/fonts/WorkSans-Medium.ttf",
+    ":/fonts/fonts/WorkSans-Regular.ttf",
+    ":/fonts/fonts/WorkSans-SemiBold.ttf"
+    ]
+    for font in fonts:
+        if font not in QtGui.QFontDatabase().families():
+            QtGui.QFontDatabase.addApplicationFont(font)
+
     win = gfMayaWidgets.showMayaWidget(MainWin, settings)
     return win
 
@@ -69,20 +79,19 @@ def showWindow(settings):
 # MAIN WINDOW CLASS
 
 class MainWin(gfMayaWidgets.GenericWidgetDock):
+    kUiFilePath = os.path.join(appInfo.kGUIPath, "win_main.ui")
     kWindowName = "%sWin" % appInfo.kApplicationName
     kWindowLabel = "%s" % appInfo.kApplicationName
     kWorkspaceName = "%sDock" % appInfo.kApplicationName
     kWorkspaceOptions = "dtc=['ToolBox', 'right'], iw=281, wp='preferred', mw=True"
 
 
-    def __init__(self, settings=None, parent=None):
-        self.kUiFilePath = os.path.join(appInfo.kGUIPath, "win_main.ui")
-        super(MainWin, self).__init__(settings, parent)
-        self.appConfig = settings
-        self.appSettings = settings["Settings"]
+    def __init__(self, data=None, parent=None):
+        super(MainWin, self).__init__(data, parent)
+        self.appConfig = data
+        self.appSettings = data["Settings"]
         self.pockets = self.appConfig["Opened Pockets"]
         self.listView = False           # TODO: Read from settings
-        # functools.partial(gfMayaWidgets.showMayaWidget, AboutWin, None)
 
         self.initUI()
 
@@ -96,7 +105,7 @@ class MainWin(gfMayaWidgets.GenericWidgetDock):
         self.ui.btnMenu.clicked.connect(self.showSideMenu)
         self.ui.btnSearch.clicked.connect(self.showSearchField)
         self.ui.btnListView.clicked.connect(self.toggleListView)
-        self.ui.btnAbout.clicked.connect(self.loadAboutWin)
+        self.ui.btnAboutApp.clicked.connect(self.loadAboutWin)
         if not self.appConfig["Opened Pockets"]:
             self.generateTestPocket()
             # self.generateHomePocket()
@@ -105,9 +114,7 @@ class MainWin(gfMayaWidgets.GenericWidgetDock):
 
 
     def loadAboutWin(self):
-        print("Yep")
-        gfMayaWidgets.showMayaWidget(AboutWin, dict())
-        print("Still yep")
+        gfMayaWidgets.execMayaWidget(AboutWin)
 
 
     def resizeEvent(self, event):
@@ -271,22 +278,29 @@ class MainWin(gfMayaWidgets.GenericWidgetDock):
 # ABOUT APPLICATION WINDOW CLASS
 
 class AboutWin(gfMayaWidgets.GenericDialogWin):
+    kUiFilePath = os.path.join(appInfo.kGUIPath, "win_about.ui")
     kWindowName = "%sAboutWin" % appInfo.kApplicationName
-    kWindowLabel = "%s" % appInfo.kApplicationName
+    kWindowLabel = "About"
 
 
-    def __init__(self, settings=None, parent=None):
-        self.kUiFilePath = os.path.join(appInfo.kGUIPath, "win_about.ui")
-        super(AboutWin, self).__init__(settings, parent)
+    def __init__(self, data=None, parent=None):
+        super(AboutWin, self).__init__(data, parent)
 
         self.initUI()
 
 
     def initUI(self):
-        # TODO: Load ui in center of the screen
-        pass
+        self.setWindowFlags(QtCore.Qt.Tool)
+        self.ui.lblAppTitle.setText(appInfo.kApplicationName)
+        self.ui.lblAppVersion.setText("version %s" % appInfo.kApplicationVersion)
+        self.closeBtn = gfWidgets.DialogButton("Close", self)
+        self.closeBtn.setFixedHeight(30)
+        self.closeBtn.setColor(QtGui.QColor(200, 200, 200))
+        self.closeBtn.setRadius(8)
+        self.closeBtn.setDisplayStyle(gfWidgets.DialogButton.DisplayStyle.kMainPriority)
+        self.closeBtn.clicked.connect(lambda: self.close())
+        self.ui.layCloseButton.addWidget(self.closeBtn)
 
 
-    def closeEvent(self, event):
-        event.accept()
-        sys.stdout.write("Closing about window.\n")
+    def sizeHint(self):
+        return QtCore.QSize(400, 300)
