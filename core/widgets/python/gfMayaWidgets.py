@@ -32,6 +32,9 @@ How to use:
             def sizeHint(self):
                 return QtCore.QSize(300, 600)
 
+            def spawnOnCenter(self):
+                return True
+
             def closeEvent(self, event):
                 print("Application closed.")
 
@@ -54,7 +57,7 @@ Functions:
     * execMayaWidget(widgetClass, data=None)
 
 Todo:
-    * Make ability to not use a .ui file
+    * NDA
 
 Sources:
     * https://gist.github.com/liorbenhorin/69da10ec6f22c6d7b92deefdb4a4f475
@@ -70,31 +73,35 @@ from PySide2 import QtWidgets
 from PySide2 import QtUiTools
 import maya.cmds as cmds
 import maya.OpenMayaUI as omui1
+import maya.app.general.mayaMixin as mxin
 
 
-class GenericWidgetWin(QtWidgets.QWidget):
-    
-    def __new__(cls, data=None, parent=None):
+class GenericWidgetWin(mxin.MayaQWidgetBaseMixin, QtWidgets.QWidget):
+
+    def __new__(cls, parent=None, **kwargs):
         version = cmds.about(version=True)
         if int(version) < 2017:
             raise RuntimeError("Maya version not supported (%s)." % version)
         return super(GenericWidgetWin, cls).__new__(cls)
 
-    def __init__(self, data=None, parent=None):
-        super(GenericWidgetWin, self).__init__(parent)
+    def __init__(self, parent=None, **kwargs):
+        super(GenericWidgetWin, self).__init__(parent=parent)
         self.setObjectName(self.kWindowName)
         self.setWindowTitle(self.kWindowLabel)
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose, True)
 
-        self.checkUiFile()
-        self.loadUiFile()
+        if hasattr(self, "kUiFilePath"):
+            self.checkUiFile()
+            self.loadUiFile()
+        if self.spawnOnCenter():
+            self.moveToCenterScreen()
 
     @staticmethod
     def _checkDependencies(obj):
-        attrs = ["kUiFilePath", "kWindowName", "kWindowLabel"]
+        attrs = ["kWindowName", "kWindowLabel"]
         for attr in attrs:
             if not hasattr(obj, attr):
-                msg = msg = "Class attribute <%s.%s> don't exists. You have to define it in order to use GenericWidgetWin." % (obj.__name__, attr)
+                msg = "Class attribute <%s.%s> don't exists. You have to define it in order to use GenericWidgetWin." % (obj.__name__, attr)
                 raise AttributeError(msg)
             else:
                 cmd = "typeMatch = isinstance(obj.%s, str)" % attr
@@ -103,90 +110,11 @@ class GenericWidgetWin(QtWidgets.QWidget):
                     msg = "Class attribute <%s.%s> must be a string." % (obj.__name__, attr)
                     raise AttributeError(msg)
 
-    def checkUiFile(self):
-        if self.kUiFilePath is None or not os.path.isfile(self.kUiFilePath):
-            raise RuntimeError("Ui file not founded.")
+    def spawnOnCenter(self):
+        return True
 
-    def loadUiFile(self):
-        loader = QtUiTools.QUiLoader()
-        uiFile = QtCore.QFile(self.kUiFilePath)
-        uiFile.open(QtCore.QFile.ReadOnly)
-        self.ui = loader.load(uiFile, self)
-        uiFile.close()
-        self.mainLayout = QtWidgets.QHBoxLayout(self)
-        self.mainLayout.setContentsMargins(0, 0, 0, 0)
-        self.mainLayout.setSpacing(0)
-        self.setLayout(self.mainLayout)
-        self.mainLayout.addWidget(self.ui)
-
-
-
-
-class GenericWidgetDock(GenericWidgetWin):
-    kWorkspaceName = None
-    kWorkspaceOptions = None
-
-    def __init__(self, data=None, parent=None):
-        self.dockWidget = parent
-        super(GenericWidgetDock, self).__init__(data, parent)
-
-    @staticmethod
-    def _checkDependencies(obj):
-        attrs = ["kUiFilePath", "kWindowName", "kWindowLabel", "kWorkspaceName", "kWorkspaceOptions"]
-        for attr in attrs:
-            if not hasattr(obj, attr):
-                msg = msg = "Class attribute <%s.%s> don't exists. You have to define it in order to use GenericWidgetWin." % (obj.__name__, attr)
-                raise AttributeError(msg)
-            else:
-                cmd = "typeMatch = isinstance(obj.%s, str)" % attr
-                exec cmd
-                if not typeMatch:
-                    msg = "Class attribute <%s.%s> must be a string." % (obj.__name__, attr)
-                    raise AttributeError(msg)
-
-    def loadUiFile(self):
-        loader = QtUiTools.QUiLoader()
-        uiFile = QtCore.QFile(self.kUiFilePath)
-        uiFile.open(QtCore.QFile.ReadOnly)
-        self.ui = loader.load(uiFile, self)
-        uiFile.close()
-        self.mainLayout = self.dockWidget.layout()
-        self.mainLayout.addWidget(self.ui)
-
-
-
-
-class GenericDialogWin(QtWidgets.QDialog):
-
-    def __new__(cls, data=None, parent=None):
-        version = cmds.about(version=True)
-        if int(version) < 2017:
-            raise RuntimeError("Maya version not supported (%s)." % version)
-        return super(GenericDialogWin, cls).__new__(cls)
-
-    def __init__(self, data=None, parent=None):
-        super(GenericDialogWin, self).__init__(parent)
-        self.setObjectName(self.kWindowName)
-        self.setWindowTitle(self.kWindowLabel)
-        self.setAttribute(QtCore.Qt.WA_DeleteOnClose, True)
-
-        self.checkUiFile()
-        self.loadUiFile()
-        self.moveToCenterScreen()
-
-    @staticmethod
-    def _checkDependencies(obj):
-        attrs = ["kUiFilePath", "kWindowName", "kWindowLabel"]
-        for attr in attrs:
-            if not hasattr(obj, attr):
-                msg = "Class attribute <%s.%s> don't exists. You have to define it in order to use GenericDialogWin." % (obj.__name__, attr)
-                raise AttributeError(msg)
-            else:
-                cmd = "typeMatch = isinstance(obj.%s, str)" % attr
-                exec cmd
-                if not typeMatch:
-                    msg = "Class attribute <%s.%s> must be a string." % (obj.__name__, attr)
-                    raise AttributeError(msg)
+    def sizeHint(self):
+        return QtCore.QSize(640, 480)
 
     def checkUiFile(self):
         if self.kUiFilePath is None or not os.path.isfile(self.kUiFilePath):
@@ -207,27 +135,125 @@ class GenericDialogWin(QtWidgets.QDialog):
     def moveToCenterScreen(self):
         screenGeo = QtGui.QGuiApplication.screens()[0].geometry()
         center = screenGeo.center()
-        self.move(center.x() - self.ui.width() * 0.5, center.y() - self.ui.height() * 0.5)
+        self.move(center.x() - self.sizeHint().width() * 0.5, center.y() - self.sizeHint().height() * 0.5)
 
 
 
 
-def showMayaWidget(widgetClass, data=None):
+class GenericWidgetDock(GenericWidgetWin):
+
+    def __init__(self, parent=None, **kwargs):
+        super(GenericWidgetDock, self).__init__(parent=parent)
+
+    @staticmethod
+    def _checkDependencies(obj):
+        attrs = ["kWindowName", "kWindowLabel", "kWorkspaceName", "kWorkspaceOptions"]
+        for attr in attrs:
+            if not hasattr(obj, attr):
+                msg = msg = "Class attribute <%s.%s> don't exists. You have to define it in order to use GenericWidgetDock." % (obj.__name__, attr)
+                raise AttributeError(msg)
+            else:
+                cmd = "typeMatch = isinstance(obj.%s, str)" % attr
+                exec cmd
+                if not typeMatch:
+                    msg = "Class attribute <%s.%s> must be a string." % (obj.__name__, attr)
+                    raise AttributeError(msg)
+
+    def sizeHint(self):
+        # Don't pass any size hint
+        pass
+
+    def loadUiFile(self):
+        loader = QtUiTools.QUiLoader()
+        uiFile = QtCore.QFile(self.kUiFilePath)
+        uiFile.open(QtCore.QFile.ReadOnly)
+        self.ui = loader.load(uiFile, self)
+        uiFile.close()
+        self.mainLayout = self.parent().layout()
+        self.mainLayout.addWidget(self.ui)
+
+    def moveToCenterScreen(self):
+        # Don't move the window
+        pass
+
+
+
+
+class GenericDialogWin(QtWidgets.QDialog):
+
+    def __new__(cls, parent=None, **kwargs):
+        version = cmds.about(version=True)
+        if int(version) < 2017:
+            raise RuntimeError("Maya version not supported (%s)." % version)
+        return super(GenericDialogWin, cls).__new__(cls)
+
+    def __init__(self, parent=None, **kwargs):
+        super(GenericDialogWin, self).__init__(parent=parent)
+        self.setObjectName(self.kWindowName)
+        self.setWindowTitle(self.kWindowLabel)
+        self.setAttribute(QtCore.Qt.WA_DeleteOnClose, True)
+
+        if hasattr(self, "kUiFilePath"):
+            self.checkUiFile()
+            self.loadUiFile()
+        self.moveToCenterScreen()
+
+    @staticmethod
+    def _checkDependencies(obj):
+        attrs = ["kWindowName", "kWindowLabel"]
+        for attr in attrs:
+            if not hasattr(obj, attr):
+                msg = "Class attribute <%s.%s> don't exists. You have to define it in order to use GenericWidgetWin." % (obj.__name__, attr)
+                raise AttributeError(msg)
+            else:
+                cmd = "typeMatch = isinstance(obj.%s, str)" % attr
+                exec cmd
+                if not typeMatch:
+                    msg = "Class attribute <%s.%s> must be a string." % (obj.__name__, attr)
+                    raise AttributeError(msg)
+
+    def sizeHint(self):
+        return QtCore.QSize(400, 300)
+
+    def checkUiFile(self):
+        if self.kUiFilePath is None or not os.path.isfile(self.kUiFilePath):
+            raise RuntimeError("Ui file not founded.")
+
+    def loadUiFile(self):
+        loader = QtUiTools.QUiLoader()
+        uiFile = QtCore.QFile(self.kUiFilePath)
+        uiFile.open(QtCore.QFile.ReadOnly)
+        self.ui = loader.load(uiFile, self)
+        uiFile.close()
+        self.mainLayout = QtWidgets.QHBoxLayout(self)
+        self.mainLayout.setContentsMargins(0, 0, 0, 0)
+        self.mainLayout.setSpacing(0)
+        self.setLayout(self.mainLayout)
+        self.mainLayout.addWidget(self.ui)
+
+    def moveToCenterScreen(self):
+        screenGeo = QtGui.QGuiApplication.screens()[0].geometry()
+        center = screenGeo.center()
+        self.move(center.x() - self.sizeHint().width() * 0.5, center.y() - self.sizeHint().height() * 0.5)
+
+
+
+
+def showMayaWidget(widgetClass, **kwargs):
     widgetClass._checkDependencies(widgetClass)
     if issubclass(widgetClass, GenericWidgetDock):
         if cmds.workspaceControl(widgetClass.kWorkspaceName, q=True, ex=True):
-            cmds.workspaceControl(widgetClass.kWorkspaceName, q=True, close=True)
-            cmds.deleteUI(widgetClass.kWorkspaceName, control=True)
+            cmds.deleteUI(widgetClass.kWorkspaceName, ctl=True)
         cmd = "workspace = cmds.workspaceControl(widgetClass.kWorkspaceName, %s, l=widgetClass.kWindowLabel)" % widgetClass.kWorkspaceOptions
         exec cmd in globals(), locals()
         workspacePtr = omui1.MQtUtil.findControl(workspace)
         parent = shiboken2.wrapInstance(long(workspacePtr), QtWidgets.QWidget)
         parent.setAttribute(QtCore.Qt.WA_DeleteOnClose, True)
+        kwargs["parent"] = parent
     else:
         if cmds.window(widgetClass.kWindowName, q=True, ex=True):
             cmds.deleteUI(widgetClass.kWindowName)
-        parent = shiboken2.wrapInstance(long(omui1.MQtUtil.mainWindow()), QtWidgets.QMainWindow)
-    win = widgetClass(data, parent)
+    win = widgetClass(**kwargs)
     if issubclass(widgetClass, GenericWidgetDock):
         parent.destroyed.connect(lambda: win.close())
     else:
@@ -238,10 +264,15 @@ def showMayaWidget(widgetClass, data=None):
 
 
 
-def execMayaWidget(widgetClass, data=None):
+def openMayaDialog(widgetClass, **kwargs):
     widgetClass._checkDependencies(widgetClass)
-    if issubclass(widgetClass, GenericWidgetDock):
-        raise RuntimeError("Window inherited by <GenericWidgetDock> cannot be executed in execMayaWidget().")
-    parent = shiboken2.wrapInstance(long(omui1.MQtUtil.mainWindow()), QtWidgets.QMainWindow)
-    win = widgetClass(data, parent)
-    win.exec_()
+    if not issubclass(widgetClass, GenericDialogWin):
+        raise RuntimeError("Only windows inherited by <GenericDialogWin> can be executed in openMayaDialog().")
+    if cmds.window(widgetClass.kWindowName, q=True, ex=True):
+        cmds.deleteUI(widgetClass.kWindowName)
+    if "parent" not in kwargs.keys():
+        mayaWinPtr = omui1.MQtUtil.mainWindow()
+        mayaWin = shiboken2.wrapInstance(long(mayaWinPtr), QtWidgets.QMainWindow)
+        kwargs["parent"] = mayaWin
+    win = widgetClass(**kwargs)
+    win.open()
