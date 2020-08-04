@@ -70,7 +70,7 @@ def showWindow(settings):
         if font not in QtGui.QFontDatabase().families():
             QtGui.QFontDatabase.addApplicationFont(font)
 
-    win = gfMayaWidgets.showMayaWidget(MainWin, settings)
+    win = gfMayaWidgets.showMayaWidget(MainWin, data=settings)
     return win
 
 
@@ -87,7 +87,7 @@ class MainWin(gfMayaWidgets.GenericWidgetDock):
 
 
     def __init__(self, data=None, parent=None):
-        super(MainWin, self).__init__(data, parent)
+        super(MainWin, self).__init__(parent)
         self.appConfig = data
         self.appSettings = data["Settings"]
         self.pockets = self.appConfig["Opened Pockets"]
@@ -106,6 +106,7 @@ class MainWin(gfMayaWidgets.GenericWidgetDock):
         self.ui.btnSearch.clicked.connect(self.showSearchField)
         self.ui.btnListView.clicked.connect(self.toggleListView)
         self.ui.btnAboutApp.clicked.connect(self.loadAboutWin)
+        self.ui.btnSettings.clicked.connect(self.loadSettingsWin)
         if not self.appConfig["Opened Pockets"]:
             self.generateTestPocket()
             # self.generateHomePocket()
@@ -114,7 +115,11 @@ class MainWin(gfMayaWidgets.GenericWidgetDock):
 
 
     def loadAboutWin(self):
-        gfMayaWidgets.execMayaWidget(AboutWin)
+        gfMayaWidgets.openMayaDialog(AboutWin)
+
+
+    def loadSettingsWin(self):
+        gfMayaWidgets.showMayaWidget(SettingsWin)
 
 
     def resizeEvent(self, event):
@@ -284,7 +289,7 @@ class AboutWin(gfMayaWidgets.GenericDialogWin):
 
 
     def __init__(self, data=None, parent=None):
-        super(AboutWin, self).__init__(data, parent)
+        super(AboutWin, self).__init__(parent)
 
         self.initUI()
 
@@ -304,3 +309,22 @@ class AboutWin(gfMayaWidgets.GenericDialogWin):
 
     def sizeHint(self):
         return QtCore.QSize(400, 300)
+
+
+
+
+########################################################################
+# SETTINGS WINDOW CLASS
+
+class SettingsWin(gfMayaWidgets.GenericWidgetWin):
+    kUiFilePath = os.path.join(appInfo.kGUIPath, "win_settings.ui")
+    kWindowName = "%sSettingsWin" % appInfo.kApplicationName
+    kWindowLabel = "Settings"
+
+
+    def __init__(self, data=None, parent=None):
+        super(SettingsWin, self).__init__(parent)
+
+
+    def sizeHint(self):
+        return QtCore.QSize(600, 400)
