@@ -1,59 +1,38 @@
-import os
-import sys
-import shiboken2
-import maya.OpenMayaUI as omui1
-from PySide2 import QtCore, QtWidgets, QtUiTools
+# -*- coding: utf-8 -*-
+"""
+Copyright 2020 Giuliano Franca
 
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
 
-class GFCustomTool(object):
-    def __init__(self):
-        self.TOOL_NAME = "gfCustomTool_1"
-        self.TOOLTIP = "NDA"
-        self.ICON = ""
-        self._checkClass()
-        self.computeSingleCommand()
-        self.computeDoubleCommand()
+    http://www.apache.org/licenses/LICENSE-2.0
 
-    def _checkClass(self):
-        if isinstance(self, GFCustomTool):
-            print("Tudo certo")
-        else:
-            print("Inheritance needed.")
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
 
-    @property
-    def mayaWindow(self):
-        """
-        Name: mayaWindow
-        Type: PySide2.QtWidgets.QWidget instance
-        Access: R
-        Description: Return the Maya main window as PySide2 QWidget object.
-        """
-        mWin = shiboken2.wrapInstance(long(omui1.MQtUtil.mainWindow()), QtWidgets.QWidget)
-        return mWin
+====================================================================================================
 
-    def displayWindow(self, parent=self.mayaWindow):
-        """
-        Signature: <GFCustomTool>.displayWindow()
-        Parameters:
-        Returns:
-        Description: Run the single click command from the custom tool.
-        """
-        pass
+How to use:
+    * Copy the parent folder to the MAYA_SCRIPT_PATH.
+    * To find MAYA_SCRIPT_PATH paste this command in a Python tab:
+        import os; os.environ["MAYA_SCRIPT_PATH"].split(";")
+    * In Maya, go to Windows > Settings/Preferences > Plug-in Manager.
+    * Browse for "gfTools > plug-ins > dev > python"
+    * Find gfTools_P.py and import it.
 
-    def computeSingleCommand(self):
-        """
-        Signature: <GFCustomTool>.computeSingleCommand()
-        Parameters:
-        Returns:
-        Description: Run the single click command from the custom tool.
-        """
-        print("Compute Command printed.")
+Requirements:
+    * Maya 2017 or above.
 
-    def computeDoubleCommand(self):
-        """
-        Signature: <GFCustomTool>.computeDoubleCommand()
-        Parameters:
-        Returns:
-        Description: Run the double click command from the custom tool.
-        """
-        print("Compute Double Command printed.")
+Todo:
+    * NDA
+
+Sources:
+    * NDA
+
+This code supports Pylint. Rc file in project.
+"""
+

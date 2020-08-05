@@ -33,7 +33,7 @@ global proc shelf_gfTools () {
         -style "iconOnly" 
         -marginWidth 1
         -marginHeight 1
-        -command "import platform\nif platform.system() == \"Windows\":\n    cmds.loadPlugin(n=\"gfTools.mll\", qt=True)\nelif platform.syste() == \"Linux\":\n    cmds.loadPlugin(n=\"gfTools.so\", qt=True)\nelse:\n    cmds.loadPlugin(n=\"gfTools.bundle\", qt=True)" 
+        -command "import platform\nif platform.system() == \"Windows\":\n    cmds.loadPlugin(\"gfTools.mll\")\nelif platform.system() == \"Linux\":\n    cmds.loadPlugin(\"gfTools.so\")\nelse:\n    cmds.loadPlugin(\"gfTools.bundle\")" 
         -sourceType "python" 
         -commandRepeatable 1
         -flat 1
@@ -80,7 +80,7 @@ global proc shelf_gfTools () {
         -style "iconOnly" 
         -marginWidth 1
         -marginHeight 1
-        -command "from gfUtilitiesBelt2 import gfUtilitiesBelt\nreload(gfUtilitiesBelt)\ngfUtilitiesBelt.main()" 
+        -command "from gfUtilitiesBelt import gfUtilitiesBelt\nreload(gfUtilitiesBelt)\ngfUtilitiesBelt.main()" 
         -sourceType "python" 
         -commandRepeatable 1
         -flat 1

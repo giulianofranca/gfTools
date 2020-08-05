@@ -119,7 +119,7 @@ class MainWin(gfMayaWidgets.GenericWidgetDock):
 
 
     def loadSettingsWin(self):
-        gfMayaWidgets.showMayaWidget(SettingsWin)
+        gfMayaWidgets.showMayaWidget(SettingsWin, data=self.appConfig)
 
 
     def resizeEvent(self, event):

@@ -1,1 +1,0 @@
-# Start application from here
