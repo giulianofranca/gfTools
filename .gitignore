@@ -5,13 +5,19 @@ __pycache__/
 plugin/maya/dev/cpp/build
 core/_studies/testMayaPyExtension
 core/_studies/RigAPI
+
+# Design
 *.ttf
 *.otf
+*.eps
+*.ai
+*.svg
+*.png
 
 # gfTools tools
-tools/maya/gfUtilitiesBelt2/core/mayaData
-tools/maya/gfUtilitiesBelt2/core/*.json
-tools/maya/gfUtilitiesBelt2/pockets/*.gfpocket
+tools/maya/gfUtilitiesBelt/core/mayaData
+tools/maya/gfUtilitiesBelt/core/*.json
+tools/maya/gfUtilitiesBelt/pockets/*.gfpocket
 
 # Extensions
 *.pyc
