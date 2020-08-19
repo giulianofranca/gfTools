@@ -1,0 +1,289 @@
+/*
+Copyright (c) 2019 Giuliano França
+
+MIT License
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+====================================================================================================
+
+How to use:
+    * Copy the plugin file to the MAYA_PLUG_IN_PATH.
+    * To find MAYA_PLUG_IN_PATH paste this command in a Python tab:
+        import os; os.environ["MAYA_PLUG_IN_PATH"].split(";")
+    * In Maya, go to Windows > Settings/Preferences > Plug-in Manager.
+    * Find the plugin file and import it. Can be:
+        Windows: gfTools.mll
+        OSX: gfTools.bundle
+        Linux: gfTools.so
+
+Requirements:
+    * Maya 2017 or above.
+
+Nodes:
+    * gfDebugVector          (MPxLocatorNode): Node to visualize vectors in the viewport.
+    * gfPSDVectorAngle       (MPxNode): Calculate weights based on a pose.
+    * gfIKVChain             (MPxNode): IK Solver to VChain type of rig.
+    * gfBlendTransform       (MPxNode): Blend transformations (SRT) between an array of objects.
+    * gfAimConstraint        (MPxNode): Custom aim constraint.
+    * gfParentConstraint     (MPxNode): Custom parent contraint.
+    * gfAngleMath            (MPxNode): Basic double angle operations.
+    * gfAngleScalarMath      (MPxNode): Basic double angle operations with float scalar.
+    * gfAngleTrigMath        (MPxNode): Basic double angle trigonometric operations.
+    * gfAngleToDouble        (MPxNode): Convert double angle to double.
+    * gfDoubleToAngle        (MPxNode): Convert double to double angle.
+    * gfEulerMath            (MPxNode): Basic euler rotation operations.
+    * gfEulerScalarMath      (MPxNode): Basic euler rotation operations with float scalar.
+    * gfEulerToVector        (MPxNode): Convert euler rotation to vector.
+    * gfVectorToEuler        (MPxNode): Convert vector to euler rotation.
+    * gfDecompRowMatrix      (MPxNode): Decompose all rows of a matrix as vector3.
+
+Todo:
+    * NDA
+
+Sources:
+    * NDA
+*/
+// gfDebug
+#include "headers/n_gfDebugVector.h"
+// gfRig
+#include "headers/n_gfRigMeshController.h"
+#include "headers/n_gfRigPSDVectorAngle.h"
+#include "headers/n_gfRigIKVChain.h"
+#include "headers/n_gfRigHelperJoint.h"
+#include "headers/n_gfRigDistributeAlongSurface.h"
+#include "headers/n_gfRigTwistExtractor.h"
+// gfUtil
+#include "headers/n_gfUtilBlendTransform.h"
+#include "headers/n_gfUtilAimConstraint.h"
+#include "headers/n_gfUtilParentConstraint.h"
+#include "headers/n_gfUtilPoleVectorConstraint.h"
+#include "headers/n_gfUtilSpaceConstraint.h"
+#include "headers/n_gfUtilAngleMath.h"
+#include "headers/n_gfUtilAngleScalarMath.h"
+#include "headers/n_gfUtilAngleTrigMath.h"
+#include "headers/n_gfUtilAngleToDouble.h"
+#include "headers/n_gfUtilDoubleToAngle.h"
+#include "headers/n_gfUtilEulerMath.h"
+#include "headers/n_gfUtilEulerScalarMath.h"
+#include "headers/n_gfUtilEulerToVector.h"
+#include "headers/n_gfUtilVectorToEuler.h"
+#include "headers/n_gfUtilDecompRowMatrix.h"
+#include "headers/n_gfUtilFindParamFromCurveLength.h"
+
+#include <maya/MFnPlugin.h>
+#include <maya/MDrawRegistry.h>
+#include <maya/MString.h>
+#include <maya/MStringArray.h>
+#include <maya/MTypeId.h>
+#include <maya/MGlobal.h>
+
+
+#define REGISTER_NODE(NODE, PLUGIN)         \
+    status = PLUGIN.registerNode(           \
+        NODE::kNodeName,                    \
+        NODE::kNodeID,                      \
+        NODE::creator,                      \
+        NODE::initialize,                   \
+        MPxNode::kDependNode,               \
+        &NODE::kNodeClassify                \
+    );                                      \
+    CHECK_MSTATUS(status);                  \
+
+#define DEREGISTER_NODE(NODE, PLUGIN)       \
+    status = PLUGIN.deregisterNode(         \
+        NODE::kNodeID                       \
+    );                                      \
+    CHECK_MSTATUS(status);                  \
+
+#define REGISTER_LOCATOR_NODE(NODE, PLUGIN, DRAWOVERRIDE)                   \
+    status = PLUGIN.registerNode(                                           \
+        NODE::kNodeName,                                                    \
+        NODE::kNodeID,                                                      \
+        NODE::creator,                                                      \
+        NODE::initialize,                                                   \
+        MPxNode::kLocatorNode,                                              \
+        &NODE::kNodeClassify                                                \
+    );                                                                      \
+    CHECK_MSTATUS(status);                                                  \
+    status = MHWRender::MDrawRegistry::registerDrawOverrideCreator(         \
+        NODE::kNodeClassify,                                                \
+        NODE::kNodeRegistrantID,                                            \
+        DRAWOVERRIDE::creator                                               \
+    );                                                                      \
+    CHECK_MSTATUS(status);                                                  \
+
+#define DEREGISTER_LOCATOR_NODE(NODE, PLUGIN)                               \
+    status = PLUGIN.deregisterNode(                                         \
+        NODE::kNodeID                                                       \
+    );                                                                      \
+    CHECK_MSTATUS(status);                                                  \
+    status = MHWRender::MDrawRegistry::deregisterDrawOverrideCreator(       \
+        NODE::kNodeClassify,                                                \
+        NODE::kNodeRegistrantID                                             \
+    );                                                                      \
+    CHECK_MSTATUS(status);                                                  \
+
+
+const char* kAuthor = "Giuliano Franca";
+
+MString res = MGlobal::executePythonCommandStringResult("import gfTools; gfTools.version()");
+const char* kVersion = res.asChar();
+const char* kRequiredAPIVersion = "Any";
+
+// gfDebug
+const MString DebugVector::kNodeName = "gfDebugVector";
+const MString DebugVector::kNodeClassify = "drawdb/geometry/debugVector";
+const MString DebugVector::kNodeRegistrantID = "gfDebugVectorNodePlugin";
+const MTypeId DebugVector::kNodeID = 0x00130d80;
+// gfRig
+const MString MeshController::kNodeName = "gfMeshController";
+const MString MeshController::kNodeClassify = "drawdb/geometry/meshController";
+const MString MeshController::kNodeRegistrantID = "gfMeshControllerNodePlugin";
+const MTypeId MeshController::kNodeID = 0x00130d81;
+const MString VectorAnglePSD::kNodeName = "gfPSDVectorAngle";
+const MString VectorAnglePSD::kNodeClassify = "utility/general";
+const MTypeId VectorAnglePSD::kNodeID = 0x00130d82;
+const MString IKVChainSolver::kNodeName = "gfIKVChain";
+const MString IKVChainSolver::kNodeClassify = "utility/general";
+const MTypeId IKVChainSolver::kNodeID = 0x00130d83;
+const MString HelperJoint::kNodeName = "gfHelperJoint";
+const MString HelperJoint::kNodeClassify = "utility/general";
+const MTypeId HelperJoint::kNodeID = 0x00130d84;
+const MString DistributeAlongSurface::kNodeName = "gfDistributeAlongSurface";
+const MString DistributeAlongSurface::kNodeClassify = "utility/general";
+const MTypeId DistributeAlongSurface::kNodeID = 0x00130d85;
+const MString TwistExtractor::kNodeName = "gfTwistExtractor";
+const MString TwistExtractor::kNodeClassify = "utility/general";
+const MTypeId TwistExtractor::kNodeID = 0x00130d86;
+// gfUtil
+const MString BlendTransform::kNodeName = "gfBlendTransform";
+const MString BlendTransform::kNodeClassify = "utility/general";
+const MTypeId BlendTransform::kNodeID = 0x00130d87;
+const MString AimConstraint::kNodeName = "gfAimConstraint";
+const MString AimConstraint::kNodeClassify = "utility/general";
+const MTypeId AimConstraint::kNodeID = 0x00130d88;
+const MString ParentConstraint::kNodeName = "gfParentConstraint";
+const MString ParentConstraint::kNodeClassify = "utility/general";
+const MTypeId ParentConstraint::kNodeID = 0x00130d89;
+const MString PoleVectorConstraint::kNodeName = "gfPoleVectorConstraint";
+const MString PoleVectorConstraint::kNodeClassify = "utility/general";
+const MTypeId PoleVectorConstraint::kNodeID = 0x00130d8a;
+const MString SpaceConstraint::kNodeName = "gfSpaceConstraint";
+const MString SpaceConstraint::kNodeClassify = "utility/general";
+const MTypeId SpaceConstraint::kNodeID = 0x00130d8b;
+const MString AngularMath::kNodeName = "gfAngleMath";
+const MString AngularMath::kNodeClassify = "utility/general";
+const MTypeId AngularMath::kNodeID = 0x00130d8c;
+const MString AngularScalarMath::kNodeName = "gfAngleScalarMath";
+const MString AngularScalarMath::kNodeClassify = "utility/general";
+const MTypeId AngularScalarMath::kNodeID = 0x00130d8d;
+const MString AngularTrigMath::kNodeName = "gfAngleTrigMath";
+const MString AngularTrigMath::kNodeClassify = "utility/general";
+const MTypeId AngularTrigMath::kNodeID = 0x00130d8e;
+const MString AngleToDouble::kNodeName = "gfAngleToDouble";
+const MString AngleToDouble::kNodeClassify = "utility/general";
+const MTypeId AngleToDouble::kNodeID = 0x00130d8f;
+const MString DoubleToAngle::kNodeName = "gfDoubleToAngle";
+const MString DoubleToAngle::kNodeClassify = "utility/general";
+const MTypeId DoubleToAngle::kNodeID = 0x00130d90;
+const MString EulerMath::kNodeName = "gfEulerMath";
+const MString EulerMath::kNodeClassify = "utility/general";
+const MTypeId EulerMath::kNodeID = 0x00130d91;
+const MString EulerScalarMath::kNodeName = "gfEulerScalarMath";
+const MString EulerScalarMath::kNodeClassify = "utility/general";
+const MTypeId EulerScalarMath::kNodeID = 0x00130d92;
+const MString EulerToVector::kNodeName = "gfEulerToVector";
+const MString EulerToVector::kNodeClassify = "utility/general";
+const MTypeId EulerToVector::kNodeID = 0x00130d93;
+const MString VectorToEuler::kNodeName = "gfVectorToEuler";
+const MString VectorToEuler::kNodeClassify = "utility/general";
+const MTypeId VectorToEuler::kNodeID =0x00130d94;
+const MString DecomposeRowMatrix::kNodeName = "gfDecompRowMtx";
+const MString DecomposeRowMatrix::kNodeClassify = "utility/general";
+const MTypeId DecomposeRowMatrix::kNodeID = 0x00130d95;
+const MString FindParamFromLength::kNodeName = "gfFindParamFromLength";
+const MString FindParamFromLength::kNodeClassify = "utility/general";
+const MTypeId FindParamFromLength::kNodeID = 0x00130d96;
+
+
+MStatus initializePlugin(MObject mobject){
+    MStatus status;
+    MFnPlugin mPlugin(mobject, kAuthor, kVersion, kRequiredAPIVersion, &status);
+    status = mPlugin.setName("gfTools");
+
+    REGISTER_LOCATOR_NODE(DebugVector, mPlugin, DebugVectorDrawOverride);
+    REGISTER_LOCATOR_NODE(MeshController, mPlugin, MeshControllerDrawOverride);
+    REGISTER_NODE(VectorAnglePSD, mPlugin);
+    REGISTER_NODE(IKVChainSolver, mPlugin);
+    REGISTER_NODE(HelperJoint, mPlugin);
+    REGISTER_NODE(DistributeAlongSurface, mPlugin);
+    REGISTER_NODE(TwistExtractor, mPlugin);
+    REGISTER_NODE(BlendTransform, mPlugin);
+    REGISTER_NODE(AimConstraint, mPlugin);
+    REGISTER_NODE(ParentConstraint, mPlugin);
+    REGISTER_NODE(PoleVectorConstraint, mPlugin);
+    REGISTER_NODE(SpaceConstraint, mPlugin);
+    REGISTER_NODE(AngularMath, mPlugin);
+    REGISTER_NODE(AngularScalarMath, mPlugin);
+    REGISTER_NODE(AngularTrigMath, mPlugin);
+    REGISTER_NODE(AngleToDouble, mPlugin);
+    REGISTER_NODE(DoubleToAngle, mPlugin);
+    REGISTER_NODE(EulerMath, mPlugin);
+    REGISTER_NODE(EulerScalarMath, mPlugin);
+    REGISTER_NODE(EulerToVector, mPlugin);
+    REGISTER_NODE(VectorToEuler, mPlugin);
+    REGISTER_NODE(DecomposeRowMatrix, mPlugin);
+    REGISTER_NODE(FindParamFromLength, mPlugin);
+    MGlobal::displayInfo("[gfToolsNodes] Plugin loaded successfully.");
+
+    return status;
+}
+
+MStatus uninitializePlugin(MObject mobject){
+    MStatus status;
+    MFnPlugin mPlugin(mobject, kAuthor, kVersion, kRequiredAPIVersion, &status);
+
+    DEREGISTER_LOCATOR_NODE(DebugVector, mPlugin);
+    DEREGISTER_LOCATOR_NODE(MeshController, mPlugin);
+    DEREGISTER_NODE(VectorAnglePSD, mPlugin);
+    DEREGISTER_NODE(IKVChainSolver, mPlugin);
+    DEREGISTER_NODE(HelperJoint, mPlugin);
+    DEREGISTER_NODE(DistributeAlongSurface, mPlugin);
+    DEREGISTER_NODE(TwistExtractor, mPlugin);
+    DEREGISTER_NODE(BlendTransform, mPlugin);
+    DEREGISTER_NODE(AimConstraint, mPlugin);
+    DEREGISTER_NODE(ParentConstraint, mPlugin);
+    DEREGISTER_NODE(PoleVectorConstraint, mPlugin);
+    DEREGISTER_NODE(SpaceConstraint, mPlugin);
+    DEREGISTER_NODE(AngularMath, mPlugin);
+    DEREGISTER_NODE(AngularScalarMath, mPlugin);
+    DEREGISTER_NODE(AngularTrigMath, mPlugin);
+    DEREGISTER_NODE(AngleToDouble, mPlugin);
+    DEREGISTER_NODE(DoubleToAngle, mPlugin);
+    DEREGISTER_NODE(EulerMath, mPlugin);
+    DEREGISTER_NODE(EulerScalarMath, mPlugin);
+    DEREGISTER_NODE(EulerToVector, mPlugin);
+    DEREGISTER_NODE(VectorToEuler, mPlugin);
+    DEREGISTER_NODE(DecomposeRowMatrix, mPlugin);
+    DEREGISTER_NODE(FindParamFromLength, mPlugin);
+    MGlobal::displayInfo("[gfToolsNodes] Plugin unloaded successfully.");
+
+    return status;
+}

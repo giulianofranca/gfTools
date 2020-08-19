@@ -45,8 +45,8 @@ if sys.version_info.major >= 3:
 else:
     import cPickle as pickle
 
-from gfUtilitiesBelt2.core import appInfo
-from gfUtilitiesBelt2.core import getMayaInfo
+from gfUtilitiesBelt.core import appInfo
+from gfUtilitiesBelt.core import getMayaInfo
 reload(appInfo)
 reload(getMayaInfo)
 

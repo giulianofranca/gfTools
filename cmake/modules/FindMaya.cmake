@@ -84,28 +84,36 @@ set(MAYA_LOCATION ${MAYA_INSTALL_BASE_PATH}/maya${MAYA_VERSION})
 
 # Maya include directory
 find_path(MAYA_INCLUDE_DIR maya/MFn.h
-PATHS
-    ${MAYA_LOCATION}
-PATH_SUFFIXES
-    "devkitBase/include/"
-    "devkit/include/"
-    "include/"
+    PATHS
+        ${MAYA_LOCATION}
+    PATH_SUFFIXES
+        "devkitBase/include/"
+        "devkit/include/"
+        "include/"
 )
 
 # Maya lib directory
 find_library(MAYA_LIBRARY
-NAMES 
-    OpenMaya
-PATHS
-    ${MAYA_LOCATION}
-PATH_SUFFIXES
-    "devkitBase/lib/"
-    "lib/"
-    "Maya.app/Contents/MacOS/"
-NO_DEFAULT_PATH
+    NAMES 
+        OpenMaya
+    PATHS
+        ${MAYA_LOCATION}
+    PATH_SUFFIXES
+        "devkitBase/lib/"
+        "lib/"
+        "Maya.app/Contents/MacOS/"
+    NO_DEFAULT_PATH
 )
 set(MAYA_LIBRARIES "${MAYA_LIBRARY}")
 
+include(FindPackageHandleStandardArgs)
+find_package_handle_standard_args(Maya
+    REQUIRED_VARS 
+        MAYA_INCLUDE_DIR
+        MAYA_LIBRARY
+    VERSION_VAR
+        MAYA_VERSION
+)
 mark_as_advanced(MAYA_INCLUDE_DIR MAYA_LIBRARY)
 
 if (NOT TARGET Maya::Maya)
@@ -137,7 +145,11 @@ foreach(MAYA_LIB ${_MAYA_LIBRARIES})
             "Maya.app/Contents/MacOS/"
         NO_DEFAULT_PATH)
     mark_as_advanced(MAYA_${MAYA_LIB}_LIBRARY)
-    set(MAYA_LIBRARIES ${MAYA_LIBRARIES} "${MAYA_${MAYA_LIB}_LIBRARY}")
+    if (MAYA_${MAYA_LIB}_LIBRARY)
+        set_property(TARGET Maya::Maya APPEND PROPERTY
+            INTERFACE_LINK_LIBRARIES "${MAYA_${MAYA_LIB}_LIBRARY}")
+        set(MAYA_LIBRARIES ${MAYA_LIBRARIES} "${MAYA_${MAYA_LIB}_LIBRARY}")
+    endif()
 endforeach()
 
 function(MAYA_PLUGIN _target)
@@ -149,12 +161,3 @@ function(MAYA_PLUGIN _target)
         PREFIX ""
         SUFFIX ${MAYA_PLUGIN_EXTENSION})
 endfunction()
-
-include(FindPackageHandleStandardArgs)
-find_package_handle_standard_args(Maya
-    REQUIRED_VARS 
-        MAYA_INCLUDE_DIR
-        MAYA_LIBRARY
-    VERSION_VAR
-        MAYA_VERSION
-)

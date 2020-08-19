@@ -1,0 +1,11 @@
+<RCC>
+  <qresource prefix="gfFonts">
+    <file alias="WorkSans-Light">fonts/WorkSans-Light.ttf</file>
+    <file alias="WorkSans-Medium">fonts/WorkSans-Medium.ttf</file>
+    <file alias="WorkSans-Regular">fonts/WorkSans-Regular.ttf</file>
+    <file alias="WorkSans-SemiBold">fonts/WorkSans-SemiBold.ttf</file>
+  </qresource>
+  <qresource prefix="gfIcons">
+    <file alias="gfUtilitiesBelt_python32">icons/gfUtilitiesBelt_python32.png</file>
+  </qresource>
+</RCC>

@@ -16,10 +16,4 @@
     <file>img/gfUtilitiesBelt_tool32.png</file>
     <file>img/gfUtilitiesBelt_pythonMini32.png</file>
   </qresource>
-  <qresource prefix="fonts">
-    <file>fonts/WorkSans-Light.ttf</file>
-    <file>fonts/WorkSans-Medium.ttf</file>
-    <file>fonts/WorkSans-Regular.ttf</file>
-    <file>fonts/WorkSans-SemiBold.ttf</file>
-  </qresource>
 </RCC>

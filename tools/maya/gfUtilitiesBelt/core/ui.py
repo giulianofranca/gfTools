@@ -43,10 +43,10 @@ from PySide2 import QtGui
 from PySide2 import QtWidgets
 import maya.cmds as cmds
 
-from gfUtilitiesBelt2.core import appInfo
-from gfUtilitiesBelt2.core import config
-from gfUtilitiesBelt2.core import pockets
-from gfUtilitiesBelt2.core import resources
+from gfUtilitiesBelt.core import appInfo
+from gfUtilitiesBelt.core import config
+from gfUtilitiesBelt.core import pockets
+from gfUtilitiesBelt.core import resources
 import gfMayaWidgets
 import gfWidgets
 import gfLayouts

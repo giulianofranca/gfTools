@@ -1,3 +1,0 @@
-Maya IDs:
-    Prototypes: 0x0012f7c0 - 0x0012f7ff
-    Releases: 0x00130d80 - 0x00130e7f

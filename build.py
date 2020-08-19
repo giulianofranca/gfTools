@@ -21,7 +21,6 @@ How to use:
 
 Requirements:
     * Maya 2018 or above.
-    * Qt 5.6.1 and 5.12.5
 
 This code supports Pylint. Rc file in project.
 """
@@ -49,7 +48,7 @@ defaultPath = os.path.abspath(os.path.dirname(__file__))
 mayaToolsList = ["gfUtilitiesBelt"]
 mayaVersions = [2018, 2019, 2020]
 _project = "gfTools"
-_version = "1.0.26 alpha"
+_version = "1.0.34-alpha"
 
 def windows():
     return platform.system() == "Windows"
@@ -120,6 +119,7 @@ def printProcessList(buildArgs):
     printMessage("- Build and copy tools for Autodesk Maya:")
     for tool in mayaToolsList:
         printMessage("\t- %s" % tool)
+    printMessage("- Copy standalone scripts")
     printMessage("- Copy Autodesk Maya scripts")
     printMessage("- Generate config files")
     printMessage("- Copy resources files")
@@ -297,7 +297,14 @@ with open(logFilePath, "a+") as logFile:
     toolsCBTime = time.strftime(timePat, time.gmtime(time.time() - startToolsTime))
 
 #------------------------- SCRIPTS -------------------------
+    startScriptsTime = time.time()
     scriptsFolder = os.path.join(defaultPath, "scripts")
+    # Standalone
+    printMessage("Copying standalone scripts...")
+    standaloneFolder = os.path.join(scriptsFolder, "standalone")
+    dest = os.path.join(args.installLocation, "scripts", "standalone")
+    createDir(dest)
+    copyFiles(standaloneFolder, dest)
     # Maya
     printMessage("Copying Autodesk Maya scripts...")
     mayaFolder = os.path.join(scriptsFolder, "maya")
@@ -306,6 +313,7 @@ with open(logFilePath, "a+") as logFile:
     ign = None
     createDir(dest)
     copyFiles(mayaFolder, dest, ext, ign)
+    scriptsCTime = time.strftime(timePat, time.gmtime(time.time() - startScriptsTime))
 
 #---------------------- CONFIG FILES -----------------------
     printMessage("Generating config files...")
@@ -320,12 +328,10 @@ with open(logFilePath, "a+") as logFile:
     infoFileName = "app"
     infoFile = os.path.join(coreFolder, infoFileName)
     with open(infoFile, "wb") as f:
-        pickle.dump(infoDict, f, pickle.HIGHEST_PROTOCOL)
-    # TODO: Copy scripts in core folder
-    # Copy license and how to
+        pickle.dump(infoDict, f, 2)
+    # Copy license and how tos
     files = [os.path.join(defaultPath, "LICENSE")]
     files.append(os.path.join(defaultPath, "install_instructions.txt"))
-    files.append(os.path.join(defaultPath, "uninstall_instructions.txt"))
     for f in files:
         shutil.copy(f, args.installLocation)
 
@@ -385,6 +391,7 @@ with open(logFilePath, "a+") as logFile:
     printMessage("The build process is done!")
     printMessage("Plug-ins build for Autodesk Maya: %s[Done] | %s." % (" " * 11, mPluginsBTime))
     # printMessage("Build and copy tools for Autodesk Maya: %s[Done] | %s." %(" " * 5, toolsCBTime))
+    printMessage("%s scripts copy: %s[Done] | %s." % (_project, " " * 23, scriptsCTime))
     printMessage("%s resources copy: %s[Done] | %s." % (_project, " " * 21, resourcesCTime))
     if args.packaging:
         printMessage("gfTools package: %s[Done] | %s." % (" " * 28, packageTime))

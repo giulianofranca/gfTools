@@ -33,7 +33,7 @@ global proc shelf_gfTools () {
         -style "iconOnly" 
         -marginWidth 1
         -marginHeight 1
-        -command "import platform\nif platform.system() == \"Windows\":\n    cmds.loadPlugin(\"gfTools.mll\")\nelif platform.system() == \"Linux\":\n    cmds.loadPlugin(\"gfTools.so\")\nelse:\n    cmds.loadPlugin(\"gfTools.bundle\")" 
+        -command "import platform\nimport maya.cmds as cmds\nif platform.system() == \"Windows\":\n    cmds.loadPlugin(\"gfToolsNodes.mll\")\nelif platform.system() == \"Linux\":\n    cmds.loadPlugin(\"gfToolsNodes.so\")\nelse:\n    cmds.loadPlugin(\"gfToolsNodes.bundle\")" 
         -sourceType "python" 
         -commandRepeatable 1
         -flat 1
@@ -80,7 +80,7 @@ global proc shelf_gfTools () {
         -style "iconOnly" 
         -marginWidth 1
         -marginHeight 1
-        -command "from gfUtilitiesBelt import gfUtilitiesBelt\nreload(gfUtilitiesBelt)\ngfUtilitiesBelt.main()" 
+        -command "from gfUtilitiesBelt import run\nreload(run)\nrun.main()" 
         -sourceType "python" 
         -commandRepeatable 1
         -flat 1

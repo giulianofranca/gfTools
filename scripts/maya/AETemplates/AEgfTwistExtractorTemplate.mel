@@ -1,0 +1,15 @@
+global proc AEgfTwistExtractorTemplate(string $nodeName){
+    editorTemplate -beginScrollLayout;
+        editorTemplate -beginLayout "gfTwistExtractor Attributes" -collapse 0;
+            editorTemplate -addControl "rotation";
+            editorTemplate -addControl "rotationOrder";
+            editorTemplate -addControl "useUpVector";
+            editorTemplate -addControl "upVector";
+            editorTemplate -addSeparator;
+            editorTemplate -addControl "inverseTwist";
+            editorTemplate -addControl "reverseDistribution";
+        editorTemplate -endLayout;
+        AEdependNodeTemplate $nodeName;
+    editorTemplate -addExtraControls;
+    editorTemplate -endScrollLayout;
+}

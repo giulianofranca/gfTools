@@ -5,6 +5,7 @@ __pycache__/
 plugin/maya/dev/cpp/build
 core/_studies/testMayaPyExtension
 core/_studies/RigAPI
+core/app
 
 # Design
 *.ttf

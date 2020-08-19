@@ -50,7 +50,7 @@ if sys.version_info.major >= 3:
 else:
     import cPickle as pickle
 
-from gfUtilitiesBelt2.core import appInfo
+from gfUtilitiesBelt.core import appInfo
 reload(appInfo)
 
 # TODO: Update maya tools filter from maya info ???

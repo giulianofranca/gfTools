@@ -41,9 +41,9 @@ import json
 import datetime
 from collections import OrderedDict
 
-from gfUtilitiesBelt2.core import appInfo
-from gfUtilitiesBelt2.core import getMayaInfo
-from gfUtilitiesBelt2.core import pockets
+from gfUtilitiesBelt.core import appInfo
+from gfUtilitiesBelt.core import getMayaInfo
+from gfUtilitiesBelt.core import pockets
 reload(appInfo)
 reload(getMayaInfo)
 reload(pockets)

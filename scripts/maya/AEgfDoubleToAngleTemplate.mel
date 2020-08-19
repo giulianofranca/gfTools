@@ -1,9 +1,0 @@
-global proc AEgfDoubleToAngleTemplate(string $nodeName){
-    editorTemplate -beginScrollLayout;
-        editorTemplate -beginLayout "gfDoubleToAngle Attributes" -collapse 0;
-            editorTemplate -addControl "double";
-        editorTemplate -endLayout;
-        AEdependNodeTemplate $nodeName;
-    editorTemplate -addExtraControls;
-    editorTemplate -endScrollLayout;
-}
