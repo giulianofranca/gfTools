@@ -17,5 +17,5 @@ if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
 endif()
 message(STATUS "Install location: ${CMAKE_INSTALL_PREFIX}")
 
-# add_subdirectory(main)
+add_subdirectory(main)
 add_subdirectory(nodes)

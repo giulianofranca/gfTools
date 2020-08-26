@@ -34,10 +34,10 @@ MAYA_PLUGIN(${PROJECT_NAME})
 
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
     install(TARGETS ${PROJECT_NAME}
-        ${MAYA_TARGET_TYPE} DESTINATION "Maya${MAYA_VERSION}")
+        ${MAYA_TARGET_TYPE} DESTINATION "maya${MAYA_VERSION}")
 else()
     install(TARGETS ${PROJECT_NAME} 
-        ${MAYA_TARGET_TYPE} DESTINATION "plugin/maya/release/Maya${MAYA_VERSION}")
+        ${MAYA_TARGET_TYPE} DESTINATION "plugin/maya/release/maya${MAYA_VERSION}")
     install(DIRECTORY ${CMAKE_SOURCE_DIR}/nodes/templates
         DESTINATION "plugin/maya")
 endif()

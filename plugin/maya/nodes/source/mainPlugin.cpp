@@ -142,7 +142,6 @@ Sources:
 
 
 const char* kAuthor = "Giuliano Franca";
-
 MString res = MGlobal::executePythonCommandStringResult("import gfTools; gfTools.version()");
 const char* kVersion = res.asChar();
 const char* kRequiredAPIVersion = "Any";
@@ -226,7 +225,7 @@ const MTypeId FindParamFromLength::kNodeID = 0x00130d96;
 MStatus initializePlugin(MObject mobject){
     MStatus status;
     MFnPlugin mPlugin(mobject, kAuthor, kVersion, kRequiredAPIVersion, &status);
-    status = mPlugin.setName("gfTools");
+    status = mPlugin.setName("gfToolsNodes");
 
     REGISTER_LOCATOR_NODE(DebugVector, mPlugin, DebugVectorDrawOverride);
     REGISTER_LOCATOR_NODE(MeshController, mPlugin, MeshControllerDrawOverride);
