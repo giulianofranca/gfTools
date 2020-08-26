@@ -89,7 +89,7 @@
         </property>
         <property name="icon">
          <iconset resource="resources.qrc">
-          <normaloff>:/icons/img/gfUtilitiesBelt_menu16.png</normaloff>:/icons/img/gfUtilitiesBelt_menu16.png</iconset>
+          <normaloff>:/icons/gfUtilitiesBelt_menu16</normaloff>:/icons/gfUtilitiesBelt_menu16</iconset>
         </property>
         <property name="checkable">
          <bool>true</bool>
@@ -126,7 +126,7 @@
         </property>
         <property name="icon">
          <iconset resource="resources.qrc">
-          <normaloff>:/icons/img/gfUtilitiesBelt_search16.png</normaloff>:/icons/img/gfUtilitiesBelt_search16.png</iconset>
+          <normaloff>:/icons/gfUtilitiesBelt_search16</normaloff>:/icons/gfUtilitiesBelt_search16</iconset>
         </property>
         <property name="checkable">
          <bool>true</bool>
@@ -163,7 +163,7 @@
         </property>
         <property name="icon">
          <iconset resource="resources.qrc">
-          <normaloff>:/icons/img/gfUtilitiesBelt_listView16.png</normaloff>:/icons/img/gfUtilitiesBelt_listView16.png</iconset>
+          <normaloff>:/icons/gfUtilitiesBelt_listView16</normaloff>:/icons/gfUtilitiesBelt_listView16</iconset>
         </property>
         <property name="checkable">
          <bool>true</bool>
@@ -313,7 +313,7 @@
               </property>
               <property name="icon">
                <iconset resource="resources.qrc">
-                <normaloff>:/icons/img/gfUtilitiesBelt_icon32.png</normaloff>:/icons/img/gfUtilitiesBelt_icon32.png</iconset>
+                <normaloff>:/icons/gfUtilitiesBelt_icon32</normaloff>:/icons/gfUtilitiesBelt_icon32</iconset>
               </property>
               <property name="iconSize">
                <size>
@@ -390,7 +390,7 @@
               </property>
               <property name="icon">
                <iconset resource="resources.qrc">
-                <normaloff>:/icons/img/gfUtilitiesBelt_addPocket32.png</normaloff>:/icons/img/gfUtilitiesBelt_addPocket32.png</iconset>
+                <normaloff>:/icons/gfUtilitiesBelt_addPocket32</normaloff>:/icons/gfUtilitiesBelt_addPocket32</iconset>
               </property>
               <property name="iconSize">
                <size>
@@ -425,7 +425,7 @@
               </property>
               <property name="icon">
                <iconset resource="resources.qrc">
-                <normaloff>:/icons/img/gfUtilitiesBelt_editPocket32.png</normaloff>:/icons/img/gfUtilitiesBelt_editPocket32.png</iconset>
+                <normaloff>:/icons/gfUtilitiesBelt_editPocket32</normaloff>:/icons/gfUtilitiesBelt_editPocket32</iconset>
               </property>
               <property name="iconSize">
                <size>
@@ -460,7 +460,7 @@
               </property>
               <property name="icon">
                <iconset resource="resources.qrc">
-                <normaloff>:/icons/img/gfUtilitiesBelt_updateLibraries32.png</normaloff>:/icons/img/gfUtilitiesBelt_updateLibraries32.png</iconset>
+                <normaloff>:/icons/gfUtilitiesBelt_updateLibraries32</normaloff>:/icons/gfUtilitiesBelt_updateLibraries32</iconset>
               </property>
               <property name="iconSize">
                <size>
@@ -495,7 +495,7 @@
               </property>
               <property name="icon">
                <iconset resource="resources.qrc">
-                <normaloff>:/icons/img/gfUtilitiesBelt_settings32.png</normaloff>:/icons/img/gfUtilitiesBelt_settings32.png</iconset>
+                <normaloff>:/icons/gfUtilitiesBelt_settings32</normaloff>:/icons/gfUtilitiesBelt_settings32</iconset>
               </property>
               <property name="iconSize">
                <size>
@@ -530,7 +530,7 @@
               </property>
               <property name="icon">
                <iconset resource="resources.qrc">
-                <normaloff>:/icons/img/gfUtilitiesBelt_aboutApp32.png</normaloff>:/icons/img/gfUtilitiesBelt_aboutApp32.png</iconset>
+                <normaloff>:/icons/gfUtilitiesBelt_aboutApp32</normaloff>:/icons/gfUtilitiesBelt_aboutApp32</iconset>
               </property>
               <property name="iconSize">
                <size>

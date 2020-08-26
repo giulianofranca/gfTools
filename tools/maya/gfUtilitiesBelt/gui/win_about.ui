@@ -75,7 +75,7 @@
         </property>
         <property name="icon">
          <iconset resource="resources.qrc">
-          <normaloff>:/icons/img/gfUtilitiesBelt_icon32.png</normaloff>:/icons/img/gfUtilitiesBelt_icon32.png</iconset>
+          <normaloff>:/icons/gfUtilitiesBelt_icon32</normaloff>:/icons/gfUtilitiesBelt_icon32</iconset>
         </property>
         <property name="iconSize">
          <size>

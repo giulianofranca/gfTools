@@ -1,19 +1,19 @@
 <RCC>
   <qresource prefix="icons">
-    <file>img/gfUtilitiesBelt_aboutApp32.png</file>
-    <file>img/gfUtilitiesBelt_settings32.png</file>
-    <file>img/gfUtilitiesBelt_updateLibraries32.png</file>
-    <file>img/gfUtilitiesBelt_editPocket32.png</file>
-    <file>img/gfUtilitiesBelt_addPocket32.png</file>
-    <file>img/gfUtilitiesBelt_iconView16.png</file>
-    <file>img/gfUtilitiesBelt_listView16.png</file>
-    <file>img/gfUtilitiesBelt_close16.png</file>
-    <file>img/gfUtilitiesBelt_icon32.png</file>
-    <file>img/gfUtilitiesBelt_search16.png</file>
-    <file>img/gfUtilitiesBelt_menu16.png</file>
-    <file>img/gfUtilitiesBelt_hammer32.png</file>
-    <file>img/gfUtilitiesBelt_python32.png</file>
-    <file>img/gfUtilitiesBelt_tool32.png</file>
-    <file>img/gfUtilitiesBelt_pythonMini32.png</file>
+    <file alias="gfUtilitiesBelt_aboutApp32">img/gfUtilitiesBelt_aboutApp32.svg</file>
+    <file alias="gfUtilitiesBelt_settings32">img/gfUtilitiesBelt_settings32.svg</file>
+    <file alias="gfUtilitiesBelt_updateLibraries32">img/gfUtilitiesBelt_updateLibraries32.svg</file>
+    <file alias="gfUtilitiesBelt_editPocket32">img/gfUtilitiesBelt_editPocket32.svg</file>
+    <file alias="gfUtilitiesBelt_addPocket32">img/gfUtilitiesBelt_addPocket32.svg</file>
+    <file alias="gfUtilitiesBelt_iconView16">img/gfUtilitiesBelt_iconView16.svg</file>
+    <file alias="gfUtilitiesBelt_listView16">img/gfUtilitiesBelt_listView16.svg</file>
+    <file alias="gfUtilitiesBelt_close16">img/gfUtilitiesBelt_close16.svg</file>
+    <file alias="gfUtilitiesBelt_icon32">img/gfUtilitiesBelt_icon32.svg</file>
+    <file alias="gfUtilitiesBelt_search16">img/gfUtilitiesBelt_search16.svg</file>
+    <file alias="gfUtilitiesBelt_menu16">img/gfUtilitiesBelt_menu16.svg</file>
+    <file alias="gfUtilitiesBelt_hammer32">img/gfUtilitiesBelt_hammer32.svg</file>
+    <file alias="gfUtilitiesBelt_python32">img/gfUtilitiesBelt_python32.svg</file>
+    <file alias="gfUtilitiesBelt_tool32">img/gfUtilitiesBelt_tool32.svg</file>
+    <file alias="gfUtilitiesBelt_pythonMini32">img/gfUtilitiesBelt_pythonMini32.svg</file>
   </qresource>
 </RCC>
