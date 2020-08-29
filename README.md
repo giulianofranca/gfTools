@@ -1,9 +1,9 @@
 <!-- https://medium.com/better-programming/add-badges-to-a-github-repository-716d2988dc6a -->
-gfTools
-=======
+# gfTools
+
 **Stay cool man, this repo is on development yet. This is just to remember me what i have to do. =]**
 
-Short description with website link if exists. Work for Autodesk Maya 2017-2020 for Windows, MacOS and Linux.
+Short description with website link if exists. Work for Autodesk Maya 2018-2020 for Windows, MacOS and Linux.
 
 [![License](https://img.shields.io/github/license/giuliano-franca/gfTools?color=blue&label=license&style=for-the-badge)](LICENSE)
 [![Downloads](https://img.shields.io/github/downloads/giuliano-franca/gfTools/total?style=for-the-badge)](https://github.com/giuliano-franca/gfTools/releases)
@@ -11,29 +11,52 @@ Short description with website link if exists. Work for Autodesk Maya 2017-2020 
 <!-- Build Status
 ------------ -->
 
-Supported Platforms
--------------------
-gfTools build on Windows, macOS and Linux and is created using Windows and Fedora.
-Currently available for Autodesk Maya versions 2017 to 2020.
+## Supported Platforms
 
-Additional Documentation
-------------------------
-* How to build documentation
+gfTools build and run on Windows, macOS and Linux and is being created using Fedora 32.
+Will be available for Autodesk Maya versions 2018 to 2020.
+
+## Additional Documentation
+
+* [Building gfTools](BUILDING.md)
 * Rig API documentation
 * Qt widgets use documentation
-* Maya devkit install documentation
+* gfTools Maya nodes documentation
 
-Dependencies
-------------
-* C++ Compiler
-* [CMake](https://cmake.org/download/) (Pre-builded in version 3.15.2)
-* [Maya Devkit](https://www.autodesk.com/developer-network/platform-technologies/maya)
-* [Qt](https://download.qt.io/new_archive/qt/) (Pre-builded in version 5.13.2)
-* [Python 3](https://www.python.org/downloads/)
+## Latest Built Release Info (Soon)
 
-Getting the Application
------------------------
-How to install the application by pre-builded releases
+| v1.0.0-alpha         	| Linux      	| MacOS            	| Windows                                  	|
+|----------------------	|------------	|------------------	|------------------------------------------	|
+| Tested OS            	| Fedora 32  	| 10.15.3 Catalina 	| Windows 10                               	|
+| Compiler             	| gcc 10.2.1 	| Xcode 11.3       	| VS 2017                                  	|
+| Build<br>Generator   	| Ninja      	| Ninja            	| Ninja                                    	|
+| Command<br>Processor 	| bash       	| bash             	| Visual Studio X64 2017<br>command prompt 	|
+| CMake                	| 3.17.4     	| 3.18.2           	| 3.18.2                                   	|
+| Doxygen              	| 1.8.18     	| 1.8.20           	| 1.8.20                                   	|
+| Python               	| 2.7.18     	| 2.7.18           	| 2.7.18                                   	|
+| Eigen                	| 3.3.7      	| 3.3.7            	| 3.3.7                                    	|
+| Pybind11             	| 2.5.0      	| 2.5.0            	| 2.5.0                                    	|
+
+| Maya 	| 2018  	| 2019  	| 2020   	|
+|------	|-------	|-------	|--------	|
+| Qt   	| 5.6.3 	| 5.6.3 	| 5.12.5 	|
+|      	|       	|       	|        	|
+
+
+
+## Installing gfTools Toolkit
+
+Go to [releases](https://github.com/giuliano-franca/gfTools/releases) and download the latest pre-built release zip file of your specific OS and Maya versions.
+
+Extract the zip file on the recommended install directories below and follow the instructions inside file install_instructions.txt that lives inside gfTools folder.
+
+Recommended install directories:
+
+- Windows: C:/gfTools
+- MacOS: /opt/local/gfTools
+- Linux: /opt/gfTools
+
+You can optionally build gfTools from souce. For this, please refer to [building gfTools](BUILDING.md).
 
 <!-- **Edit a file, create a new file, and clone from Bitbucket in under 2 minutes**
 
