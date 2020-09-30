@@ -71,7 +71,6 @@ This is the documentation on how to build gfTools from source code.
             | Maya 	| 2018  	| 2019  	| 2020   	|
             |------	|-------	|-------	|--------	|
             | Qt   	| 5.6.1 	| 5.6.1 	| 5.12.5 	|
-            |      	|       	|       	|        	|
 
             Follow the instructions of the Qt Installer.
 
@@ -82,7 +81,7 @@ This is the documentation on how to build gfTools from source code.
                 echo 'export PATH="/opt/Qt5.12.5/5.12.5/gcc_64/bin:$PATH"' >> ~/.bashrc
                 echo 'export LD_LIBRARY_PATH="/opt/Qt5.12.5/5.12.5/gcc_64/lib:$LD_LIBRARY_PATH"' >> ~/.bashrc
 
-            > **Note:** Change the path above to the path where you installed Qt
+            > **Note:** Change the paths above to the paths where you installed Qt.
 
             > **Note:** Here I'm using .bashrc file to store environment variables on my Fedora 32 system. Can be another filename in other Linux distributions.
 

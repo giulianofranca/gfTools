@@ -50,6 +50,8 @@
 #   All the Maya libraries.
 # ``MAYA_TARGET_TYPE``
 #   The target type to be installed.
+# ``MAYA_PYTHON_INTERPRETER``
+#   The python interpreter of maya.
 #
 
 if(${MAYA_VERSION} STRLESS "2018")
@@ -104,6 +106,23 @@ find_library(MAYA_LIBRARY
         "Maya.app/Contents/MacOS/"
     NO_DEFAULT_PATH
 )
+
+# Maya Python Interpreter
+if(USE_MAYAPY)
+    find_program(MAYA_PYTHON_INTERPRETER
+        NAMES
+            mayapy
+        PATHS
+            ${MAYA_LOCATION}
+        PATH_SUFFIXES
+            "bin/"
+        NO_DEFAULT_PATH
+    )
+    if(NOT MAYA_PYTHON_INTERPRETER)
+        message(FATAL_ERROR "Could not find mayapy version ${MAYA_VERSION}")
+    endif()
+endif()
+
 set(MAYA_LIBRARIES "${MAYA_LIBRARY}")
 
 include(FindPackageHandleStandardArgs)

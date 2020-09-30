@@ -25,7 +25,7 @@ How to use:
     * Find gfTools_P.py and import it.
 
 Requirements:
-    * Maya 2017 or above.
+    * Maya 2018 or above.
 
 Todo:
     * Add fade animations

@@ -25,20 +25,29 @@ Requirements:
 This code supports Pylint. Rc file in project.
 """
 # pylint: disable=missing-function-docstring
-import sys
 import os
 import platform
-import maya.cmds as cmds
 
-kAppPath = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir))
+# Check if this script is using mayapy.
+try:
+    import maya.cmds as cmds
+except ImportError:
+    raise RuntimeError("Could not find Maya. You should use this script inside Maya, just drag it into the viewport.")
 
-kMayaVersion = cmds.about(version=True)
+mayaVersion = cmds.about(version=True)
 
-kDialogTitle = "gfTools for Maya Uninstallation"
-kUninstallMsg = "This will uninstall gfTools plugins for Autodesk Maya. Are you sure you want to uninstall it?"
-kModPathErrorMsg = "Could not find Maya module path. Uninstallation interrupted."
-kAppNotFounded = "gfTools installation not founded. Uninstallation interrupted."
-kSucessMsg = "Uninstallation completed! You need to restart Maya to take effects."
+# Import gfCore module to get information needed to install gfTools Maya plugins. gfCore is platform independant.
+try:
+    from gfTools import gfCore
+except ImportError:
+    raise RuntimeError("Could not find gfCore module.")
+
+dialogTitle = "gfTools for Maya Uninstallation"
+uninstallMsg = "This will uninstall gfTools plugins for Autodesk Maya. Are you sure you want to uninstall it?"
+modPathErrorMsg = "Could not find Maya module path. Uninstallation interrupted."
+appNotFounded = "gfTools installation not founded. Uninstallation interrupted."
+sucessMsg = "Uninstallation completed! You need to restart Maya to take effects."
+
 
 def windows():
     return platform.system() == "Windows"
@@ -49,39 +58,39 @@ def linux():
 def macOS():
     return platform.system() == "Darwin"
 
-def printMsg(msg):
-    sys.stdout.write("%s\n" % msg)
-
-
 def getMayaModulePath():
-    printMsg("Checking Maya module path...")
-    mModPath = os.environ["MAYA_MODULE_PATH"]
-    paths = mModPath.split(";") if windows() else mModPath.split(":")
+    print("Checking Maya module path...")
+    modPaths = os.environ["MAYA_MODULE_PATH"].split(os.pathsep)
     if windows():
-        matches = [kMayaVersion, "Common Files"]
+        matches = [mayaVersion, "Common Files"]
     elif linux():
-        matches = [kMayaVersion, os.environ["HOME"]]
+        matches = [mayaVersion, os.environ["HOME"]]
     elif macOS():
-        matches = [kMayaVersion]
+        matches = [mayaVersion]
     path = None
-    for modPath in paths:
+    for modPath in modPaths:
         if all(match in modPath for match in matches):
             path = modPath
             break
     if not path:
-        emitMsg(kModPathErrorMsg)
+        emitMsg(modPathErrorMsg)
         return None
     if not os.path.isdir(path):
         os.mkdir(path)
+    print("Maya module path: %s" % os.path.abspath(path))
     return os.path.abspath(path)
 
 def checkMod(modPath):
+    print("Checking existed installation...")
     filePath = os.path.join(modPath, "gfTools.mod")
-    return os.path.isfile(filePath)
+    if not os.path.isfile(filePath):
+        emitMsg(appNotFounded, icn="warning")
+        return False
+    return True
 
 def uninstallModFile(modFile):
     # pylint: disable=broad-except
-    printMsg("Uninstalling module file...")
+    print("Uninstalling module file...")
     try:
         os.remove(modFile)
     except Exception as err:
@@ -91,49 +100,48 @@ def uninstallModFile(modFile):
 
 def emitMsg(msg, b=["Ok"], db="Ok", icn="critical", **kwargs):
     # pylint: disable=exec-used, dangerous-default-value, unused-argument, invalid-name
-    cmd = "cmds.confirmDialog(t=kDialogTitle, m=msg, b=b, db=db, icn=icn"
+    cmd = "cmds.confirmDialog(t=dialogTitle, m=msg, b=b, db=db, icn=icn"
     for key, value in kwargs.items():
         cmd += ', %s="%s"' % (key, value)
     cmd += ")"
     exec(cmd)
-    printMsg(msg)
+    print(msg)
 
 def emitUninstallPrompt():
-    status = cmds.confirmDialog(t=kDialogTitle, m=kUninstallMsg, b=["Uninstall", "Cancel"], db="Uninstall",
+    status = cmds.confirmDialog(t=dialogTitle, m=uninstallMsg, b=["Uninstall", "Cancel"], db="Uninstall",
                                 cb="Cancel", ds="Cancel", icn="question")
     if status == "Uninstall":
         return True
-    else:
-        return False
+    return False
 
 #############################################################################################
 # RUN
 
 def onMayaDroppedPythonFile(*args):
     # pylint: disable=unused-argument
-    # 1- Promp Uninstallation
-    printMsg("")
+    # 1- Prompt Uninstallation
+    print("")
     uninstallIt = emitUninstallPrompt()
     if not uninstallIt:
         emitMsg("The uninstallation was canceled.")
         return
-    printMsg("Uninstalling gfTools for Autodesk Maya %s." % kMayaVersion)
+    print("Uninstalling gfTools for Autodesk Maya %s." % mayaVersion)
     # 2- Get Maya module path
     modPath = getMayaModulePath()
     if not modPath:
         return
-    printMsg("Maya module path: %s" % modPath)
     # 3- Check gfTools installation
     status = checkMod(modPath)
     if not status:
-        emitMsg(kAppNotFounded, icn="warning")
         return
-    printMsg("gfTools directory path: %s" % kAppPath)
-    # 4- Find and delete gfTools mod file
+    # 4- Print gfTools information
+    print("gfTools version: %s" % gfCore.version())
+    print("gfTools directory: %s" % gfCore.installLocation())
+    # 5- Find and delete gfTools mod file
     modFile = os.path.join(modPath, "gfTools.mod")
-    printMsg("Found gfTools mod file: %s" % modFile)
+    print("Found gfTools mod file: %s" % modFile)
     status = uninstallModFile(modFile)
     if not status:
         return
-    # 5- Promp to restart Maya
-    emitMsg(kSucessMsg, icn="information")
+    # 6- Prompt to restart Maya
+    emitMsg(sucessMsg, icn="information")

@@ -8,11 +8,10 @@ core/_studies/RigAPI
 core/app
 
 # Design
-*.ttf
 *.otf
 *.eps
 *.ai
-*.svg
+# *.svg
 *.png
 
 # gfTools tools

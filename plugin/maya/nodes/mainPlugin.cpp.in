@@ -142,8 +142,7 @@ Sources:
 
 
 const char* kAuthor = "Giuliano Franca";
-MString res = MGlobal::executePythonCommandStringResult("import gfTools; gfTools.version()");
-const char* kVersion = res.asChar();
+const char* kVersion = "@GFTOOLS_STR_VERSION@";
 const char* kRequiredAPIVersion = "Any";
 
 // gfDebug

@@ -29,8 +29,8 @@ Requirements:
     * Maya 2018 or above.
 
 Todo:
-    * Load/Unload shelf
     * Undo stack for rig framework
+    * If only BUILD_LIBS are setted remove python scripts from this file (menu, shelf and version)
 
 Sources:
     * NDA
@@ -41,8 +41,7 @@ Sources:
 
 
 const char* kAuthor = "Giuliano Franca";
-MString res = MGlobal::executePythonCommandStringResult("import gfTools; gfTools.version()");
-const char* kVersion = res.asChar();
+const char* kVersion = "@GFTOOLS_STR_VERSION@";
 const char* kRequiredAPIVersion = "Any";
 
 
@@ -51,8 +50,10 @@ MStatus initializePlugin(MObject mobject){
     MFnPlugin mPlugin(mobject, kAuthor, kVersion, kRequiredAPIVersion, &status);
     status = mPlugin.setName("gfTools");
 
-    MGlobal::executePythonCommand("import gfToolsMenu; gfToolsMenu.load()");
-    MGlobal::executePythonCommand("import gfToolsShelf; gfToolsShelf.load()");
+    #ifdef ADD_SHELF_AND_MENU
+        MGlobal::executePythonCommand("import gfToolsMenu; gfToolsMenu.load()");
+        MGlobal::executePythonCommand("import gfToolsShelf; gfToolsShelf.load()");
+    #endif
     MGlobal::displayInfo("[gfTools] Plugin loaded successfully.");
 
     return status;
@@ -62,8 +63,10 @@ MStatus uninitializePlugin(MObject mobject){
     MStatus status;
     MFnPlugin mPlugin(mobject, kAuthor, kVersion, kRequiredAPIVersion, &status);
 
-    MGlobal::executePythonCommand("import gfToolsMenu; gfToolsMenu.unload()");
-    MGlobal::executePythonCommand("import gfToolsShelf; gfToolsShelf.unload()");
+    #ifdef ADD_SHELF_AND_MENU
+        MGlobal::executePythonCommand("import gfToolsMenu; gfToolsMenu.unload()");
+        MGlobal::executePythonCommand("import gfToolsShelf; gfToolsShelf.unload()");
+    #endif
     MGlobal::displayInfo("[gfTools] Plugin unloaded successfully.");
 
     return status;

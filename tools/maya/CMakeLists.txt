@@ -1,0 +1,7 @@
+foreach(TOOL ${TOOLS_SELECTION})
+    if(TOOL STREQUAL gfUtilitiesBelt)
+        add_subdirectory(gfUtilitiesBelt)
+    else()
+        message(FATAL_ERROR "Tool (${TOOL}) not recognized.")
+    endif()
+endforeach()
