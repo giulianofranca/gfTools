@@ -13,6 +13,22 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 
+* \author Giuliano Franca
+* \version 1.0.0-alpha
+* \date 2020-10-09
+* \bug when clicking on the X in the corner the application does not terminate correctly.
+* \warning improper use of this code may void your car's warranty
+* \copyright GNU Public License
+* \mainpage The teensy LED controller
+* \section intro_sec Introduction
+* This code was developed to torture students.
+* \section compile_sec Compilation
+* Here I would describe how to compile this code with cmake and make.
+* \subsection Step 1 - CMake
+* How to use cmake
+* \subsection Step 2 - Make
+* How to use make
+
 TODO:
     * Create a method to delete a list of attributes from selection 
         or from list of objects.
@@ -67,10 +83,10 @@ TODO:
 
 OPEN_GFTOOLS_TYPES_NAMESPACE
 
-// TODO: Learn how to deal with vector and array attributes
-// TODO: Add vector of units
-// TODO: Recognize vector types looking at child's types.
-// TODO: Fix AttributeTypes in Python not working with int numbers
+//! \todo: Learn how to deal with vector and array attributes
+//! \todo: Add vector of units
+//! \todo: Recognize vector types looking at child's types.
+//! \todo: Fix AttributeTypes in Python not working with int numbers
 
 enum class AttributeTypes{
     kNone = 0,                  //!< No attribute attatched
@@ -110,37 +126,75 @@ OPEN_GFTOOLS_MAIN_NAMESPACE
 
 
 
-// TODO: deleteAttribute()
-// TODO: equal operator
-// TODO: loadAttribute(attrName) - Return a specified typed attribute class instance
-// TODO: Move attributes in channel box (upper and lower)
-// TODO: Review std::string reference and copies for Attribute class members.
-// TODO: Check if this attribute is the same type of another.
-// TODO: Create separator attributes (static)
-// TODO: In child classes: setAttr value function()
-// TODO: transferAttributes()
-// TODO: Add constructor that use MPlug
-// TODO: Add copy constructor
-// TODO: Convert Attribute class to Typed Attribute class (e.g.: asNumericAttribute())
-// TODO: Create AttributeList class
-// TODO: Convert listAllAttributes() and listExtraAttributes() to return 
-// AttributeList class
-// TODO: Fix display errors and return bool at the same time
-// TODO: static findMFnType()
-// TODO: setAttribute(MObject) overload
-// TODO: Add = operator to child classes
-// TODO: Change objectName and attributeName to properties
+//! \todo: deleteAttribute()
+//! \todo: equal operator
+//! \todo: loadAttribute(attrName) - Return a specified typed attribute class instance
+//! \todo: Move attributes in channel box (upper and lower)
+//! \todo: Review std::string reference and copies for Attribute class members.
+//! \todo: Check if this attribute is the same type of another.
+//! \todo: Create separator attributes (static)
+//! \todo: In child classes: setAttr value function()
+//! \todo: transferAttributes()
+//! \todo: Add constructor that use MPlug
+//! \todo: Add copy constructor
+//! \todo: Convert Attribute class to Typed Attribute class (e.g.: asNumericAttribute())
+//! \todo: Create AttributeList class
+//! \todo: Convert listAllAttributes() and listExtraAttributes() to return AttributeList class
+//! \todo: Fix display errors and return bool at the same time
+//! \todo: static findMFnType()
+//! \todo: setAttribute(MObject) overload
+//! \todo: Add = operator to child classes
+//! \todo: Change objectName and attributeName to properties
+
+//! \brief A vector math class for vectors of doubles.
+/*!
+This class provides access to Maya's internal vector math library allowing
+vectors to be handled easily, and in a manner compatible with internal
+Maya data structures.
+
+All methods that query the vector are threadsafe, all methods that
+modify the vector are not threadsafe.
+    \param[in] src the vector object to copy
+    \see Nothing here
+    \note A little note
+    \attention A little more important than a note
+*/
+/// ## Example
+/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~.cpp
+/// MyClass* a = new MyClass();     // A comment
+/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/*! \details For this function to work, the widget class must have pointer for all
+* widgets that we want to modify from the core.
+*/
+
 
 class Attribute{
     public:
         Attribute();
+        /*!
+            Class constructor.  Initializes the vector with the
+            explicit x, y and z values provided as arguments.
+
+            \param[in] xx the x component of the vector
+            \param[in] yy the y component of the vector
+            \param[in] zz the z component of the vector.  Defaults to 0.0.
+            \return Bool True of the vectors are equivalent and false otherwise.
+        */
         Attribute(std::string& objName);
         Attribute(MString& objName);
         Attribute(std::string& objName, std::string& attribName);
         Attribute(MString& objName, MString& attribName);
         Attribute(MPlug& attrPlug);
+        /*!
+            Class destructor.
+        */
         virtual ~Attribute();
 
+        /*!
+            The assignment operator.  Allows assignment between MVectors.
+
+            \param[in] src Vector to copy from.
+        */
         virtual bool                                operator==(const Attribute& other) const;
         virtual bool                                operator!=(const Attribute& other) const;
         // return !(*this == other)

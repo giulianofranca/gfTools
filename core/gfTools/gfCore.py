@@ -1,4 +1,7 @@
-# -*- coding: utf-8 -*-
+## @package gfCore
+#  Documentation for this module.
+#
+#  More defails.
 """
 Copyright 2020 Giuliano Franca
 
@@ -31,8 +34,11 @@ Todo:
 This code supports Pylint. Rc file in project.
 """
 import os
+import maya.cmds as cmds
 
-
+## Return the application version in a string.
+#
+#  @return str The application version.
 def version():
     """Return the application version in a string.
 
@@ -40,6 +46,24 @@ def version():
         str: The application version.
     """
     return "@GFTOOLS_STR_VERSION@"
+
+
+## Documentation for a class.
+#
+#  More details.
+class Test:
+
+    ## @var _memVar
+    #  a member variable
+
+    ## The constructor.
+    def __init__(self):
+        self._memVar = 0
+
+    ## Documentation for a method.
+    #  @param self The object pointer.
+    def pyMethod(self):
+        pass
 
 
 def majorVersion():
@@ -67,6 +91,15 @@ def patchVersion():
         int: The application patch version.
     """
     return int("@GFTOOLS_PATCH_VERSION@")
+
+
+def tweakVersion():
+    """Return the application tweak version.
+
+    Returns:
+        str: The application tweak version.
+    """
+    return "@GFTOOLS_TWEAK_VERSION@"
 
 
 def mayaVersionsCompatible():
@@ -99,85 +132,34 @@ def installLocation():
     return os.path.abspath(gfToolsPath)
 
 
+def loadPlugin():
+    """Load gfTools plugin.
+
+    Returns:
+        Bool: True if it suceeded and False if it doesn't.
+    """
+    # pylint: disable=broad-except
+    if platform() == "Windows":
+        pluginExt = ".mll"
+    elif platform() == "Linux":
+        pluginExt = ".so"
+    elif platform() == "Darwin":
+        pluginExt = ".bundle"
+    pluginName = "gfTools%s" % pluginExt
+    try:
+        cmds.loadPlugin(pluginName)
+    except Exception:
+        return False
+    return True
 
 
-
-
-
-
-# pylint: disable=import-error, import-outside-toplevel
-# if sys.version_info.major >= 3:
-#     import pickle
-# else:
-#     import cPickle as pickle
-
-
-
-# def version():
-#     """Return the application version.
-
-#     Returns:
-#         str: The application version.
-#     """
-#     data = getAppInfo()
-#     if not data:
-#         return
-#     return data["Version"]
-
-
-# def getAppInfo():
-#     """Return application information.
-
-#     Returns:
-#         Dict or False: The dict containing all the application information if file founded.
-#     """
-#     gfToolsPath = installLocation()
-#     appInfoFile = os.path.join(gfToolsPath, "core", "app")
-#     try:
-#         with open(appInfoFile, "rb") as f:
-#             data = pickle.load(f)
-#     except IOError as err:
-#         print(err)
-#         return False
-#     return data
-
-
-# def verifyMayaVersion():
-#     """Verify if the current Maya version is compatible with gfTools.
-
-#     Returns:
-#         bool: True if its compatible False if its not.
-#     """
-#     import maya.cmds as cmds
-#     currentVersion = int(cmds.about(version=True))
-
-#     data = getAppInfo()
-#     if not data:
-#         return False
-#     if currentVersion not in data["Maya Versions Compatible"]:
-#         return False
-#     return True
-
-
-# def verifyPlatform():
-#     """Verify if gfTools is compatible with current system platform.
-
-#     Returns:
-#         bool: True if its compatible False if its not.
-#     """
-#     data = getAppInfo()
-#     if not data:
-#         return False
-#     if platform.system() != data["Platform"]:
-#         return False
-#     return True
-
-
-# def installLocation():
-#     """Return the path to the install location of gfTools.
-
-#     Returns:
-#         str: The gfTools installation path
-#     """
-#     gfToolsPath = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir))
-#     return gfToolsPath
+def isPluginLoaded():
+    """Is plugin loaded?"""
+    if platform() == "Windows":
+        pluginExt = ".mll"
+    elif platform() == "Linux":
+        pluginExt = ".so"
+    elif platform() == "Darwin":
+        pluginExt = ".bundle"
+    pluginName = "gfTools%s" % pluginExt
+    return cmds.pluginInfo(pluginName, q=True, loaded=True)

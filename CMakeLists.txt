@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 project(gfTools)
+# Add definitions: USE_CUSTOM_PYBIND11 and USE_CUSTOM_EIGEN | CUSTOM_PYBIND11_PATH and CUSTOM_EIGEN_PATH
 
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -17,7 +18,7 @@ message(STATUS "Install location: ${CMAKE_INSTALL_PREFIX}")
 
 # Add subdirectories
 if(BUILD_DOCS)
-    # add_subdirectory(docs)
+    add_subdirectory(docs)
 endif()
 if(BUILD_TOOLS OR BUILD_LIBS)
     add_subdirectory(core)

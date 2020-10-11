@@ -25,6 +25,8 @@ Requirements:
 This code supports Pylint. Rc file in project.
 """
 # pylint: disable=import-error, fixme, missing-function-docstring
+# TODO (Urgent): If only-nodes, choose by category which nodes will be compiled
+# TODO: Put the package zip file inside package folder
 from distutils.spawn import find_executable
 import sys
 import os
