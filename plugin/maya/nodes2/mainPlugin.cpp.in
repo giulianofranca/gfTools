@@ -1,0 +1,87 @@
+/*
+Copyright 2020 Giuliano Franca
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+Nodes:
+    * gfAngleMath               (MPxNode): Basic double angle math operations.
+    * gfAngleTrig               (MPxNode): Double angle trigonometric operations.
+
+Todo:
+    * gfAngleBlend
+    * gfAngleClamp
+*/
+
+// Nodes
+#include "headers/angleMath.hpp"
+#include "headers/angleTrig.hpp"
+
+#include <maya/MFnPlugin.h>
+#include <maya/MDrawRegistry.h>
+#include <maya/MGlobal.h>
+
+
+#define REGISTER_NODE(plugin, nodeClass)        \
+    status = plugin.registerNode(               \
+        nodeClass::kNodeName,                   \
+        nodeClass::kNodeID,                     \
+        nodeClass::creator,                     \
+        nodeClass::initialize,                  \
+        MPxNode::kDependNode,                   \
+        &nodeClass::kNodeClassify               \
+    );                                          \
+    CHECK_MSTATUS_AND_RETURN_IT(status)         \
+
+#define DEREGISTER_NODE(plugin, nodeClass)                  \
+    status = plugin.deregisterNode(nodeClass::kNodeID);     \
+    CHECK_MSTATUS_AND_RETURN_IT(status)                     \
+
+
+const char* kAuthor = "Giuliano Franca";
+const char* kVersion = "@GFTOOLS_STR_VERSION@";
+const char* kRequiredAPIVersion = "Any";
+const char* kUtilityNodeClassify = "utility/general";
+
+// Nodes
+const MString AngleMath::kNodeName = "gfAngleMath";
+const MString AngleMath::kNodeClassify = kUtilityNodeClassify;
+const MTypeId AngleMath::kNodeID = 0x00130d80;
+const MString AngleTrig::kNodeName = "gfAngleTrig";
+const MString AngleTrig::kNodeClassify = kUtilityNodeClassify;
+const MTypeId AngleTrig::kNodeID = 0x00130d81;
+
+
+MStatus initializePlugin(MObject mobject){
+    MStatus status;
+    MFnPlugin mPlugin(mobject, kAuthor, kVersion, kRequiredAPIVersion, &status);
+    CHECK_MSTATUS_AND_RETURN_IT(status);
+    status = mPlugin.setName("gfToolsNodes");
+
+    REGISTER_NODE(mPlugin, AngleMath);
+    REGISTER_NODE(mPlugin, AngleTrig);
+    MGlobal::displayInfo("[gfToolsNodes] Plugin loaded successfully.");
+
+    return MStatus::kSuccess;
+}
+
+MStatus uninitializePlugin(MObject mobject){
+    MStatus status;
+    MFnPlugin mPlugin(mobject, kAuthor, kVersion, kRequiredAPIVersion, &status);
+    CHECK_MSTATUS_AND_RETURN_IT(status);
+
+    DEREGISTER_NODE(mPlugin, AngleMath);
+    DEREGISTER_NODE(mPlugin, AngleTrig);
+    MGlobal::displayInfo("[gfToolsNodes] Plugin unloaded successfully.");
+
+    return MStatus::kSuccess;
+}
