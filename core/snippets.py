@@ -1168,9 +1168,99 @@ def unfreezeTransformations():
         rp = fnTrans.rotatePivot(om2.MSpace.kWorld)
         vPos = om2.MVector(rp.x, rp.y, rp.z)
         fnTrans.translateBy(-vPos, om2.MSpace.kWorld)
-        cmds.makeIdentity(a=True, t=True, r=True, s=True, n=False, pn=True)
+        cmds.makeIdentity(a=True, t=True, r=False, s=False, n=False, pn=True)
         fnTrans.translateBy(vPos, om2.MSpace.kWorld)
     return True
+
+def unfreezeRotations():
+    """Unfreeze selected objects rotation.
+    """
+    # TODO: Clean up the script
+    # TODO: Set closest point by selection (vertex / edge / face)
+    # TODO: Remove useVertices flag
+    # TODO: Fix primary and up axes
+    # TODO: Figure out how to align the up vector. (Currently using up world)
+
+    # Arguments
+    vPrimaryAxis = om2.MVector.kZaxisVector
+    vUpAxis = om2.MVector.kYaxisVector
+    useVertices = False        # Use closest vertex of the closest point
+
+    pi = 3.141592653589793
+
+
+    # Get object from selection
+    selList = om2.MGlobal.getActiveSelectionList()
+    objMob = selList.getDependNode(0)
+    if not objMob.hasFn(om2.MFn.kDagNode):
+        objName = om2.MFnDependencyNode(objMob).name()
+        raise RuntimeError("Object '%s' is not a DAG node. Can only operate in DAG objects." % objName)
+    objPath = selList.getDagPath(0)
+
+    # Check if object have rotation
+    transFn = om2.MFnTransform(objPath)
+    qRot = transFn.rotation(om2.MSpace.kWorld, asQuaternion=True)
+    if qRot != om2.MQuaternion():
+        raise RuntimeError("Object '%s' have rotation values." % objPath.partialPathName())
+
+    # Get current transformation
+    pLastPivotTrans = transFn.rotatePivot(om2.MSpace.kWorld)
+    qLastPivotOri = om2.MQuaternion()
+
+    # Get bounding box
+    dagFn = om2.MFnDagNode(objPath)
+    objBBox = dagFn.boundingBox
+    pObjCenter = objBBox.center
+
+    # Get shape node
+    shapeMob = None
+    for i in range(dagFn.childCount()):
+        child = dagFn.child(i)
+        name = om2.MFnDependencyNode(child).name()
+        if "ShapeOrig" in name:
+            continue
+        if child.hasFn(om2.MFn.kMesh):
+            shapeMob = child
+            break
+    if shapeMob is None:
+        raise RuntimeError("Could not find any shape of type kMesh.")
+    shapePath = om2.MDagPath.getAPathTo(shapeMob)
+
+    # Get closest point
+    meshFn = om2.MFnMesh(shapePath)
+    if useVertices:
+        _, faceId = meshFn.getClosestPoint(pObjCenter, om2.MSpace.kWorld)
+        verticesId = meshFn.getPolygonVertices(faceId)
+        distances = []
+        for i in range(len(verticesId)):
+            pPoint = meshFn.getPoint(verticesId[i])
+            test = pPoint - pObjCenter
+            distances.append(test.length())
+        vtxId = verticesId[distances.index(min(distances))]
+        pClosestPos = meshFn.getPoint(vtxId)
+        vClosestNormal = meshFn.getVertexNormal(vtxId, False, om2.MSpace.kWorld)
+    else:
+        pClosestPos, vClosestNormal, faceId = meshFn.getClosestPointAndNormal(pObjCenter, om2.MSpace.kWorld)
+
+    # Get pivot orientation
+    qBasis = om2.MQuaternion()
+    qAim = om2.MQuaternion(vPrimaryAxis, vClosestNormal)
+    qBasis *= qAim
+    vUpWorld = om2.MVector.kYaxisVector
+    vUp = vUpWorld - ((vUpWorld * vClosestNormal) * vClosestNormal)
+    vUp.normalize()
+    nUp = vUpAxis.rotateBy(qAim)
+    angle = nUp.angle(vUp)
+    qNormal = om2.MQuaternion(angle, vClosestNormal)
+    if not vUp.isEquivalent(nUp.rotateBy(qNormal), 1.0e-5):
+        angle = 2.0 * pi - angle
+        qNormal = om2.MQuaternion(angle, vClosestNormal)
+    qBasis *= qNormal
+
+    # Set the inverse orientation, freeze it, and set the orientation again
+    transFn.setRotation(qBasis.inverse(), om2.MSpace.kWorld)
+    cmds.makeIdentity(apply=True, t=False, r=True, s=False, n=False, pn=True)
+    transFn.setRotation(qBasis, om2.MSpace.kWorld)
 
 
 def createObject(objType, name=None):
@@ -1196,8 +1286,8 @@ def createObject(objType, name=None):
     om2.MGlobal.setActiveSelectionList(sel)
     return name
 
-def createObjectOnTransform(objType="transform", namePreffix=None):
-    """Create objects in top of selected objects.
+def createObjectsOnTransforms(objType="transform", namePreffix=None):
+    """Create objects on top of selected objects.
 
     Args:
         objType (string: "transform" [Optional]): The type of the object.
@@ -1209,6 +1299,8 @@ def createObjectOnTransform(objType="transform", namePreffix=None):
     Raises:
         TypeError: If the objType is not a DagNode or don't exists.
     """
+    # TODO: Align with pivot rotation
+    # TODO: Construction methods can be: centerOfMesh (bbox), pivotLocation
     sel = om2.MGlobal.getActiveSelectionList()
     dagFn = om2.MFnDagNode()
     objsList = []
@@ -1229,10 +1321,183 @@ def createObjectOnTransform(objType="transform", namePreffix=None):
         transFn.translateBy(objTrans, om2.MSpace.kTransform)
         transFn.rotateBy(objRot, om2.MSpace.kTransform)
         objsList.append(om2.MFnDependencyNode(newObj).name())
-    selList = om2.MSelectionList().add(newObj)
+    selList = om2.MSelectionList().add(om2.MDagPath.getAPathTo(newObj))
     om2.MGlobal.setSelectionMode(om2.MGlobal.kSelectObjectMode)
     om2.MGlobal.setActiveSelectionList(selList)
     return objsList
+
+def createObjectsOnComponents(objType="transform", namePreffix=None):
+    """Create objects on top of selected components.
+
+    Args:
+        objType (string: "transform" [Optional]): The type of the object.
+        namePreffix (string: None [Optional]): The name preffix of the objects about to be created.
+    """
+    # TODO: Create existing objects in component selection. Objects can be mesh, curve, surface or locators
+    # TODO: Option to create instances
+    # TODO: Align with normals
+    # TODO: Find a way to use curve / surface EPs
+    if namePreffix is None or namePreffix == "":
+        namePreffix = "object"
+    meshCmpnts = [om2.MFn.kMeshVertComponent, om2.MFn.kMeshEdgeComponent, om2.MFn.kMeshPolygonComponent]
+    curveCmpnts = [om2.MFn.kCurveCVComponent, om2.MFn.kCurveEPComponent, om2.MFn.kCurveParamComponent]
+    surfCmpnts = [om2.MFn.kSurfaceCVComponent, om2.MFn.kSurfaceEPComponent, om2.MFn.kSurfaceFaceComponent]
+
+    selList = om2.MGlobal.getActiveSelectionList()
+    for i in range(selList.length()):
+        shapePath, cmpntMob = selList.getComponent(i)
+        posList = om2.MPointArray()
+        if cmpntMob.isNull():
+            # Object selection
+            raise RuntimeError("Selection is a object.")
+        else:
+            if cmpntMob.apiType() in meshCmpnts:
+                # Mesh Component selection
+                cmpntFn = om2.MFnSingleIndexedComponent(cmpntMob)
+                elementsIDs = cmpntFn.getElements()
+                meshFn = om2.MFnMesh(shapePath)
+                if cmpntMob.hasFn(om2.MFn.kMeshVertComponent):
+                    # Mesh Vertices
+                    for id in elementsIDs:
+                        posList.append(meshFn.getPoint(id, om2.MSpace.kWorld))
+                elif cmpntMob.hasFn(om2.MFn.kMeshEdgeComponent):
+                    # Mesh Edges
+                    for id in elementsIDs:
+                        vertIDs = meshFn.getEdgeVertices(id)
+                        pnt1 = meshFn.getPoint(vertIDs[0], om2.MSpace.kWorld)
+                        pnt2 = meshFn.getPoint(vertIDs[1], om2.MSpace.kWorld)
+                        pntRes = om2.MPoint((pnt1.x + pnt2.x) / 2.0,
+                                            (pnt1.y + pnt2.y) / 2.0,
+                                            (pnt1.z + pnt2.z) / 2.0)
+                        posList.append(pntRes)
+                elif cmpntMob.hasFn(om2.MFn.kMeshPolygonComponent):
+                    # Mesh Faces
+                    for id in elementsIDs:
+                        vertIDs = meshFn.getPolygonVertices(id)
+                        pntSum = om2.MPoint()
+                        for vid in vertIDs:
+                            pntSum += meshFn.getPoint(vid, om2.MSpace.kWorld)
+                        pntRes = om2.MPoint(pntSum.x / float(len(vertIDs)),
+                                            pntSum.y / float(len(vertIDs)),
+                                            pntSum.z / float(len(vertIDs)))
+                        posList.append(pntRes)
+            elif cmpntMob.apiType() in curveCmpnts:
+                # Curve Component selection
+                cmpntFn = om2.MFnSingleIndexedComponent(cmpntMob)
+                elementsIDs = cmpntFn.getElements()
+                curveFn = om2.MFnNurbsCurve(shapePath)
+                if cmpntMob.hasFn(om2.MFn.kCurveCVComponent):
+                    # Curve CVs
+                    for id in elementsIDs:
+                        posList.append(curveFn.cvPosition(id, om2.MSpace.kWorld))
+                elif cmpntMob.hasFn(om2.MFn.kCurveEPComponent):
+                    # Curve EPs
+                    raise RuntimeError("This tool does not support curve edit points selection.")
+                elif cmpntMob.hasFn(om2.MFn.kCurveParamComponent):
+                    # Curve Parameters
+                    raise RuntimeError("This tool does not support curve parameters selection.")
+            elif cmpntMob.apiType() in surfCmpnts:
+                # Surface Component selection
+                cmpntFn = om2.MFnDoubleIndexedComponent(cmpntMob)
+                elementsIDs = cmpntFn.getElements()
+                surfFn = om2.MFnNurbsSurface(shapePath)
+                if cmpntMob.hasFn(om2.MFn.kSurfaceCVComponent):
+                    # Surface CVs
+                    for id in elementsIDs:
+                        posList.append(surfFn.cvPosition(id[0], id[1], om2.MSpace.kWorld))
+                elif cmpntMob.hasFn(om2.MFn.kSurfaceFaceComponent):
+                    # Surface Patches
+                    raise RuntimeError("This tool does not support surface patches selection.")
+            else:
+                # Non recognized component selection
+                raise RuntimeError("Selection is a non recognized component.")
+        # Create the objects
+        dagFn = om2.MFnDagNode()
+        transFn = om2.MFnTransform()
+        outSelList = om2.MSelectionList()
+        grpMob = dagFn.create("transform", "%s%s_grp" % (namePreffix, i))
+        outSelList.add(om2.MDagPath.getAPathTo(grpMob))
+        for j, pnt in enumerate(posList):
+            newObjMob = dagFn.create(objType, "%s%s" % (namePreffix, j), grpMob)
+            transFn.setObject(newObjMob)
+            transFn.translateBy(om2.MVector(pnt), om2.MSpace.kTransform)
+        om2.MGlobal.setSelectionMode(om2.MGlobal.kSelectObjectMode)
+        om2.MGlobal.setActiveSelectionList(outSelList)
+
+def attatchObjectsToCurve(useClosestPos=False):
+    """
+
+    Raises:
+        RuntimeError: If the objects selected is not a DAG node or if last object selected is not a NURBS curve.
+    """
+    # TODO: Made construction methods: maintainOffset, closestPosition, parameterDistribution
+    # Check if the last object is a NURBS curve
+    selList = om2.MGlobal.getActiveSelectionList()
+    curveMob = selList.getDependNode(selList.length() - 1)
+    selList.remove(selList.length() - 1)
+    if curveMob.hasFn(om2.MFn.kTransform):
+        curvePath = om2.MDagPath.getAPathTo(curveMob)
+        dagFn = om2.MFnDagNode(curvePath)
+        childCount = dagFn.childCount()
+        if not childCount:
+            raise RuntimeError("Last object selected is not a NURBS curve.")
+        for i in range(childCount):
+            childMob = dagFn.child(i)
+            if childMob.hasFn(om2.MFn.kNurbsCurve):
+                curveMob = childMob
+                break
+        if not curveMob.hasFn(om2.MFn.kNurbsCurve):
+            raise RuntimeError("Last object selected is not a NURBS curve.")
+    elif curveMob.hasFn(om2.MFn.kNurbsCurve):
+        # Pass it if the selection is the actually NURBS curve
+        pass
+    else:
+        raise RuntimeError("Last object selected is not a NURBS curve.")
+
+    # Attatch to curve
+    curveFn = om2.MFnNurbsCurve(om2.MDagPath.getAPathTo(curveMob))
+    dgMod = om2.MDGModifier()
+    nodeFn = om2.MFnDependencyNode()
+    if useClosestPos:
+        transFn = om2.MFnTransform()
+    else:
+        numObjs = selList.length()
+        step = 1.0 / float(numObjs)
+    for i in range(selList.length()):
+        curMob = selList.getDependNode(i)
+        if not curMob.hasFn(om2.MFn.kDagNode):
+            raise RuntimeError("Selection must be DAG nodes.")
+        # Get the U parameter
+        if useClosestPos:
+            curPath = om2.MDagPath.getAPathTo(curMob)
+            transFn.setObject(curPath)
+            pPos = om2.MPoint(transFn.translation(om2.MSpace.kWorld))
+            _, parU = curveFn.closestPoint(pPos, space=om2.MSpace.kWorld)
+        else:
+            parU = step * i
+        # Create the motionPath
+        moPathNode = dgMod.createNode("motionPath")
+        nodeFn.setObject(curveMob)
+        curveWSPlug = nodeFn.findPlug("worldSpace", False)
+        curveWSPlug = curveWSPlug.elementByLogicalIndex(0)
+        nodeFn.setObject(moPathNode)
+        geoPathPlug = nodeFn.findPlug("geometryPath", False)
+        dgMod.connect(curveWSPlug, geoPathPlug)
+        # Set the U parameter
+        uValPlug = nodeFn.findPlug("uValue", False)
+        dgMod.newPlugValueMDistance(uValPlug, om2.MDistance(parU))
+        # Connect allCoordinates attribute to current obj
+        allCoordPlugX = nodeFn.findPlug("xCoordinate", False)
+        allCoordPlugY = nodeFn.findPlug("yCoordinate", False)
+        allCoordPlugZ = nodeFn.findPlug("zCoordinate", False)
+        nodeFn.setObject(curMob)
+        transPlugX = nodeFn.findPlug("tx", False)
+        transPlugY = nodeFn.findPlug("ty", False)
+        transPlugZ = nodeFn.findPlug("tz", False)
+        dgMod.connect(allCoordPlugX, transPlugX)
+        dgMod.connect(allCoordPlugY, transPlugY)
+        dgMod.connect(allCoordPlugZ, transPlugZ)
+    dgMod.doIt()
 
 def getPoleVectorPosition(distance=1.0):
     """Find the right pole vector position based on selection.
