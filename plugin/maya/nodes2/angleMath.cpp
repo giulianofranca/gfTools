@@ -8,7 +8,7 @@
     FNATTR.setKeyable(true);    \
     CHECK_MSTATUS_AND_RETURN_IT(status);
 
-// Configure a input attribute.
+// Configure a output attribute.
 #define OUTPUT_ATTR(FNATTR)     \
     FNATTR.setWritable(false);  \
     FNATTR.setReadable(true);   \

@@ -30,25 +30,27 @@ Todo:
 class AngleMath : public MPxNode{
 public:
     AngleMath();
-    virtual ~AngleMath();
+    ~AngleMath() override;
 
-    // Public Methods
-    virtual MPxNode::SchedulingType     schedulingType() const;
-    virtual MStatus                     compute(const MPlug& plug,
-                                                MDataBlock& dataBlock);
-    static MStatus                      initialize();
-    static void*                        creator();
+    // Public Override Methods
+    MPxNode::SchedulingType     schedulingType() const override;
+    MStatus                     compute(const MPlug& plug,
+                                        MDataBlock& dataBlock) override;
+
+    // Public Static Methods
+    static MStatus              initialize();
+    static void*                creator();
 
     // Public Members
-    const static MString                kNodeName;
-    const static MString                kNodeClassify;
-    const static MTypeId                kNodeID;
+    const static MString        kNodeName;
+    const static MString        kNodeClassify;
+    const static MTypeId        kNodeID;
 
     // Attributes
-    static MObject                      inAngle1;
-    static MObject                      inAngle2;
-    static MObject                      inOperation;
-    static MObject                      outAngle;
+    static MObject              inAngle1;
+    static MObject              inAngle2;
+    static MObject              inOperation;
+    static MObject              outAngle;
 
     // Public Enums
     enum Operation{

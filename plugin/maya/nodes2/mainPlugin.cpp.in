@@ -25,6 +25,7 @@ Todo:
 // Nodes
 #include "headers/angleMath.hpp"
 #include "headers/angleTrig.hpp"
+#include "headers/visualizeVector.hpp"
 
 #include <maya/MFnPlugin.h>
 #include <maya/MDrawRegistry.h>
@@ -40,25 +41,62 @@ Todo:
         MPxNode::kDependNode,                   \
         &nodeClass::kNodeClassify               \
     );                                          \
-    CHECK_MSTATUS_AND_RETURN_IT(status)         \
+    CHECK_MSTATUS_AND_RETURN_IT(status);        \
 
 #define DEREGISTER_NODE(plugin, nodeClass)                  \
     status = plugin.deregisterNode(nodeClass::kNodeID);     \
-    CHECK_MSTATUS_AND_RETURN_IT(status)                     \
+    CHECK_MSTATUS_AND_RETURN_IT(status);                    \
+
+#define REGISTER_SHAPE(plugin, nodeClass, overrideClass)                    \
+    status = plugin.registerShape(                                          \
+        nodeClass::kNodeName,                                               \
+        nodeClass::kNodeID,                                                 \
+        nodeClass::creator,                                                 \
+        nodeClass::initialize,                                              \
+        NULL,                                                               \
+        &nodeClass::kNodeClassify                                           \
+    );                                                                      \
+    CHECK_MSTATUS_AND_RETURN_IT(status);                                    \
+    status = MHWRender::MDrawRegistry::registerGeometryOverrideCreator(     \
+        nodeClass::kNodeClassify,                                           \
+        nodeClass::kNodeRegistrantID,                                       \
+        overrideClass::creator                                              \
+    );                                                                      \
+    CHECK_MSTATUS_AND_RETURN_IT(status);                                    \
+
+#define DEREGISTER_SHAPE(plugin, nodeClass)                                 \
+    status = plugin.deregisterNode(nodeClass::kNodeID);                     \
+    CHECK_MSTATUS_AND_RETURN_IT(status);                                    \
+    status = MHWRender::MDrawRegistry::deregisterGeometryOverrideCreator(   \
+        nodeClass::kNodeClassify, nodeClass::kNodeRegistrantID);            \
+    CHECK_MSTATUS_AND_RETURN_IT(status);                                    \
+
+
 
 
 const char* kAuthor = "Giuliano Franca";
 const char* kVersion = "@GFTOOLS_STR_VERSION@";
 const char* kRequiredAPIVersion = "Any";
-const char* kUtilityNodeClassify = "utility/general";
+
+const MString kUtilityNodeClassify = "utility/general";
+const MString kShapesDrawDbClassify = "drawdb/geometry/gfToolsShapes";
+
+
+// Shapes
+const MString VisualizeVector::kNodeName = "gfVisualizeVector";
+const MString VisualizeVector::kNodeClassify = kShapesDrawDbClassify;
+const MString VisualizeVector::kNodeRegistrantID = "gfVisualizeVectorRID";
+const MTypeId VisualizeVector::kNodeID = 0x00130d80;
 
 // Nodes
 const MString AngleMath::kNodeName = "gfAngleMath";
 const MString AngleMath::kNodeClassify = kUtilityNodeClassify;
-const MTypeId AngleMath::kNodeID = 0x00130d80;
+const MTypeId AngleMath::kNodeID = 0x00130d81;
 const MString AngleTrig::kNodeName = "gfAngleTrig";
 const MString AngleTrig::kNodeClassify = kUtilityNodeClassify;
-const MTypeId AngleTrig::kNodeID = 0x00130d81;
+const MTypeId AngleTrig::kNodeID = 0x00130d82;
+
+
 
 
 MStatus initializePlugin(MObject mobject){
@@ -67,6 +105,7 @@ MStatus initializePlugin(MObject mobject){
     CHECK_MSTATUS_AND_RETURN_IT(status);
     status = mPlugin.setName("gfToolsNodes");
 
+    REGISTER_SHAPE(mPlugin, VisualizeVector, VisualizeVectorOverride);
     REGISTER_NODE(mPlugin, AngleMath);
     REGISTER_NODE(mPlugin, AngleTrig);
     MGlobal::displayInfo("[gfToolsNodes] Plugin loaded successfully.");

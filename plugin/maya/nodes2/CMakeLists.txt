@@ -5,10 +5,10 @@ configure_file("mainPlugin.cpp.in"
 
 set(SOURCE_FILES
     "${CMAKE_CURRENT_BINARY_DIR}/mainPlugin.cpp"
-    "angleMath.cpp" "angleTrig.cpp")
+    "angleMath.cpp" "angleTrig.cpp" "visualizeVector.cpp")
 
 set(HEADER_FILES
-    "headers/angleMath.hpp" "headers/angleTrig.hpp")
+    "headers/angleMath.hpp" "headers/angleTrig.hpp" "headers/visualizeVector.hpp")
 
 add_library(${PROJECT_NAME} SHARED ${SOURCE_FILES} ${HEADER_FILES})
 target_link_libraries(${PROJECT_NAME} PRIVATE Maya::Maya ${OPENGL_gl_LIBRARY})
