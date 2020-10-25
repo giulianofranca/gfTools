@@ -1,0 +1,14 @@
+global proc AEgfPoseReaderTemplate(string $nodeName){
+    editorTemplate -beginScrollLayout;
+        editorTemplate -beginLayout "gfPoseReader Attributes" -collapse 0;
+            editorTemplate -addControl "mode";
+            editorTemplate -addControl "pose";
+            editorTemplate -beginLayout "Vector Angle Settings" -collapse 1;
+                editorTemplate -addControl "targetAxis";
+                AEaddRampControl( $nodeName + ".vai" );
+            editorTemplate -endLayout;
+        editorTemplate -endLayout;
+        AEdependNodeTemplate $nodeName;
+    editorTemplate -addExtraControls;
+    editorTemplate -endScrollLayout;
+}

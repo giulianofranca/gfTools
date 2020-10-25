@@ -26,6 +26,7 @@ Todo:
 #include "headers/angleMath.hpp"
 #include "headers/angleTrig.hpp"
 #include "headers/visualizeVector.hpp"
+#include "headers/poseReader.hpp"
 
 #include <maya/MFnPlugin.h>
 #include <maya/MDrawRegistry.h>
@@ -86,15 +87,18 @@ const MString kShapesDrawDbClassify = "drawdb/geometry/gfToolsShapes";
 const MString VisualizeVector::kNodeName = "gfVisualizeVector";
 const MString VisualizeVector::kNodeClassify = kShapesDrawDbClassify;
 const MString VisualizeVector::kNodeRegistrantID = "gfVisualizeVectorRID";
-const MTypeId VisualizeVector::kNodeID = 0x00130d80;
+const MTypeId VisualizeVector::kNodeID = 0x00130d82;
 
 // Nodes
 const MString AngleMath::kNodeName = "gfAngleMath";
 const MString AngleMath::kNodeClassify = kUtilityNodeClassify;
-const MTypeId AngleMath::kNodeID = 0x00130d81;
+const MTypeId AngleMath::kNodeID = 0x00130d80;
 const MString AngleTrig::kNodeName = "gfAngleTrig";
 const MString AngleTrig::kNodeClassify = kUtilityNodeClassify;
-const MTypeId AngleTrig::kNodeID = 0x00130d82;
+const MTypeId AngleTrig::kNodeID = 0x00130d81;
+const MString PoseReader::kNodeName = "gfPoseReader";
+const MString PoseReader::kNodeClassify = kUtilityNodeClassify;
+const MTypeId PoseReader::kNodeID = 0x00130d83;
 
 
 
@@ -108,6 +112,7 @@ MStatus initializePlugin(MObject mobject){
     REGISTER_SHAPE(mPlugin, VisualizeVector, VisualizeVectorOverride);
     REGISTER_NODE(mPlugin, AngleMath);
     REGISTER_NODE(mPlugin, AngleTrig);
+    REGISTER_NODE(mPlugin, PoseReader);
     MGlobal::displayInfo("[gfToolsNodes] Plugin loaded successfully.");
 
     return MStatus::kSuccess;
@@ -118,8 +123,10 @@ MStatus uninitializePlugin(MObject mobject){
     MFnPlugin mPlugin(mobject, kAuthor, kVersion, kRequiredAPIVersion, &status);
     CHECK_MSTATUS_AND_RETURN_IT(status);
 
+    DEREGISTER_SHAPE(mPlugin, VisualizeVector);
     DEREGISTER_NODE(mPlugin, AngleMath);
     DEREGISTER_NODE(mPlugin, AngleTrig);
+    DEREGISTER_NODE(mPlugin, PoseReader);
     MGlobal::displayInfo("[gfToolsNodes] Plugin unloaded successfully.");
 
     return MStatus::kSuccess;

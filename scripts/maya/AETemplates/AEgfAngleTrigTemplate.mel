@@ -1,6 +1,6 @@
-global proc AEgfAngleTrigMathTemplate(string $nodeName){
+global proc AEgfAngleTrigTemplate(string $nodeName){
     editorTemplate -beginScrollLayout;
-        editorTemplate -beginLayout "gfAngleTrigMath Attributes" -collapse 0;
+        editorTemplate -beginLayout "gfAngleTrig Attributes" -collapse 0;
             editorTemplate -addControl "operation";
             editorTemplate -addControl "angle1";
             editorTemplate -addControl "angle2";
