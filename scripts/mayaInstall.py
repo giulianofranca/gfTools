@@ -133,8 +133,8 @@ def generateModFile():
     lines.append("PYTHONPATH +:= scripts/maya\n")
     lines.append("PYTHONPATH +:= tools/maya\n")
     lines.append("MAYA_SCRIPT_PATH +:= scripts/maya\n")
+    lines.append("MAYA_SCRIPT_PATH +:= scripts/maya/AETemplates\n")
     lines.append("MAYA_PLUG_IN_PATH +:= plugin/maya/%s\n" % mayaVersion)
-    lines.append("MAYA_CUSTOM_TEMPLATE_PATH +:= scripts/maya/AETemplates\n")
     lines.append("XBMLANGPATH +:= core/resources/icons%s\n" % ("/%B" if linux() else ""))
     with open(fileName, "w") as f:
         f.writelines(lines)
