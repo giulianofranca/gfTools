@@ -28,6 +28,7 @@ Todo:
 #include "headers/visualizeVector.hpp"
 #include "headers/poseReader.hpp"
 #include "headers/ikVChain.hpp"
+#include "headers/ikVChain2.hpp"
 
 #include <maya/MFnPlugin.h>
 #include <maya/MDrawRegistry.h>
@@ -103,6 +104,9 @@ const MTypeId PoseReader::kNodeID = 0x00130d83;
 const MString IKVChain::kNodeName = "gfIKVChain";
 const MString IKVChain::kNodeClassify = kUtilityNodeClassify;
 const MTypeId IKVChain::kNodeID = 0x00130d84;
+const MString IKSolver::kNodeName = "gfIKVChainSolver";
+const MString IKSolver::kNodeClassify = kUtilityNodeClassify;
+const MTypeId IKSolver::kNodeID = 0x00130d85;
 
 
 
@@ -118,6 +122,7 @@ MStatus initializePlugin(MObject mobject){
     REGISTER_NODE(mPlugin, AngleTrig);
     REGISTER_NODE(mPlugin, PoseReader);
     REGISTER_NODE(mPlugin, IKVChain);
+    REGISTER_NODE(mPlugin, IKSolver);
     MGlobal::displayInfo("[gfToolsNodes] Plugin loaded successfully.");
 
     return MStatus::kSuccess;
@@ -133,6 +138,7 @@ MStatus uninitializePlugin(MObject mobject){
     DEREGISTER_NODE(mPlugin, AngleTrig);
     DEREGISTER_NODE(mPlugin, PoseReader);
     DEREGISTER_NODE(mPlugin, IKVChain);
+    DEREGISTER_NODE(mPlugin, IKSolver);
     MGlobal::displayInfo("[gfToolsNodes] Plugin unloaded successfully.");
 
     return MStatus::kSuccess;

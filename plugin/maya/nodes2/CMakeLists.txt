@@ -6,11 +6,11 @@ configure_file("mainPlugin.cpp.in"
 set(SOURCE_FILES
     "${CMAKE_CURRENT_BINARY_DIR}/mainPlugin.cpp"
     "angleMath.cpp" "angleTrig.cpp" "visualizeVector.cpp"
-    "poseReader.cpp" "ikVChain.cpp")
+    "poseReader.cpp" "ikVChain.cpp" "ikVChain2.cpp")
 
 set(HEADER_FILES
     "headers/angleMath.hpp" "headers/angleTrig.hpp" "headers/visualizeVector.hpp"
-    "headers/poseReader.hpp" "headers/ikVChain.hpp")
+    "headers/poseReader.hpp" "headers/ikVChain.hpp" "headers/ikVChain2.hpp")
 
 set(EigenLib "${CMAKE_SOURCE_DIR}/third_party/Eigen")
 message(STATUS "Eigen Library: ${EigenLib}")
